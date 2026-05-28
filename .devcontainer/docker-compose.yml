@@ -1,0 +1,62 @@
+# Multi-service dev environment: app + Postgres + Redis
+# Used by devcontainer.json (service: "app")
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+      - node-modules-cache:/workspaces/${WORKSPACE_FOLDER_NAME:-project}/node_modules
+      - pnpm-store-cache:/home/node/.local/share/pnpm
+    command: sleep infinity
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://dev:dev@postgres:5432/dev
+      REDIS_URL: redis://redis:6379
+    networks:
+      - devnet
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: dev
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - devnet
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - devnet
+
+volumes:
+  postgres-data:
+  redis-data:
+  node-modules-cache:
+  pnpm-store-cache:
+
+networks:
+  devnet:
