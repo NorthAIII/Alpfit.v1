@@ -24,12 +24,12 @@
 | Program Builder (PT) | [features/02-program-builder.md](features/02-program-builder.md) | v1 |
 | Onboarding (Davet + Auth) | [features/03-onboarding.md](features/03-onboarding.md) | v1 |
 | Bildirim Sistemi (Push) | [features/04-notifications.md](features/04-notifications.md) | v1 |
+| Üye Program Görüntüleme + Tamamlama | [features/05-member-program-view.md](features/05-member-program-view.md) | v1 |
 
 ### Henüz Yazılmamış v1 Feature'ları (PRD-refine'da yazılacak)
 
 Bu feature'lar v1 kapsamındadır ama henüz feature dosyası yok — sonraki PRD oturumlarında yazılacak:
 
-- **Üye Program Görüntüleme + Tamamlama** — Üyenin programı görüp her antrenmanı "Tamamlandı" işaretlemesi. Streak'in girdisi.
 - **PT Dashboard / Üye Listesi** — PT'nin üyelerini, streak'lerini, comeback uyarılarını gördüğü ana ekran.
 - **Üye Ölçüm Takibi** — PT'nin üye için kilo/boy/vücut ölçümlerini kaydetmesi ve zaman içinde takip.
 - **Üye Yemek Günlüğü** — Üyenin yediklerini (kalori/makro form) günlük olarak girmesi. v1'de AI önerisi YOK, sadece kayıt.

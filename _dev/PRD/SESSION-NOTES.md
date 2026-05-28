@@ -9,8 +9,7 @@
 ### Yazılması Bekleyen v1 Feature'ları
 Aşağıdaki feature'lar v1 kapsamında olduğu kabul edildi ama dedicated feature dosyası henüz yok. PRD-refine oturumunda yazılmalı:
 
-- **Üye Program Görüntüleme + Tamamlama** — Üye programı nasıl görür, antrenmanı nasıl "Tamamlandı" işaretler, içindeki egzersizleri tek tek mi yoksa toplu mu işaretler, egzersiz videoları nasıl açılır (modal / inline). Sürdürülebilirlik motorunun **girdi katmanı** — kritik.
-- **PT Dashboard / Üye Listesi** — PT ana ekran kompozisyonu. Üye listesi, streak görünürlüğü, comeback uyarıları, "kayıp risk" etiketleri burada görünür. Sürdürülebilirlik motorunun **PT görünümü**.
+- **PT Dashboard / Üye Listesi** — PT ana ekran kompozisyonu. Üye listesi, streak görünürlüğü, comeback uyarıları, "kayıp risk" etiketleri burada görünür. Sürdürülebilirlik motorunun **PT görünümü**. Bir sonraki PRD-refine için en kritik sıradaki feature — `05-member-program-view.md` yazıldı; PT-side tamamlanmadan motor görünmez.
 - **Üye Ölçüm Takibi** — Kilo/boy/vücut ölçümleri PT tarafından girilir. Hangi sıklıkla, hangi metrikler, grafik gösterimi var mı? Brief Soru 6.
 - **Üye Yemek Günlüğü** — Üyenin yediklerini girdiği form. Kalori/makro yapısı, manuel mi, hazır yemek seçimi mi (v1'de muhtemelen sadece serbest metin + manuel kalori). v1.5 AI önerisinin temelini hazırlamalı.
 
@@ -41,8 +40,6 @@ Her feature dosyasının "Açık Sorular" bölümünde detay kalmıştır — PR
 ## Keşfedilmemiş Alanlar
 
 ### Hata / Edge Senaryolar
-- **App offline davranışı:** Üye internetsiz spor salonunda — program görünür mü, tamamlama işareti senkron'a giriyor mu?
-- **Çoklu cihaz çatışmaları:** Üye iki cihazda farklı şeyler işaretlerse hangisi geçerli?
 - **PT hesabı suspended / banned (ileride moderation gerekirse):** v1'de muhtemelen YOK ama mimari hazırlık?
 
 ### UX
@@ -58,7 +55,5 @@ Her feature dosyasının "Açık Sorular" bölümünde detay kalmıştır — PR
 
 ## Gözlemler ve Hipotezler (henüz kullanıcıyla konuşulmamış)
 
-- **Streak görsel ağırlığı tartışmalı.** Brief §4 "görsel rozet sistemi v2'ye" diyor — yani v1'de streak sadece sayı mı, alev/yıldız ikon mu? "Görsel rozet" olmamak ile "streak'in yanında basit bir ikon" arasında ince çizgi var. PRD-refine'da netleşmeli.
 - **PT'nin "manuel WhatsApp atması" expected davranış.** T+7 comeback uyarısı PT'ye "manuel iletişim öner" diyor. Sistem otomatik WhatsApp atmıyor (v1.5'e bırakıldı). Bu açıklık PT'ye yük bindirir ama brief'in "kardeş zaten WhatsApp'ta üyeleriyle konuşuyor" gerçeğine uyar. Pilot'ta doğrulanmalı.
-- **Üye streak'i opt-out edebilmeli mi?** Bazı kullanıcılar gamification'dan rahatsız olur. v1'de "herkese streak" mi yoksa toggle mı? Hipotez: pilot sırasında 1-2 üye "rahatsız" derse v1.5'e toggle eklemek mantıklı. v1'de sade tutmak iyi olabilir.
 - **"Tek PT-tek üye" kuralı yumuşatılabilir mi?** v1'de katı kural ama bazı üye gerçek hayatta birden fazla PT ile çalışıyor (kuvvet + beslenme + esneklik). Bu sınır pilot'ta hissedilirse v1.5'te yumuşatılır.
