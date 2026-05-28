@@ -116,6 +116,7 @@ v0.1 (v1)
 - **[Sürdürülebilirlik Motoru](01-sustainability-engine.md)** — Bildirim sisteminin en büyük tüketicisi. Reminder, comeback ve telafi penceresi bildirimleri bu motordan tetiklenir.
 - **[Onboarding](03-onboarding.md)** — Push izni isteme onboarding sonrasında. Davet kabul bildirimi onboarding'in çıktısı.
 - **[Program Builder](02-program-builder.md)** — Yeni program / program güncelleme bildirimleri buradan tetiklenir.
+- **[PT Dashboard](06-pt-dashboard.md)** — PT'ye giden push'lar (T+7 comeback, davet kabul) dashboard'da in-app banner olarak yansır; 🔕 ikonu push izni kapalı üyenin yanında görünür.
 
 ---
 

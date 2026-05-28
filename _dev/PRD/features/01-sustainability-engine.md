@@ -94,9 +94,9 @@ v0.1 (v1)
 
 ## İlişkili Feature'lar
 
-- **[Program Görüntüleme + Tamamlama]** (henüz yazılmadı) — Streak'in artması bu feature'daki "Tamamlandı" aksiyonuna bağlı.
-- **[PT Dashboard — Üye Listesi]** (henüz yazılmadı) — Comeback etiketleri ve T+7 uyarıları burada yaşar.
-- **[Bildirim Sistemi]** (henüz yazılmadı) — Reminder ve comeback push'larının teknik altyapısı bu feature'ın sorumluluğundadır.
+- **[Üye Program Görüntüleme + Tamamlama](05-member-program-view.md)** — Streak'in artması bu feature'daki "Antrenmanı bitir" aksiyonuna bağlı.
+- **[PT Dashboard — Üye Listesi](06-pt-dashboard.md)** — Comeback etiketleri (T+7 banner, T+14 kayıp risk) ve telafi penceresi ikonları burada yaşar.
+- **[Bildirim Sistemi](04-notifications.md)** — Reminder ve comeback push'larının teknik altyapısı bu feature'ın sorumluluğundadır.
 
 ---
 

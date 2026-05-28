@@ -9,9 +9,8 @@
 ### Yazılması Bekleyen v1 Feature'ları
 Aşağıdaki feature'lar v1 kapsamında olduğu kabul edildi ama dedicated feature dosyası henüz yok. PRD-refine oturumunda yazılmalı:
 
-- **PT Dashboard / Üye Listesi** — PT ana ekran kompozisyonu. Üye listesi, streak görünürlüğü, comeback uyarıları, "kayıp risk" etiketleri burada görünür. Sürdürülebilirlik motorunun **PT görünümü**. Bir sonraki PRD-refine için en kritik sıradaki feature — `05-member-program-view.md` yazıldı; PT-side tamamlanmadan motor görünmez.
-- **Üye Ölçüm Takibi** — Kilo/boy/vücut ölçümleri PT tarafından girilir. Hangi sıklıkla, hangi metrikler, grafik gösterimi var mı? Brief Soru 6.
-- **Üye Yemek Günlüğü** — Üyenin yediklerini girdiği form. Kalori/makro yapısı, manuel mi, hazır yemek seçimi mi (v1'de muhtemelen sadece serbest metin + manuel kalori). v1.5 AI önerisinin temelini hazırlamalı.
+- **Üye Ölçüm Takibi** — Kilo/boy/vücut ölçümleri PT tarafından girilir. Hangi sıklıkla, hangi metrikler, grafik gösterimi var mı? Brief Soru 6. PT Dashboard'tan "Ölçüm ekle" CTA'sı buraya bağlanacak (§06).
+- **Üye Yemek Günlüğü** — Üyenin yediklerini girdiği form. Kalori/makro yapısı, manuel mi, hazır yemek seçimi mi (v1'de muhtemelen sadece serbest metin + manuel kalori). v1.5 AI önerisinin temelini hazırlamalı. PT Dashboard'tan "Yemek günlüğü" CTA okuma erişimi açacak (§06).
 
 ### Teknik Mimari (kickoff'a bırakılan)
 Bu kararlar PRD seviyesi değil, `/devflow:kickoff`'ta verilecek — ama PRD'yi etkileyen yönü varsa not düşülmüş:

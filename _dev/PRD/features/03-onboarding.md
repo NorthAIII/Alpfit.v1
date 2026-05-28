@@ -113,6 +113,7 @@ v0.1 (v1)
 
 - **[Program Builder](02-program-builder.md)** — PT'nin program yazabilmesi için üyenin Onboarding'i tamamlamış olması gerekir.
 - **[Bildirim Sistemi](04-notifications.md)** — Push notification altyapısı bu feature'da kurulur (OTP, davet kabul bildirimleri).
+- **[PT Dashboard](06-pt-dashboard.md)** — PT, davet linki üretme ("+ Davet et" CTA), "Bekleyen davetler" listesi ve üye çıkarma akışını dashboard'tan yönetir.
 - **[Sürdürülebilirlik Motoru](01-sustainability-engine.md)** — Streak 0 olarak başlar; ilk planlı antrenman tamamlandığında 1'e geçer.
 
 ---

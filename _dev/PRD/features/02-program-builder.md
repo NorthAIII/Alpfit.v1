@@ -91,8 +91,9 @@ v0.1 (v1)
 
 ## İlişkili Feature'lar
 
-- **[Üye Kabul]** (henüz yazılmadı) — PT'nin program yazabilmesi için üyeyi kabul etmiş olması gerekir.
-- **[Üye Program Görüntüleme + Tamamlama]** (henüz yazılmadı) — Builder'ın çıktısı bu feature'ın girdisidir.
+- **[Onboarding (Üye Kabul)](03-onboarding.md)** — PT'nin program yazabilmesi için üyenin davet kabul akışını tamamlamış olması gerekir.
+- **[Üye Program Görüntüleme + Tamamlama](05-member-program-view.md)** — Builder'ın çıktısı bu feature'ın girdisidir.
+- **[PT Dashboard](06-pt-dashboard.md)** — PT, üye satırına tıklayıp "Program oluştur" veya "Program" CTA'sından bu builder'a girer.
 - **[Sürdürülebilirlik Motoru](01-sustainability-engine.md)** — Streak hesaplaması builder'da yazılan planlı antrenmanlara dayanır.
 
 ---
