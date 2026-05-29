@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.01 ✅: pnpm workspaces monorepo iskeleti (mobile/backend/shared), tsconfig.base strict NodeNext, ESLint flat + Prettier, 227 dep install, typecheck/lint/format temiz; sıradaki TASK-1.02.
+**Son Güncelleme:** 2026-05-29 — TASK-1.02 ✅: Fastify 5 + zod env loader (fail-fast) + buildServer factory + /healthz; pino-pretty dev + JSON prod; typecheck/build/lint/format temiz; dev+build /healthz 200; 3 fail-fast senaryosu doğrulandı; sıradaki TASK-1.03.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 1/34 task — TASK-1.01 tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.02 (Backend Fastify iskeleti)
+**İlerleme:** 2/34 task — TASK-1.02 tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.03 (Prisma 7 + adapter-pg + ilk migration + generate smoke)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,7 +29,7 @@
 
 ## Aktif Task
 
-**Task:** TASK-1.02 — Backend Fastify iskeleti + zod env + healthcheck
+**Task:** TASK-1.03 — Prisma 7 + adapter-pg + ilk migration + generate smoke
 **Durum:** ⬜ Bekliyor
 **İlerleme:** Bir sonraki oturumda `/devflow:run-task` ile çalıştırılacak.
 
@@ -37,12 +37,13 @@
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 1 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 2 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
 | 1.01 | Monorepo iskeleti | ✅ Tamamlandı |
-| 1.02–1.16 | M0 Altyapı (backend, mobile, test, CI, hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (15) |
+| 1.02 | Backend Fastify iskeleti + zod env + healthz | ✅ Tamamlandı |
+| 1.03–1.16 | M0 Altyapı (Prisma, test, mobile, CI, hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (14) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
@@ -66,6 +67,12 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.02 — Backend Fastify iskeleti + zod env + healthz (2026-05-29) ✅
+
+- Fastify 5 + `@fastify/sensible` + `@fastify/cors` (origin:false) + zod + pino kuruldu; `buildServer({ env, logger? })` factory + zod-validated `loadEnv()` (fail-fast, anlamlı issue listesi); dev pino-pretty + prod JSON
+- `/healthz` → `{ status, timestamp, version }` 200; `.env.example` repo'da, `.env` gitignore (kural `.gitignore:13`); script'ler: dev (tsx watch) + build + start + typecheck
+- Test kriterleri ✅ — typecheck/build/lint/format temiz; dev (3718) + build (3717) `/healthz` 200; 3 fail-fast senaryosu (missing/short/invalid enum) anlamlı mesaj + exit 1; karar DECISIONS.md'ye yazıldı (server factory + zod loader)
+
 ### TASK-1.01 — Monorepo iskeleti (2026-05-29) ✅
 
 - pnpm workspaces (mobile/backend/shared) + Node 22 + packageManager lock; root `tsconfig.base.json` strict NodeNext + paths; ESLint flat + Prettier kuruldu
@@ -85,11 +92,11 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-1.02 — Backend Fastify iskeleti + zod env + healthcheck
+**Aktif Task:** TASK-1.03 — Prisma 7 + adapter-pg + ilk migration + generate smoke
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.01 ✅: pnpm workspaces monorepo iskeleti (mobile/backend/shared), tsconfig.base strict NodeNext, ESLint flat + Prettier, 227 dep install, typecheck/lint/format temiz; sıradaki TASK-1.02.
+**Son Güncelleme:** 2026-05-29 — TASK-1.02 ✅: Fastify 5 + zod env loader (fail-fast) + buildServer factory + /healthz; pino-pretty dev + JSON prod; typecheck/build/lint/format temiz; dev+build /healthz 200; 3 fail-fast senaryosu doğrulandı; sıradaki TASK-1.03.

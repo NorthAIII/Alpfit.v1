@@ -9,6 +9,34 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — Backend Bootstrap: Server Factory + zod-Validated Env Loader
+
+**Bağlam:** TASK-1.02 backend iskeleti — production entrypoint + test edilebilirlik + env doğrulama. Sonraki task'lar (Prisma, JWT, OTP, davet endpoint'leri) bu temelin üstüne kurulacak; TASK-1.04 test altyapısı bu kararın doğrudan tüketicisi.
+
+**Seçenekler:**
+1. **`buildServer(opts)` factory + `loadEnv()` zod parse (fail-fast) + Fastify `.inject()`** — Test'te env stub + logger off ile in-process inject; production'da `index.ts` `buildServer()` çağırıp `listen()` yapar.
+2. **Top-level `Fastify().listen()` + dotenv config** — Tek dosya, daha az boilerplate; ama test'te HTTP socket açmak gerekir, env override yok.
+3. **Class-based composition root (NestJS-vari)** — Yapısal disiplin; solo + 90 gün için magic + boilerplate dengesi olumsuz, [[ilkeler]] §"Kalıcılık önceliği" gri kalır.
+
+**Karar:** Seçenek 1 — `buildServer(opts: { env, logger? })` async factory + `loadEnv()` standalone fonksiyon (zod `safeParse` → `EnvValidationError` → stderr + `process.exit(1)`).
+
+**Gerekçe:**
+- **Test edilebilirlik:** Factory pattern Fastify `.inject()` API'siyle in-process HTTP simulate edilebilir (TASK-1.04 Vitest + Testcontainers buna dayanacak); env override (logger off, mock DB URL) test'te tek satır.
+- **Fail-fast:** [[ilkeler]] §"Sır ve konfigürasyon yönetimi" — eksik/yanlış secret production'da sessiz hata yaratmaz; uygulama başlatma adımında ölür, anlamlı issue listesi stderr'e yazılır.
+- **Asenkron register zinciri:** Fastify plugin'leri (`@fastify/sensible`, `@fastify/cors`, route'lar) async `register`; factory async olmak zorunda.
+- **Logger esnekliği:** `BuildServerOptions.logger` override'ı test'te `false` ile susturma, production'da pino default. Dev'de pino-pretty transport otomatik.
+
+**Tradeoff'lar:** Top-level Fastify pattern daha az boilerplate ama testabilite kaybı tüm sonraki task'ları kırılgan yapardı. Class-based composition root için NestJS magic riski + [[research]] kararına aykırı.
+
+**Risk + Mitigation:**
+- pino transport (pino-pretty) production'da kullanılmasın → `NODE_ENV === 'production' | 'staging'` koşulu transport'u devre dışı bırakır, prod JSON log akışı.
+- `npm_package_version` `node` direkt çalıştırmada set edilmez → `/healthz` `version` alanı production'da `'0.0.0'` döner; **TASK-1.10 deploy'da** `APP_VERSION` env'inden okuma eklenir (Coolify build SHA injection).
+- Zod 4 `transform()` chain dönüş tipi `z.infer` ile çıkarılır; `exactOptionalPropertyTypes: true` Fastify constructor tip uyumsuzluğu pino `LoggerOptions` direkt kullanımıyla çözüldü (`NonNullable` indexed access yerine).
+
+**İlgili Task/Faz:** TASK-1.02 (iskelet) → TASK-1.03 (Prisma client decorate) → TASK-1.04 (Vitest + `.inject()` test altyapısı) → TASK-1.11 (Sentry + fast-redact logger config) → tüm sonraki backend task'ları.
+
+---
+
 ### 2026-05-29 — Observability: Sentry Developer (EU Frankfurt)
 
 **Bağlam:** Backend Node + RN/Expo için error tracking + crash reporting. KVKK uyumu kritik — sağlık verisi (kilo/boy/ölçüm/yemek günlüğü) log'a/error tracker'a YAZILMAZ.

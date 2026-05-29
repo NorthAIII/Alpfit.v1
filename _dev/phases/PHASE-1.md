@@ -244,7 +244,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | # | Task | Durum | Açıklama |
 |---|------|-------|----------|
 | 1.01 | TASK-1.01 | ✅ Tamamlandı | Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier + shared/) |
-| 1.02 | TASK-1.02 | ⬜ Bekliyor | Backend Fastify iskeleti + zod env + healthcheck |
+| 1.02 | TASK-1.02 | ✅ Tamamlandı | Backend Fastify iskeleti + zod env + healthcheck |
 | 1.03 | TASK-1.03 | ⬜ Bekliyor | Prisma 7 + adapter-pg + ilk migration + generate smoke |
 | 1.04 | TASK-1.04 | ⬜ Bekliyor | Backend test altyapısı (Vitest + Testcontainers) |
 | 1.05 | TASK-1.05 | ⬜ Bekliyor | Mobile Expo SDK 56 + Expo Router iskelet |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — TASK-1.01 ✅ (monorepo iskeleti ayakta); sıradaki TASK-1.02.
+**Son Güncelleme:** 2026-05-29 — TASK-1.02 ✅ (Fastify backend + zod env loader + /healthz); sıradaki TASK-1.03.
