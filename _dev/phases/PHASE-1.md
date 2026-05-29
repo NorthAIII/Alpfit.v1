@@ -251,7 +251,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.06 | TASK-1.06 | ✅ Tamamlandı | TR locale util + lint kuralı (toLowerCase yasağı) |
 | 1.07 | TASK-1.07 | ✅ Tamamlandı | i18n shell (i18next mobile + backend, TR-only) |
 | 1.08 | TASK-1.08 | ✅ Tamamlandı | Mobile test altyapısı (Jest + RTL) |
-| 1.09 | TASK-1.09 | ⬜ Bekliyor | CI PR pipeline (GitHub Actions: test + lint + typecheck) |
+| 1.09 | TASK-1.09 | ✅ Tamamlandı | CI PR pipeline (GitHub Actions: test + lint + typecheck) |
 | 1.10 | TASK-1.10 | ⬜ Bekliyor | Hetzner+Coolify staging kurulumu + auto-deploy webhook |
 | 1.11 | TASK-1.11 | ⬜ Bekliyor | Backend Sentry + PII scrubber + KVKK test |
 | 1.12 | TASK-1.12 | ⬜ Bekliyor | Mobile Sentry crash reporting + PII scrubber |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — TASK-1.08 ✅ (Jest 29.7 + jest-expo/ios tek-platform preset + @testing-library/react-native 13.3.3 modern matchers + MSW 2.14.6 + react-test-renderer 19.2.6 mobile workspace'ine eklendi; mobile/__tests__/landing-screen.test.tsx 2 test PASS (text query + snapshot); jest-expo snapshot resolver __tests__/ pattern'ine bağlı olduğu için test app/ dışına taşındı; toplam 52 test passed; sıradaki TASK-1.09 (CI pipeline)).
+**Son Güncelleme:** 2026-05-29 — TASK-1.09 ✅ (`.github/workflows/ci.yml` 4 paralel job: quality root lint+format:check / shared / mobile / backend node:22-bookworm container + postgres:17-alpine service hostname `postgres` (devcontainer paterni) + concurrency cancel-in-progress; `.github/CI-SETUP.md` manuel branch protection rehberi — kullanıcı AskUserQuestion ile gh CLI script yerine manuel UI seçti, repo henüz remote'a push edilmedi; `.github/PULL_REQUEST_TEMPLATE.md` task/modül/faz bağlantısı + commit prefix + test planı + KVKK checklist; lokalde pnpm lint + format:check + typecheck recursive + test:coverage 3 paket yeşil + YAML semantik valid; sıradaki TASK-1.10 Hetzner+Coolify staging).

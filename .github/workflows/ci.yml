@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+
+  shared:
+    name: Shared (typecheck + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F @alpfit/shared typecheck
+      - run: pnpm -F @alpfit/shared test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shared-coverage
+          path: shared/coverage/lcov.info
+          if-no-files-found: ignore
+
+  mobile:
+    name: Mobile (typecheck + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F @alpfit/mobile typecheck
+      - run: pnpm -F @alpfit/mobile test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-coverage
+          path: mobile/coverage/lcov.info
+          if-no-files-found: ignore
+
+  backend:
+    name: Backend (db:generate + typecheck + test)
+    runs-on: ubuntu-latest
+    # Job-container required so Postgres service is reachable as hostname `postgres`
+    # (matches devcontainer + backend/test/setup.ts DATABASE_URL stub).
+    container:
+      image: node:22-bookworm
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dev
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: dev
+        options: >-
+          --health-cmd "pg_isready -U dev -d dev"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://dev:dev@postgres:5432/dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Prisma 7: `migrate dev` no longer runs `generate`; explicit step is the
+      # mitigation noted in PHASE-1 §Araştırma → Dikkat Edilecekler #1.c.
+      - run: pnpm -F @alpfit/backend db:generate
+      - run: pnpm -F @alpfit/backend typecheck
+      - run: pnpm -F @alpfit/backend test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage/lcov.info
+          if-no-files-found: ignore

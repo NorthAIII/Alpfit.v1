@@ -9,6 +9,66 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — CI PR Pipeline: 4 Paralel Job + Job-Container Postgres + Manuel Branch Protection
+
+**Bağlam:** TASK-1.09 — PHASE-1 §Kapsam Tartışması "her PR'da test+lint+typecheck otomatik, kırıksa merge bloke" + §Araştırma Tuzaklar #1.c (Prisma 7 `migrate dev`/`db push` artık `generate` çalıştırmıyor) mitigation'ı. Üst kararlar: GitHub Actions (research-phase tablosu), pnpm workspaces, Vitest+per-suite Postgres (TASK-1.04 DECISIONS), `node:22-bookworm` runtime, `postgres:17-alpine` (devcontainer ile aynı majör).
+
+**Seçenekler (Job kesimi):**
+
+1. **4 paralel job: `quality` (lint+format:check) + `shared` + `mobile` + `backend`** — Root lint script (`eslint .`) + Prettier check tek noktada koşar (workspace-başına lint script eklemek gerekmiyor); typecheck+test her workspace'in kendi job'unda. Backend kendi job'unda Postgres servisini kullanır.
+2. **3 paralel job (backend + mobile + shared) — lint job içinde herhangi birine yapışır** — Task doc'taki orijinal şema; ama her workspace'in kendi lint script'i yok, root `pnpm lint`'i bir job'a koymak o job'u "özel" yapar (mantıksal kayma).
+3. **Tek monolitik job** — En basit; ama paralelliği kaybeder (CI süresi 3-4× artar) ve fail-feedback olarak hangi katmanın kırıldığı tek bakışta görünmez.
+
+**Seçenekler (Backend job + Postgres erişimi):**
+
+1. **Job-container (`node:22-bookworm`) + service container (`postgres:17-alpine`) hostname `postgres`** — `backend/test/setup.ts` `DATABASE_URL` stub'u (`postgres://dev:dev@postgres:5432/dev`) hiçbir değişiklik olmadan çalışır; devcontainer ile birebir paralel.
+2. **Host runner (ubuntu-latest) + service container, `localhost:5432` ile erişim** — `setup.ts` stub'unu environment-aware yapmak gerekirdi (`process.env.CI` veya `process.env.DATABASE_URL` override); test kodu CI'ya bağımlı hale gelirdi.
+3. **Host runner + manuel Postgres install + `apt install`** — Service container'dan daha ağır, cache'lenmez; her run'da setup süresi artar.
+
+**Seçenekler (Branch protection):**
+
+1. **Manuel UI + rehber doküman (`.github/CI-SETUP.md`)** — Repo henüz remote'a push edilmedi; pratik yol. `gh` CLI token + admin yetkisi gerekmez; kullanıcı bir kez 5 dk içinde Settings → Branches'tan set eder.
+2. **`gh api branches/main/protection` script (`.github/CI-SETUP.sh`)** — Otomatik ama: (a) repo push edilmeden çalışmıyor; (b) `gh auth` + admin token şartı; (c) tek seferlik kurulum için yeterli değer üretmiyor.
+
+**Karar:** Üç başlıkta da **1**. Kullanıcı branch protection seçimini `AskUserQuestion` ile onayladı (CLAUDE.md feedback §"Varsayım Yok"). Job kesimi ve Postgres erişimi karar noktaları implementation-time mimari ayrıntılar; task doc'un "3 paralel job" şeması root lint için workspace-başına lint script gerektirirdi — kalıcılık önceliği ile uyumlu en sade yapı 4 paralel job + tek root lint job.
+
+**Tamamlayıcı uygulama kararları:**
+
+- **`.github/workflows/ci.yml`** — Trigger: `pull_request` (tüm dallar) + `push` (main); `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }` (aynı PR'a yeni commit eskiyi iptal eder).
+- **Setup steps (her job ortak):** `actions/checkout@v4` → `pnpm/action-setup@v4` (versiyon root `package.json` `packageManager: pnpm@10.11.0` field'ından otomatik) → `actions/setup-node@v4` `node-version: '22'` + `cache: pnpm` (pnpm CLI önce kurulu olmalı, sıra önemli) → `pnpm install --frozen-lockfile` (lockfile drift FAIL).
+- **`backend` job** — `container.image: node:22-bookworm` + `services.postgres` (`postgres:17-alpine`, env `POSTGRES_USER/PASSWORD/DB=dev`, `--health-cmd "pg_isready -U dev -d dev"`); job-level `env.DATABASE_URL: postgres://dev:dev@postgres:5432/dev`; adımlar: `pnpm -F @alpfit/backend db:generate` (Prisma 7 tuzak #1.c explicit mitigation, `pretest` hook'undan bağımsız) → `typecheck` (`pretypecheck` hook'u shared build + db:generate'i tekrar eder, redundant ama deterministik) → `test:coverage` (vitest run --coverage).
+- **`mobile` / `shared` / `quality` job'ları** — `ubuntu-latest`, service container yok; `mobile` typecheck shared'i `moduleResolution: bundler` ile node_modules'tan resolve eder (build adımı gerekmiyor), `shared` typecheck self-contained.
+- **Coverage upload** — Her test job'unda `actions/upload-artifact@v4` `if: always()` + `if-no-files-found: ignore`; artifact isimleri: `backend-coverage`/`mobile-coverage`/`shared-coverage`; path `<workspace>/coverage/lcov.info` (Vitest config'i `reporter: ['text', 'lcov']`, Jest default lcov reporter).
+- **Branch protection rehberi** — `.github/CI-SETUP.md` adım-adım GitHub Settings → Branches → Add rule yolunu, status check isim listesini ("Lint & Format", "Shared (typecheck + test)", "Mobile (typecheck + test)", "Backend (db:generate + typecheck + test)"), "Require branches up to date" + "Do not allow bypassing" + doğrulama smoke testi (kasten kırık PR ile koruma test'i) yönergesini içerir.
+- **`.github/PULL_REQUEST_TEMPLATE.md`** — Özet + bağlantı (task/modül/faz) + değişiklik türü (commit prefix'i ile eşleşen 6 tip) + test planı checklist + DevFlow doküman güncellemeleri checklist + KVKK/gizlilik checklist (sağlık verisi dokunan PR'larda zorunlu).
+
+**Gerekçe (4 job kesimi):** [[ilkeler]] §"Kalıcılık önceliği" — workspace-başına lint script eklemek package.json drift riski (her workspace'in lint'i ayrı tutulurdu); tek root lint job daha az drift + daha hızlı feedback (3-4 workspace × ESLint boot vs 1 boot). [[ilkeler]] §"Kümülatif test altyapısı" — her workspace kendi test job'unda izole hata noktası gösterir; tek monolitik job'da hangi katmanın kırıldığını bulmak ek wall-time.
+
+**Gerekçe (job-container Postgres):** Devcontainer + CI birebir paralel olduğunda **test kodu environment-agnostic kalır** — `setup.ts`'in stub URL'i ("postgres" hostname) hem local hem CI'da çalışır. Host runner + `localhost:5432` paterninde `setup.ts`'i `process.env.CI` koşullu yapmak gerekirdi (test logic'inin CI'ya bağlanması). [[ilkeler]] §"Kalıcılık önceliği" — test kodunun ortamdan bağımsız olması kalıcı; environment-aware stub kısa vadeli hız.
+
+**Gerekçe (manuel branch protection):** Repo remote'u henüz yok; `gh` CLI script'i çalışmaz. Manuel UI + adım rehberi tek seferlik kurulum için yeterli; kullanıcı (Kıvanç) repo admin'i — token + auth ek setup gerektirmiyor. CLAUDE.md feedback §"Varsayım Yok" — paket/dış servis değişikliği onaysız değil; user `AskUserQuestion` ile onayladı.
+
+**Tradeoff'lar:**
+
+- **Job sayısı 3 vs 4:** Task doc 3 paralel job (backend+mobile+shared) öngörüyordu — root lint o şemada bir job'a yapıştırılırdı (örn. `quality` adı altında shared ile birleştirilse mantıksal yapışıklık). 4 ayrı job kesimi daha temiz ama paralel run slot'u +1.
+- **Job-container overhead:** `node:22-bookworm` container'ı her backend run'da çekilir (~5-10s); GitHub Actions cache layer kullanır, ikinci run'da hızlı. Host runner + apt install paterni de aynı sürede. Pilot ölçeğinde nötr.
+- **Coverage `if: always()`:** Test fail olsa bile coverage upload denenir (kısmi sonuç). `if-no-files-found: ignore` — test başlamadan boot fail olursa silently skip; artifact yoksa CI run yine de görünür (kafa karışıklığı potansiyeli ama "yok bilgisi" `if-no-files-found: warn`'a göre daha az gürültülü).
+- **Prisma `db:generate` redundancy:** `pretest`, `pretypecheck`, ve explicit step üçü `prisma generate`'i çağırır (≈7ms × 3). Maliyet ihmal edilebilir; explicit step research tuzak #1.c'nin görünürlük belgesi.
+
+**Risk + Mitigation:**
+
+- **Risk:** Job container'da pnpm cache key'i farklı çözünür (GH Actions cache action container path'lerini host'a mount eder); ilk run cache miss. **Mitigation:** Pilot ölçeğinde ikinci run'dan itibaren cache hit; `setup-node@v4`'ün pnpm cache integration'ı container-aware. Bu task'ta ölçüm gerekli değil.
+- **Risk:** Service container `postgres:17-alpine` health check'i 10 retry × 5s = 50s timeout; ağır init senaryosunda yetmeyebilir. **Mitigation:** Postgres alpine boot ~2-3s; 10 retry pilot ölçeğinde fazlasıyla yeterli. Future drift için `health-retries: 20` raise küçük PR.
+- **Risk:** Pipeline `name:` alanı değiştirilirse branch protection status check ismi eşleşmez ve check silently atlanır → PR yeşil olmadan merge edilebilir. **Mitigation:** `.github/CI-SETUP.md` §"Yeni Status Check İsmi Eklemek" bölümü disiplini yazılı; rename PR'larında reviewer'a sinyal.
+- **Risk:** `pretest` ve explicit `db:generate` step'leri uyumsuz Prisma binary path üretebilir (cache invalidation). **Mitigation:** Aynı backend node_modules üzerinde aynı `prisma generate`; deterministik output (Prisma 7'nin output yolu `src/generated/prisma`).
+- **Risk:** Mobile workspace'in jest test'leri Linux runner'da iOS-specific path resolution istisnası fırlatabilir (`preset: jest-expo/ios`). **Mitigation:** jest-expo/ios preset platform-agnostic (sadece module path haritası farkı, native build değil); TASK-1.08 lokalde devcontainer Linux'unda yeşil — CI Linux ile aynı; smoke önce ilk gerçek CI run'ında.
+
+**Üst kararla ilişki:** TASK-1.04 DECISIONS "per-suite Postgres database" paterninin CI tarafı bu task tarafından somutlaşır (services: postgres + container job). Research-phase'in "GitHub Actions" + "pnpm workspaces" üst kararı bu DECISIONS girdisi tarafından **versiyon + env detay boyutunda** dolduruluyor. TASK-1.10'da Coolify staging deploy webhook eklenirken bu workflow'a `deploy` job'u (post-CI, `needs: [quality, shared, mobile, backend]`, `if: github.ref == 'refs/heads/main'`) eklenir.
+
+**İlgili Task/Faz:** TASK-1.09 (bu task) → TASK-1.10 (Coolify staging deploy webhook — `needs:` zinciri + secret kullanımı) → TASK-1.11/1.12 (Sentry — CI'da source map upload step) → TASK-1.13 (3 rol model — yeni migration → CI Postgres'inde otomatik `prisma migrate deploy` per-suite) → tüm sonraki PR'lar (status check zorunluluğu).
+
+---
+
 ### 2026-05-29 — TR Locale Util Paketi (`@alpfit/shared`) + ESLint `no-restricted-syntax` + Metro/pnpm Transitive Resolution
 
 **Bağlam:** TASK-1.06 — PHASE-1 §Araştırma Tuzaklar #5 mitigation'ının kendisi. JS spec'in default `'İ'.toLowerCase()` davranışı `'i̇'` (U+0069 + U+0307 combining dot) üretir — TR "İ" → "i" değil. Üye arama, telefon doğrulama, isim eşleştirmede silent bug üretir. Mitigation iki katmanlı: (a) `@alpfit/shared` paketinde `trLower` / `trUpper` util + telefon (+90 mobil) ve TR tarih util'leri; (b) ESLint kuralıyla ham `.toLowerCase()` / `.toUpperCase()` çağrıları yasaklı.
