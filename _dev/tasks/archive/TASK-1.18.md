@@ -1,6 +1,6 @@
 # TASK-1.18: OTP send endpoint (rate limit + Redis)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -138,8 +138,22 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Redis katmanı (`backend/src/redis/client.ts` YENİ)** — `createRedisClient(url, opts?)` (her çağrı yeni instance) + `getRedis(url)` (production singleton) + `pingRedis(redis)`; `db/prisma.ts` deseninin birebir Redis karşılığı. `ioredis` eklendi.
+- **`server.ts`** — `opts.redis ?? getRedis(env.REDIS_URL)` çözer, `app.redis` decorate, `redis.on('error', …)` pino log (EventEmitter throw koruması). `authOtpSendRoutes` register.
+- **`/healthz` extend** — db **ve** redis PING (`Promise.all`); ikisinden biri down → `degraded` + 503; payload'a `redis: 'up'|'down'` alanı.
+- **OTP sözleşmesi (`backend/src/auth/otp.ts` YENİ)** — `generateOtp()` `crypto.randomInt(100_000, 1_000_000)` (off-by-one düzeltildi), `otpSendKey`/`otpRateKey`, `OtpRecord {code, attempts}`, `tryAcquireSendSlot` (`SET NX EX 60` atomik), `storeOtp` (`SET EX 300`). Sabitler `OTP_TTL_SEC=300`, `OTP_RATE_LIMIT_SEC=60`.
+- **`POST /auth/otp/send` (`backend/src/routes/auth-otp-send.ts` YENİ)** — doğrula (`parseTrPhone`) → rate slot (atomik) → OTP üret → Redis'e yaz → `createSmsProvider` (MockSmsProvider) `sendOtp` → `otp_sent` audit (telefon subject hash, `metadata.ip`). 400 invalid_phone / 429 rate_limited + `Retry-After: 60` / 200 `{success, expiresInSec}`. Kullanıcı-yönelik mesajlar i18n (`errors.json` `auth.otpRateLimited` eklendi).
+- **Test izolasyonu (`backend/test/redis.ts` YENİ + `build-test-server.ts`)** — `createTestRedis()` gerçek Redis 7 + per-suite `keyPrefix` (Testcontainers değil — DECISIONS Karar 5). `buildTestServer` redis enjekte eder + `closeRedis` döner. `healthz.test.ts` + `internal-dev-otp.test.ts` yeni server imzasına uyarlandı.
+
+**Test Sonucu:** backend **70 PASS** (önceki 63 + 6 auth-otp-send + 1 healthz redis-down). `auth-otp-send.test.ts` 6 senaryo: 200 Redis/dev_otp_log/audit tutarlılık, 400 yabancı numara, 400 boş body, 429 ikinci send + Retry-After, 60sn-sonrası (kilit silinerek) 200, concurrent-100 → tek 200. PII redaction MockSmsProvider'a delege edildiğinden `mock-sms-provider.test.ts` (TASK-1.17) kapsamını miras alır. typecheck + lint + format temiz. shared 41 + mobile 30 regresyon yeşil.
+
+**Karar Noktası (DECISIONS "TASK-1.18"):** Test izolasyonu için Testcontainers yerine gerçek Redis + keyPrefix (Postgres izolasyon kararının devamı, ortam Docker daemon'ı desteklemiyor). Gerçek Redis TTL fake-timer ile ilerletilemediğinden "1dk sonra" senaryosu rate kilidi `del()` ile simüle edildi.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-30

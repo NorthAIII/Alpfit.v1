@@ -260,7 +260,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.15 | TASK-1.15 | ✅ Tamamlandı | Soft delete + 30 gün retention job |
 | 1.16 | TASK-1.16 | ✅ Tamamlandı | Backblaze B2 yedek + restore drill prosedürü (dokümantasyon teslim; B2 hesap + cron deploy + ilk drill kullanıcı follow-up) |
 | 1.17 | TASK-1.17 | ✅ Tamamlandı | Mock SMS provider interface + dev_otp_log (SmsProvider + MockSmsProvider + factory + dev OTP lookup endpoint) |
-| 1.18 | TASK-1.18 | ⬜ Bekliyor | OTP send endpoint (rate limit + Redis) |
+| 1.18 | TASK-1.18 | ✅ Tamamlandı | OTP send endpoint (rate limit + Redis) — POST /auth/otp/send + Redis storage/TTL + atomik SET NX rate limit + healthz Redis PING |
 | 1.19 | TASK-1.19 | ⬜ Bekliyor | OTP verify endpoint + brute force (5 hatalı = 15dk kilit) |
 | 1.20 | TASK-1.20 | ⬜ Bekliyor | JWT access token + auth middleware + profil create |
 | 1.21 | TASK-1.21 | ⬜ Bekliyor | Refresh token rotation (30 gün + replay detection) |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-30 — TASK-1.28 ✅ (SIRA DIŞI, kullanıcı onaylı): KVKK rıza ekranı (`mobile/app/auth/kvkk.tsx`) — iki ayrı tickbox (zorunlu KVKK aydınlatma + opsiyonel sağlık verisi), scroll placeholder metin, inline Checkbox (Pressable, dış paket yok), "Devam" sadece zorunlu tickbox aktifken. Consent `router.push('/auth/profile', params)` ile taşınır (store altyapısı yok). `kvkk.json` camelCase placeholder + `textVersion`. 7 test + snapshot, mobile 30 PASS. ⚠️ Çalışma ağacında commit edilmemiş TASK-1.18 backend WIP (otp.ts/redis/auth-otp-send.ts) bulundu — dokunulmadı.
+**Son Güncelleme:** 2026-05-30 — TASK-1.18 ✅: OTP send endpoint (`POST /auth/otp/send`) — telefon doğrula → atomik `SET NX EX 60` rate limit → `crypto.randomInt` 6 hane OTP → Redis `otp:send:` TTL 300 → MockSmsProvider → `otp_sent` audit. Redis backend'e tanıtıldı (`redis/client.ts`, `app.redis`, `/healthz` Redis PING + `redis` alanı); test izolasyonu gerçek Redis 7 + per-suite keyPrefix (Testcontainers değil). backend 70 PASS (63+7), shared 41 + mobile 30 regresyon yeşil.

@@ -9,6 +9,28 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.18: OTP Send Endpoint — Redis Storage + Telefon-Bazlı Rate Limit + Gerçek-Redis Test İzolasyonu
+
+**Bağlam:** F1.1 PRD: "6 haneli OTP SMS gönderilir, 5 dakika geçerli, 1 dakika sonra 'Yeniden gönder' aktif". `POST /auth/otp/send` bu akışın backend tarafı. OTP storage için TTL + hız gerekir (her istekte DB yazıp cron'la temizlemek yerine); rate limit için atomik bir "1dk'da 1 send" garantisi gerekir. Redis bu task'ta tanıtılıyor (`REDIS_URL` env + devcontainer servisi zaten mevcuttu).
+
+**Karar 1 — OTP storage + rate limit Redis'te (kalıcı kayıt değil).** `otp:send:<phoneE164>` → `{ code, attempts: 0 }` JSON, TTL 300sn (otomatik expire, ayrı purge yok). Rate limit `otp:rate:<phoneE164>` → `SET NX EX 60`: set başarısız (zaten var) → 429 + `Retry-After: 60`. `SET NX` **atomik** → concurrent 100 send tek telefonda yalnızca 1 kazanır (test ile doğrulandı). Tarihsel kalıcı kayıt Redis'te DEĞİL — `dev_otp_log` (TASK-1.17) + `audit_log` (TASK-1.14).
+- *Alternatif (red):* OTP'yi sadece Postgres'te tutmak — TTL manuel cron temizliği + rate limit için ekstra sorgu/lock; Redis NX tek satırda atomik + TTL otomatik.
+
+**Karar 2 — Kod üretimi `crypto.randomInt(100_000, 1_000_000)`.** Güvenli rastgele (QUALITY §2; `Math.random` yasak). Üst sınır dışlandığı için 999999'u kapsamak adına `1_000_000` verildi — task taslağının `999_999` değeri off-by-one'dı (999999 hiç üretilmezdi), düzeltildi.
+
+**Karar 3 — Bilgi sızdırmama: send aşamasında telefon varlığı kontrolü YOK.** Geçersiz/TR-dışı numara → 400 `invalid_phone` (generic). "Bu telefon zaten kayıtlı, giriş yap" yönlendirmesi **verify** tarafında (TASK-1.19). Brute-force kilidi (5 hatalı → 15dk) de verify'de. Bu task yalnızca **send** + telefon-bazlı rate limit.
+
+**Karar 4 — Redis lifecycle `db/prisma.ts` desenini birebir izler.** `createRedisClient(url, opts?)` (her çağrı yeni instance) + `getRedis(url)` (production singleton); `server.ts` `opts.redis ?? getRedis(env.REDIS_URL)` ile çözer ve `app.redis`'i decorate eder. ioredis bir EventEmitter olduğundan dinlenmeyen `error` event'i Node'da throw eder → server `redis.on('error', …)` ile pino'ya loglar (redact PII'yi maskeler). `/healthz` Redis PING ekler: db **veya** redis down → `degraded` + 503, payload'a `redis: 'up'|'down'` alanı.
+
+**Karar 5 — Test izolasyonu: gerçek Redis 7 + per-suite `keyPrefix` (Testcontainers DEĞİL).** "Backend Test İzolasyonu: Per-Suite Postgres" (2026-05-29) kararının Redis karşılığı — Testcontainers Docker daemon gerektirir (aynı gerekçeyle reddedildi); devcontainer'daki gerçek Redis servisine bağlanılır, her suite `test:<rastgele>:` keyPrefix'i alır (paralel suite çakışmaz). Artık anahtarlar TTL ile temizlenir; teardown yalnızca `quit()`. **Gerçek Redis TTL'i fake-timer ile ilerletilemez** → "1dk sonra yeniden send" senaryosu rate kilidini `del()` ile silerek deterministik simüle edilir. `test/redis.ts` `createTestRedis()` helper'ı; testler client'ı server'a enjekte eder (route + test aynı prefixli client → çift-prefix tuzağı yok).
+- *Task taslağından sapma:* Task "Testcontainers Redis 7" diyordu; ortam Docker daemon'ı desteklemediği için (Postgres'te alınmış mevcut karar) gerçek-servis yaklaşımı izlendi.
+
+**Test:** backend 70 PASS (önceki 63 + 6 auth-otp-send: 200 tutarlılık / 400 yabancı / 400 boş body / 429 rate / 60sn-sonrası 200 / concurrent-100 + 1 healthz redis-down). PII redaction route seviyesinde tekrarlanmadı — MockSmsProvider'a delege edildiği için `mock-sms-provider.test.ts` (TASK-1.17) kapsamını miras alır. typecheck + lint + format temiz. shared 41 + mobile 30 regresyon yeşil.
+
+**Sonuç:** OTP send akışı uçtan uca; verify (TASK-1.19) `otp:send:` kaydını okuyup `attempts` sayacını kullanacak. Redis backend'e tanıtıldı — sonraki rate-limit/session işleri aynı client'ı kullanır.
+
+---
+
 ### 2026-05-30 — TASK-1.17: SMS Provider Interface + Driver Pattern + dev_otp_log + Dev OTP Lookup
 
 **Bağlam:** M1 Auth, telefon + SMS OTP üzerine kurulu. Gerçek SMS provider (Netgsm/Twilio) kararı `TECH-STACK.md`'de ve entegrasyonu Yakın 5 (UAT + Pilot) öncesi. Geliştirme/staging boyunca gerçek SMS'e ihtiyaç yok — ama OTP gönderim kodu (TASK-1.18+) provider'a bağımlı yazılırsa Yakın 5'te dağınık değişiklik gerekir. Bu task SMS katmanını **şimdiden** soyutlar; sonradan provider eklemek tek dosya değişikliği olur ([[ilkeler]] §"Kalıcılık önceliği").

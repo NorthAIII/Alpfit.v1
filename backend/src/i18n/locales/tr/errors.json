@@ -7,6 +7,7 @@
   },
   "auth": {
     "otpInvalid": "Kod hatalı veya süresi doldu.",
+    "otpRateLimited": "Bir dakikada yalnızca bir kez kod isteyebilirsin.",
     "otpTooManyAttempts": "Çok fazla deneme. Lütfen daha sonra tekrar dene.",
     "tokenInvalid": "Yetkilendirme geçersiz.",
     "tokenExpired": "Oturumun sona erdi.",

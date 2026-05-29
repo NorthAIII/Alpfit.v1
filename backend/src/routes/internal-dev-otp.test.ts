@@ -12,6 +12,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildTestServer, type TestServer } from '../../test/build-test-server.js';
 import { createTestDatabase, dropTestDatabase, type TestDatabase } from '../../test/db.js';
+import { createTestRedis, type TestRedis } from '../../test/redis.js';
 import { loadEnv } from '../config/env.js';
 import { createPrismaClient, type PrismaClient } from '../db/prisma.js';
 import { buildServer } from '../server.js';
@@ -30,6 +31,7 @@ describe('TASK-1.17 — dev OTP lookup (dev mode, token configured)', () => {
   let testDb: TestDatabase;
   let app: FastifyInstance;
   let prisma: PrismaClient;
+  let testRedis: TestRedis;
 
   beforeAll(async () => {
     testDb = await createTestDatabase();
@@ -40,12 +42,14 @@ describe('TASK-1.17 — dev OTP lookup (dev mode, token configured)', () => {
       ADMIN_INTERNAL_TOKEN: ADMIN_TOKEN,
     });
     prisma = createPrismaClient(testDb.databaseUrl);
-    app = await buildServer({ env, logger: false, prisma });
+    testRedis = createTestRedis();
+    app = await buildServer({ env, logger: false, prisma, redis: testRedis.redis });
   });
 
   afterAll(async () => {
     await app.close();
     await prisma.$disconnect();
+    await testRedis.cleanup();
     await dropTestDatabase(testDb.databaseName);
   });
 
@@ -108,6 +112,7 @@ describe('TASK-1.17 — dev OTP lookup (production → 404)', () => {
   let testDb: TestDatabase;
   let app: FastifyInstance;
   let prisma: PrismaClient;
+  let testRedis: TestRedis;
 
   beforeAll(async () => {
     testDb = await createTestDatabase();
@@ -118,12 +123,14 @@ describe('TASK-1.17 — dev OTP lookup (production → 404)', () => {
       ADMIN_INTERNAL_TOKEN: ADMIN_TOKEN,
     });
     prisma = createPrismaClient(testDb.databaseUrl);
-    app = await buildServer({ env, logger: false, prisma });
+    testRedis = createTestRedis();
+    app = await buildServer({ env, logger: false, prisma, redis: testRedis.redis });
   });
 
   afterAll(async () => {
     await app.close();
     await prisma.$disconnect();
+    await testRedis.cleanup();
     await dropTestDatabase(testDb.databaseName);
   });
 
@@ -153,6 +160,7 @@ describe('TASK-1.17 — dev OTP lookup (token unconfigured → 503)', () => {
   afterAll(async () => {
     await server.app.close();
     await server.prisma.$disconnect();
+    await server.closeRedis();
     await dropTestDatabase(testDb.databaseName);
   });
 
