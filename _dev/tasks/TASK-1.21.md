@@ -86,9 +86,9 @@ Discuss-phase: "30 gün cihaz hatırlama varsayılan açık". Research-phase Tuz
   - Dosya: `backend/src/routes/auth-profile.ts` (UPDATE), `backend/src/routes/auth-otp-verify.ts` (UPDATE)
 
 - [ ] **5. AuditLog event'leri**
-  - `AuditEventType` enum extend: `refresh_rotated`, `refresh_replay_detected`, `refresh_expired`
-  - Migration: `pnpm prisma migrate dev --name audit_refresh_events`
-  - Dosya: `backend/prisma/schema.prisma` (UPDATE), migration
+  - `refresh_rotated`, `refresh_replay_detected`, `refresh_expired` event tipleri TASK-1.14 enum'unda tanımlı — hazır kullanılır.
+  - Rotation başarılı → `refresh_rotated`; replay attack → `refresh_replay_detected`; expired → `refresh_expired`
+  - Metadata: familyId hash (PII whitelist'te)
 
 - [ ] **6. Integration testler**
   - `backend/src/routes/auth-refresh.test.ts`:
@@ -114,8 +114,7 @@ backend/
 ├── prisma/
 │   ├── schema.prisma                                          # GÜNCELLE
 │   └── migrations/
-│       ├── <ts>_refresh_token/migration.sql                   # YENİ
-│       └── <ts>_audit_refresh_events/migration.sql            # YENİ
+│       └── <ts>_refresh_token/migration.sql                   # YENİ
 └── src/
     ├── auth/
     │   └── refresh-token.ts                                   # YENİ

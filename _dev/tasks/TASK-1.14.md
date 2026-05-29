@@ -76,12 +76,19 @@ Discuss-phase rıza ekran kararı: tek ekran, iki tickbox — KVKK aydınlatma (
     enum AuditEventType {
       user_created
       user_login
+      user_logout
       user_logout_all
+      otp_sent
+      otp_verified
+      otp_verify_failed
       consent_granted
       consent_revoked
       invitation_created
       invitation_accepted
       member_removed
+      refresh_rotated
+      refresh_replay_detected
+      refresh_expired
       retention_purge
       // v1'de bu kadar; v1.5+ ölçüm/yemek event'leri eklenir
     }

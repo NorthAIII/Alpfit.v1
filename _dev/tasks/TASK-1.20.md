@@ -103,7 +103,7 @@ backend/
     │   └── middleware.test.ts                            # YENİ
     └── routes/
         ├── auth-otp-verify.ts                            # GÜNCELLE (JWT response existing user)
-        └── auth-profile.ts                               # YENİ
+        ├── auth-profile.ts                               # YENİ
         └── auth-profile.test.ts                          # YENİ
 ```
 

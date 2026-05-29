@@ -56,16 +56,11 @@ F1.1 PRD: "6 haneli OTP kod SMS gönderilir, Kod 5 dakika geçerli, 1 dakika son
   - Rate limit kontrolü: `SET NX otp:rate:<phone> '1' EX 60` — set başarısız (zaten varsa) → 429 "Bir dakikada bir kod isteyebilirsiniz" + `Retry-After: 60`
   - OTP üretilir, Redis'e yazılır (`otp:send:<phone>` TTL 300)
   - `MockSmsProvider.sendOtp(phone, code, 300)` çağrılır
-  - AuditLog `user_login` event (eventType yeniden `otp_sent` daha açık; TASK-1.14 enum'a eklenmeli — **karar noktası**)
+  - AuditLog `otp_sent` event (enum TASK-1.14'te tanımlı, hazır kullanılır)
   - Response: `{ success: true, expiresInSec: 300 }`
   - Dosya: `backend/src/routes/auth-otp-send.ts`
 
-- [ ] **4. TASK-1.14 enum extend kararı**
-  - `AuditEventType` enum'a `otp_sent`, `otp_verify_failed`, `otp_verified` eklenir (TASK-1.14'te v1 listesi vardı, otp event'leri eksikti)
-  - Migration: `pnpm prisma migrate dev --name audit_otp_events`
-  - Dosya: `backend/prisma/schema.prisma` (UPDATE), migration
-
-- [ ] **5. Integration testler**
+- [ ] **4. Integration testler**
   - `backend/src/routes/auth-otp-send.test.ts`:
     - Geçerli TR telefon → 200, Redis'te `otp:send:...` var, dev_otp_log row'u var
     - Geçersiz telefon (+1) → 400 zod hata
@@ -74,7 +69,7 @@ F1.1 PRD: "6 haneli OTP kod SMS gönderilir, Kod 5 dakika geçerli, 1 dakika son
   - Test rate limit için `vi.useFakeTimers()` + ioredis-mock veya Testcontainers Redis
   - Dosya: `backend/src/routes/auth-otp-send.test.ts`
 
-- [ ] **6. Test setup: Redis container**
+- [ ] **5. Test setup: Redis container**
   - `backend/test/db-container.ts` extend — `startTestRedis()` Testcontainers Redis 7
   - Test setup'ta her suite kendi Redis'ini alır
   - Dosya: `backend/test/db-container.ts` (UPDATE), `backend/test/setup.ts` (UPDATE)
@@ -86,9 +81,6 @@ F1.1 PRD: "6 haneli OTP kod SMS gönderilir, Kod 5 dakika geçerli, 1 dakika son
 ```
 backend/
 ├── package.json                                            # GÜNCELLE
-├── prisma/
-│   ├── schema.prisma                                       # GÜNCELLE (audit enum)
-│   └── migrations/<ts>_audit_otp_events/migration.sql      # YENİ
 ├── test/
 │   ├── db-container.ts                                     # GÜNCELLE (Redis)
 │   └── setup.ts                                            # GÜNCELLE
@@ -128,7 +120,6 @@ backend/
 
 ## Karar Noktaları
 
-- **AuditEventType enum extend:** TASK-1.14'teki enum'a `otp_sent`, `otp_verify_failed`, `otp_verified` eklenir. Yeni migration. Kullanıcıya teyit ettir.
 - **`Retry-After` header:** Standart HTTP convention; mobile UI bu header'a göre 60s countdown gösterir.
 
 ---

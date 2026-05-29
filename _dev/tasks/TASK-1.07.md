@@ -115,12 +115,14 @@ backend/
 
 ## Test Kriterleri
 
-- [ ] `pnpm -F @alpfit/mobile test` (TASK-1.08 sonrası) — i18n smoke test PASS (örn. `expect(t('common.continue')).toBe('Devam')`)
-- [ ] `pnpm -F @alpfit/backend test` — `t('sms.otp', { code: '482931' })` doğru interpolation döner
-- [ ] Eksik anahtar (`t('common.nonexistent')`) dev mode'da hata fırlatır, production mode'da fallback verir
+- [ ] `pnpm -F @alpfit/mobile typecheck` hatasız geçer (i18n init + provider import edilebilir)
+- [ ] `pnpm -F @alpfit/backend test` — `t('sms.otp', { code: '482931' })` doğru interpolation döner (backend Vitest TASK-1.04'te kurulu, test bu task'ta yazılabilir)
+- [ ] Mobile boot smoke (manuel `pnpm -F mobile exec expo start`) — i18n provider initialize olur, landing screen TR string'ini key'den çeker
 - [ ] Type-safe typecheck: `t('unknown.key')` typecheck FAIL eder
-- [ ] TR karakter (`ş, ğ, ı, ç, İ`) JSON'dan render edilirken doğru görünür (visual + snapshot test)
-- [ ] Mobile boot'ta i18n provider wrap çalışır, "Merhaba Alpfit" (TASK-1.05 landing) i18n key'inden çekilir hale gelir
+- [ ] TR karakter (`ş, ğ, ı, ç, İ`) JSON'dan editor'de doğru görünür (UTF-8 encoding)
+- [ ] Eksik anahtar handler dev'de throw, prod'da fallback to key (kod inceleme + runtime smoke ile doğrulanır; Jest tabanlı test TASK-1.08'in görevi)
+
+> **Not:** Mobile Jest test runner TASK-1.08'de kuruluyor. Bu task'ın mobile tarafı **kod ve typecheck** ile tamamlanır; runtime test verification TASK-1.08'in i18n smoke testinde olur.
 
 ---
 

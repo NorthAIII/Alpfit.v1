@@ -105,7 +105,7 @@ _dev/docs/
 
 ## Dikkat Noktaları
 
-- **MSW (mobile mock):** `pnpm -F mobile add -D msw` — fetch'i intercept eder; gerçek backend gerek yok mobile smoke için.
+- **MSW (mobile mock):** TASK-1.08'de kurulu; bu task uçtan uca onboarding akışını mock'layacak handler'ları `mobile/test/msw/handlers.ts`'e ekler (paket kurulumu YOK).
 - **Backend integration testi süresi:** Testcontainers Postgres + Redis 2 container = 15-30s boot. Smoke testi 1-2 dakika tolerable.
 - **Staging smoke manuel adım:** Kullanıcının bizzat test cihazlarıyla yapması gerekiyor; rehber doküman yardımcı.
 - **PHASE-1 milestone karşılaştırması:** Bu task'ın PASS olması faz milestone'unun karşılandığının göstergesi. Verify-phase'de (UAT) gerçek kullanıcı senaryosuyla tekrar doğrulanır.

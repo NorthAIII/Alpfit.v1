@@ -4,7 +4,7 @@
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
-**Bağımlılıklar:** TASK-1.13, TASK-1.14
+**Bağımlılıklar:** TASK-1.03, TASK-1.04
 
 ---
 

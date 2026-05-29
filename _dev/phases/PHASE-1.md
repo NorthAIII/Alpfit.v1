@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — plan-phase 1 tamamlandı; 34 task dokümanı oluşturuldu, sıradaki adım verify-plan.
+**Son Güncelleme:** 2026-05-29 — verify-plan 1 tamamlandı; 3 mekanik + 5 yapısal düzeltme uygulandı; sıradaki adım run-task ile TASK-1.01.

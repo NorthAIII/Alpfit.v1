@@ -55,15 +55,12 @@ F1.1 PRD: "Telefon numarası TR formatında girilir (+90 5XX XXX XX XX), inline 
 - [ ] **3. Devam butonu aksiyonu**
   - Telefon E.164'e parse edilir (`+905551234567`)
   - Onboarding store'a kaydedilir
-  - **Akış kararı:** Mevcut user kontrolü için ne yapıyoruz?
-    - Seçenek A: Backend `GET /auth/exists?phone=...` endpoint (yeni, eklenmeli)
-    - Seçenek B: Telefon ekranında kontrol yapmadan KVKK rıza ekranına geç; OTP verify aşamasında mevcut user → 409 → login akışına yönlendir
-    - **Önerim B** (sade, ek endpoint yok, KVKK ihlali riski sıfır — telefon var/yok sızdırmıyoruz). F1.1 PRD: "Bu telefon zaten kayıtlı, giriş yap" yönlendirmesi verify sonrası gelir.
-  - Sonraki ekran: KVKK rıza (`/auth/kvkk`) — yeni kullanıcı akışı
-  - Mevcut kullanıcı akışı: telefon → OTP → JWT direkt (KVKK rıza ekranı atlanır; user'ın `kvkkConsentAt` zaten var)
-    - Bu durumu yönetmek için: telefon ekranından **KVKK ekranı atlayıp OTP'ye gitme**, OTP verify response'unda `userExists` kontrol et + KVKK ekranı sadece `userExists: false` ise göster
-    - **Akış basitleşmesi:** Yeni vs mevcut user → OTP send/verify sonrasında ayrılır; bu ekran sadece telefon validate + OTP send tetikleme
-  - **Akış yeniden düzenleme:** Bu ekranda OTP send çağrısı (`POST /auth/otp/send` — TASK-1.18) yapılır, sonra OTP ekranına geçilir. KVKK rıza ekranı OTP verify sonrasında, sadece yeni kullanıcılarda.
+  - `POST /auth/otp/send` (TASK-1.18) çağrılır
+  - Başarılı → OTP ekranına (`/auth/otp`) navigate
+  - 429 → countdown UI (alt görev 4)
+  - **Mevcut user / yeni user ayrımı bu ekranda YAPILMAZ** — KVKK ihlali yaratabilecek "bu telefon var mı?" sızıntısını önlemek için telefon kontrolü yapılmaz. Yeni vs mevcut ayrımı OTP verify response'undaki `isNew` field'ından (TASK-1.20) yapılır:
+    - Mevcut user → verify response'unda direkt access+refresh token → home'a
+    - Yeni user → KVKK ekranına (TASK-1.28), sonra profil (TASK-1.30)
   - Dosya: `mobile/app/auth/phone.tsx` (UPDATE)
 
 - [ ] **4. Hata durumları**
@@ -106,9 +103,7 @@ mobile/
 
 ## Dikkat Noktaları
 
-- **Akış sade kalsın:** Telefon → KVKK ekranı atla → OTP send → OTP ekranı → verify (yeni kullanıcı için KVKK rıza ekranı verify sonrası). Bu akış değişikliği TASK-1.28 (KVKK ekranı) ve TASK-1.29 (OTP ekranı) bağımlılığını yeniden düzenler — bu task **akış kararını** netleştiriyor.
-- **Aslında F1.1 PRD'de:** "SMS OTP sonrası, profil formundan önce KVKK aydınlatma + sağlık verisi açık rıza ekranı çıkar". → **KVKK ekranı OTP verify sonrası**, yeni kullanıcılarda. Bu akış doğru — telefon → OTP send → OTP gir → verify → (yeni ise) KVKK rıza → profil → login; (mevcut ise) verify → login direkt.
-- **Akış güncellemesi:** Bu task'ta telefon ekranı OTP send'i tetikler; KVKK ekranı (TASK-1.28) ve profil ekranı (TASK-1.30) verify sonrası akışına bağlanır. TASK numara sırası doğru ama bağımlılıklar yeniden gözden geçirilmeli (verify-plan aşamasında).
+- **Akış (F1.1 PRD ile uyumlu):** Telefon → OTP send → OTP ekranı → verify → (yeni user ise) KVKK rıza → profil → login; (mevcut user ise) verify → home direkt. Bu task telefon validate + OTP send tetiklemeden sorumlu; sonraki ayrım OTP verify response'unda yapılır.
 - **TR mobil hat prefix:** 5XX kontrolü (libphonenumber-js TR ile yapar).
 
 ---

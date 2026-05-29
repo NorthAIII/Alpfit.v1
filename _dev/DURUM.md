@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — plan-phase 1: 34 task dokümanı oluşturuldu (M0 altyapı 1.01-1.16 + M1 Auth backend 1.17-1.25 + M1 Mobile UI 1.26-1.34); sıradaki adım verify-plan.
+**Son Güncelleme:** 2026-05-29 — verify-plan 1: 3 mekanik düzeltme + 5 yapısal iyileştirme uygulandı (TASK-1.14 enum konsolidasyonu, TASK-1.08 MSW kurulumu, TASK-1.07 test paradoksu, TASK-1.27 akış metinleri, TASK-1.06 shared vitest config); sıradaki adım run-task.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
-**Adım:** verify-plan
-**İlerleme:** 0/34 task — plan-phase tamamlandı (34 task dokümanı yazıldı); sıradaki adım `/devflow:verify-plan 1` ile plan review
+**Adım:** task
+**İlerleme:** 0/34 task — verify-plan tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.01'i çalıştırmak
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** Yok — plan-phase tamamlandı, sıradaki adım verify-plan (plan review oturumu).
+**Task:** TASK-1.01 — Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier + shared/)
 **Durum:** ⬜ Bekliyor
-**İlerleme:** Bir sonraki oturumda `/devflow:verify-plan 1` çalıştırılacak.
+**İlerleme:** Bir sonraki oturumda `/devflow:run-task` ile çalıştırılacak.
 
 ---
 
@@ -80,11 +80,11 @@ Henüz tamamlanmış task yok.
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — verify-plan 1'de plan review yapılacak
+**Aktif Task:** TASK-1.01 — Monorepo iskeleti
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — plan-phase 1: 34 task dokümanı oluşturuldu (M0 altyapı 1.01-1.16 + M1 Auth backend 1.17-1.25 + M1 Mobile UI 1.26-1.34); sıradaki adım verify-plan.
+**Son Güncelleme:** 2026-05-29 — verify-plan 1: 3 mekanik düzeltme + 5 yapısal iyileştirme uygulandı (TASK-1.14 enum konsolidasyonu, TASK-1.08 MSW kurulumu, TASK-1.07 test paradoksu, TASK-1.27 akış metinleri, TASK-1.06 shared vitest config); sıradaki adım run-task.

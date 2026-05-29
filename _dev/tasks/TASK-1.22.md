@@ -40,7 +40,7 @@ F1.1 PRD: "'Çıkış yap' butonu Ayarlar'da; 'Tüm cihazlardan çıkış' opsiy
   - Body: `{ refreshToken: string }` (gerekiyor — hangi cihazın token'ı revoke edilecek)
   - Token hash lookup; user ID match doğrulanır (başka user'ın token'ı revoke edilemez)
   - `revokedAt = now`, `revokedReason = 'logout'`
-  - AuditLog `user_logout` event (TASK-1.14 enum'a `user_logout` eklenir — TASK-1.14'te zaten var mı kontrol edilecek; varsa kullan)
+  - AuditLog `user_logout` event (TASK-1.14 enum'unda tanımlı, hazır kullanılır)
   - Response: 204 No Content
   - Dosya: `backend/src/routes/auth-logout.ts`
 
@@ -82,7 +82,6 @@ backend/
 
 - **Access token logout sonrası 15dk hala geçerli:** Stateless JWT'nin doğal davranışı. Mobile'da logout sonrası UI hemen kapanır (token storage silinir); ama theoretical olarak access token süresi dolana kadar API erişimi mümkün. Kabul edilebilir trade-off (15dk pencere); kritik invalidation gerekirse blacklist (jti) eklenir.
 - **Logout sırasında refresh token gönderme:** Body'de açık mı? Yes — mobile current refresh'i ile request atar. Alternatif: server-side last-used tracking ile current device tahmin etmek (kompleks; v1'de basit body parametresi).
-- **TASK-1.14 enum kontrol:** `user_logout` enum'a TASK-1.14'te eklenmemiş olabilir; ek migration: `pnpm prisma migrate dev --name audit_logout_events`.
 - **AuditLog metadata:** Logout-all'da kaç token revoke edildi (sayı) metadata'da; PII yok.
 
 ---

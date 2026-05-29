@@ -36,15 +36,18 @@ Research-phase mobile için Jest + RTL seçti (E2E Maestro Yakın 5'te). Discuss
 
 ## Alt Görevler
 
-- [ ] **1. Jest + RTL kurulumu**
-  - `pnpm -F @alpfit/mobile add -D jest jest-expo @testing-library/react-native @testing-library/jest-native react-test-renderer @types/jest`
+- [ ] **1. Jest + RTL + MSW kurulumu**
+  - `pnpm -F @alpfit/mobile add -D jest jest-expo @testing-library/react-native @testing-library/jest-native react-test-renderer @types/jest msw whatwg-fetch`
   - `mobile/jest.config.js` — `preset: 'jest-expo'`, `setupFilesAfterEach: ['@testing-library/jest-native/extend-expect']`, transform ignore patterns (Expo modülleri)
   - Dosya: `mobile/jest.config.js`, `mobile/package.json` (deps + scripts)
 
 - [ ] **2. Test setup (global)**
-  - `mobile/test/setup.ts` — i18n init wrap helper, react-native mock'ları (gerekirse Expo modülleri için manual mock)
+  - `mobile/test/setup.ts` — i18n init wrap helper, react-native mock'ları (gerekirse Expo modülleri için manual mock), MSW server start/stop hooks (beforeAll/afterEach/afterAll)
   - `mobile/test/render-with-providers.tsx` — custom render: `<I18nextProvider>` + Expo Router stub + tema provider (gelecekte) wrap'ler
-  - Dosya: `mobile/test/setup.ts`, `mobile/test/render-with-providers.tsx`
+  - `mobile/test/msw/server.ts` — `setupServer(...handlers)` Node Server instance
+  - `mobile/test/msw/handlers.ts` — boş default handler dizisi (sonraki UI task'ları kendi handler'larını ekler — pattern bu task'ta kurulur)
+  - `mobile/test/msw/README.md` — handler ekleme pattern'i (yeni UI task → kendi handler dosyası → suite-level `server.use(...)` ile inject)
+  - Dosya: `mobile/test/setup.ts`, `mobile/test/render-with-providers.tsx`, `mobile/test/msw/*`
 
 - [ ] **3. İlk component testi: landing screen**
   - `mobile/app/index.test.tsx` — `<Index />` render edildiğinde "Merhaba Alpfit" string'i (i18n key'inden) DOM'da görünür
@@ -71,7 +74,11 @@ mobile/
 ├── test/
 │   ├── setup.ts                     # YENİ
 │   ├── render-with-providers.tsx    # YENİ
-│   └── README.md                    # YENİ
+│   ├── README.md                    # YENİ
+│   └── msw/
+│       ├── server.ts                # YENİ
+│       ├── handlers.ts              # YENİ
+│       └── README.md                # YENİ
 └── app/
     └── index.test.tsx               # YENİ
 ```

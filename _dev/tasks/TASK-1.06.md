@@ -84,7 +84,14 @@ JS `'İ'.toLowerCase() === 'i̇'` (Unicode I-with-dot) — Türkçe "İ" → "i"
   - Test: bir dosyada ham `'X'.toLowerCase()` yaz, `pnpm lint` FAIL eder
   - Dosya: `eslint.config.js` (UPDATE)
 
-- [ ] **6. Backend + mobile entry'lerinden import edilebilirlik smoke**
+- [ ] **6. shared/ Vitest config (test runner)**
+  - `shared/vitest.config.ts` — ayrı config, `environment: 'node'`, default reporter (backend gibi)
+  - `shared/package.json` script: `"test": "vitest run"`, `"test:watch": "vitest"`
+  - Dev deps: `pnpm -F @alpfit/shared add -D vitest @vitest/coverage-v8`
+  - Karar: ayrı `shared/vitest.config.ts` (backend'in `vitest.config.ts`'sinden bağımsız) — paket bağımsızlığı için ([[ilkeler]] §"Kalıcılık önceliği")
+  - Dosya: `shared/vitest.config.ts`, `shared/package.json`
+
+- [ ] **7. Backend + mobile entry'lerinden import edilebilirlik smoke**
   - `backend/src/server.ts` veya helper'ında `import { trLower } from '@alpfit/shared'` çalışır
   - `mobile/app/index.tsx`'te aynı import çalışır
   - Compile + typecheck'te alias düzgün resolve eder
@@ -96,7 +103,8 @@ JS `'İ'.toLowerCase() === 'i̇'` (Unicode I-with-dot) — Türkçe "İ" → "i"
 
 ```
 shared/
-├── package.json                # GÜNCELLE (libphonenumber-js, date-fns)
+├── package.json                # GÜNCELLE (libphonenumber-js, date-fns, vitest)
+├── vitest.config.ts            # YENİ
 └── src/
     ├── index.ts                # GÜNCELLE (re-export)
     ├── locale.ts               # YENİ
@@ -138,7 +146,7 @@ _dev/MEMORY.md                  # GÜNCELLE (index pointer)
 
 ## Karar Noktaları
 
-- **shared/ test runner:** Ayrı `shared/vitest.config.ts` (backend gibi) mı, yoksa root'tan global Vitest mi? → Ayrı önereyim, paket bağımsızlığı için daha sağlam ([[ilkeler]] §"Kalıcılık önceliği").
+> shared/ Vitest config (ayrı `shared/vitest.config.ts`) kararı onaylandı (verify-plan oturumu) — alt görev 6'da uygulanır. Açık karar noktası kalmadı.
 
 ---
 

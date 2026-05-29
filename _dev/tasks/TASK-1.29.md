@@ -95,6 +95,7 @@ F1.1 PRD: "6 haneli OTP", "Kod 5 dakika geçerli, 1 dakika sonra 'Yeniden gönde
 
 ```
 mobile/
+├── .env.example                            # GÜNCELLE (EXPO_PUBLIC_DEV_OTP_LOOKUP)
 ├── app/auth/
 │   ├── otp.tsx                             # YENİ
 │   └── otp.test.tsx                        # YENİ
