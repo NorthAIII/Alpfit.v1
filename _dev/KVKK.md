@@ -126,4 +126,20 @@ KVKK Madde 6 sağlık verisini **özel nitelikli kişisel veri** olarak tanımla
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 2: KVKK boş şablon olarak oluşturuldu (5 doldurulacak bölüm + hukuki danışman süreci listelendi).
+## Üçüncü Taraf Sözleşmeler (Standart Sözleşme — SCC) — TODO
+
+KVKK m.9 reformu (7499 sayılı Kanun, 01.06.2024) sonrası yurt dışı veri aktarımı için **Standart Sözleşme (SCC) imzası** zorunlu — Kasım 2025 itibarıyla hiçbir ülke için yeterlilik kararı yok. AB'de hostlanan servisler için bile SCC imzalanmalı.
+
+**TODO (Yakın 4 öncesi, hukuki danışman ile birlikte):**
+
+- [ ] **Hetzner Cloud Standart Sözleşme imzası** — Backend + Postgres + Redis Hetzner Nuremberg'de (`_dev/memory/staging-infra.md`). SCC metni Hetzner DPA'sı kapsamında mevcut; hukuki danışman onayı + Kıvanç imzası.
+- [ ] **Squarespace DNS Standart Sözleşme** — `kiwiailab.com` DNS Squarespace'te (US). DNS verisi sadece A record + CNAME (PII içermez ama metadata olarak kabul edilebilir); hukuki danışmana sor.
+- [ ] **GitHub Actions** — CI/CD build/test sürecinde repo kodu Microsoft (US) sunucularında işleniyor. Genelde geliştirme metadata SCC kapsamı dışında ama sağlık verisi test fixture'ı asla CI'a girmemeli (zaten yok).
+- [ ] **SMS provider (Yakın 4 — TASK-1.17/1.18)** — Twilio (US) mı Netgsm (TR) mi kararı SCC gerekliliğini değiştirir. PRD-refine'da.
+- [ ] **Push provider** (Yakın 3) — FCM (Google US) zorunlu Android için; APNs (Apple US) zorunlu iOS için. SCC + push payload'ında PII olmaması (sadece üye ID hash + event tipi).
+- [ ] **Backblaze B2 yedek** (TASK-1.16) — US-West (Sacramento) varsayılan; AB region (`eu-central-003`, Amsterdam) tercih edilmeli + SCC.
+- [ ] **Sentry** (TASK-1.11/1.12) — EU Frankfurt residency seçildi (DECISIONS 2026-05-29 "Observability: Sentry Developer"); EU veri merkezi SCC gerektirebilir, sözleşme metnine bak.
+
+---
+
+**Son Güncelleme:** 2026-05-29 — TASK-1.10: Üçüncü taraf SCC TODO bölümü eklendi (Hetzner + Squarespace + GitHub + SMS + Push + Backblaze + Sentry).

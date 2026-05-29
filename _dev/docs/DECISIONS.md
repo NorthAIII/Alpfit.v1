@@ -9,6 +9,60 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — TASK-1.10 Staging Deploy: Coolify Yerine Docker Compose + bunker-nginx Subdomain Proxy (Shared VPS)
+
+**Bağlam:** TASK-1.10 başlarken kullanıcı maliyet optimizasyonu için var olan Hetzner CPX32 sunucusunu (178.104.140.36, Nuremberg, `ops.kiwiailab.com`) Alpfit staging için de kullanmak istedi. Sunucuda halihazırda Bunker projesi (11 Docker container: nginx:alpine 80/443'ü tutuyor, Next.js dashboard 3000, n8n 5678, Postgres 15, Redis 7, Qdrant, Ollama, Adminer, Umami) çalışıyor. SSH ile keşif yapıldı (Senaryo A: Bunker tamamen Docker'da, bare metal nginx yok); 80/443 portları `bunker-nginx` container'ı tarafından tutuluyor. RAM 7.6 GB → 5.2 GB serbest, disk 150 GB → 34 GB serbest (%77 dolu), swap 0. Üst karar (2026-05-29 Hosting+Staging DECISIONS) "Hetzner Cloud + Coolify, Falkenstein/Nuremberg" diyordu — sunucu zaten Hetzner Nuremberg, AB konum gereği korunuyor; sapma yalnızca **orkestrasyon katmanı** (Coolify yerine docker-compose) ve **paylaşımlı VPS** boyutunda.
+
+**Seçenekler:**
+
+1. **Yeni CPX22 aç (~€10/ay) — Coolify temiz kurulum** — Task doc'un öngördüğü orijinal yol. İki proje tamamen izole, Coolify avantajları korunur. Maliyet artışı.
+2. **Mevcut sunucuya Coolify kur (8080/8443) + bunker-nginx ile manuel routing** — Coolify Traefik'i default 80/443 yerine alternatif portta. bunker-nginx önde reverse proxy. Karmaşık install + iki reverse proxy.
+3. **Bunker'ı Coolify'a taşı** — Önce Coolify kurulumu sonra Bunker compose'unu Coolify'a import. Bunker kesintisi + multi-tenant veri riski + emek.
+4. **Coolify'sız: docker-compose + bunker-nginx subdomain proxy + GitHub Actions SSH deploy** — Backend Dockerfile + `/opt/alpfit/docker-compose.yml` (postgres17 + redis7 + backend) + bunker-nginx'e `alpfit-staging.kiwiailab.com` server block + GH Actions `appleboy/ssh-action` ile `docker compose pull && up -d`. Bunker'a sıfır dokunma.
+
+**Karar:** **Seçenek 4 — Coolify'sız docker-compose.** Kullanıcı `AskUserQuestion` ile onayladı (CLAUDE.md feedback §"Varsayım Yok").
+
+**Tamamlayıcı uygulama kararları:**
+
+- **Staging subdomain:** `alpfit-staging.kiwiailab.com` (DNS: Squarespace A record → 178.104.140.36). Yakın 5'te `alpfit.app` alındığında staging buraya taşınır; geçici subdomain disposable.
+- **Backend Dockerfile** (`backend/Dockerfile`) — Multi-stage: `node:22-bookworm` builder (pnpm install --frozen-lockfile + shared build + prisma generate + tsc) + `node:22-bookworm-slim` runner (sadece dist + production node_modules). Non-root user, `dumb-init` PID 1.
+- **`docker-compose.staging.yml`** (`_ops/staging/docker-compose.yml`) — `alpfit-backend` (build context: repo root, env from `.env.staging`) + `alpfit-postgres` (postgres:17-alpine, named volume `alpfit-pgdata`, **portsuz** — sadece internal network) + `alpfit-redis` (redis:7-alpine, named volume `alpfit-redisdata`, portsuz). Healthcheck'ler her servis için. Restart policy `unless-stopped`. Internal docker network `alpfit-net`; bunker network'üne dokunulmaz.
+- **bunker-nginx config ekleme** — Bunker repo'sundaki nginx config'e yeni server block: `server_name alpfit-staging.kiwiailab.com`, Let's Encrypt sertifikası (bunker zaten certbot var muhtemelen), `location / { proxy_pass http://alpfit-backend:3000; }`. **Backend container bunker network'üne external attach edilir** (`networks: { default: { external: true, name: bunker_default } }` veya benzer) — bunker-nginx Alpfit'i hostname ile çağırabilsin diye. Bu manuel adım hetzner-staging-setup.md'de adım-adım.
+- **CI/CD — GitHub Actions** (`.github/workflows/deploy-staging.yml`) — Trigger: `push: main` (CI yeşil koşulu olarak `needs: [quality, shared, mobile, backend]` aynı workflow içinde değil; ayrı dosya, `workflow_run` ile chain). SSH-action: appleboy/ssh-action@v1, `host: 178.104.140.36`, `username: deploy` (ayrı düşük yetkili user; root değil), `key: ${{ secrets.STAGING_SSH_KEY }}`. Script: `cd /opt/alpfit && git pull && docker compose -f _ops/staging/docker-compose.yml --env-file .env.staging build && up -d && docker compose run --rm alpfit-backend pnpm prisma migrate deploy`.
+- **Swap (2 GB)** — `/swapfile` 2 GB, `swappiness=10`, `/etc/fstab` persistent. OOM koruması; iki proje 8 GB RAM paylaşacak.
+- **deploy user** — Root yerine `deploy` user; `/opt/alpfit` sahibi, docker group üyesi, `sudo` yok. GH Actions SSH key sadece bu user'a. Root SSH erişimi key-only kalır (zaten öyle).
+
+**Gerekçe (Seçenek 4):**
+
+- **Maliyet:** Ek sunucu yok (€10/ay tasarruf). İki demo proje paylaşımlı VPS'de mantıklı.
+- **Risk düşüklüğü:** Bunker'a hiç dokunulmuyor; Coolify install'ın Docker daemon'a yapacağı değişiklikler (daemon.json override, systemd unit, network plugin) **yok**. Mevcut 11 Bunker container'ı etkilenmiyor.
+- **Hareketli parça azlığı:** Coolify ~800 MB RAM + Traefik + UI + dahili Postgres = ek operasyon yüzeyi. Demo aşamasında değer üretmiyor.
+- **CI/CD zaten kurulu:** TASK-1.09'da GH Actions yeşil; deploy job eklemek küçük adım. Coolify webhook + dashboard öğrenmeye kıyasla daha az öğrenme eğrisi.
+- **[[ilkeler]] §"Kalıcılık önceliği":** docker-compose + nginx stack'i 10+ yıllık, vendor-neutral; Coolify (Mayıs 2026 itibarıyla 4 yaşında) zamanla yön değiştirebilir. Vendor lock azaltıldı.
+- **[[ilkeler]] §"Sır ve konfigürasyon yönetimi":** `.env.staging` `/opt/alpfit/.env.staging` ownership `deploy:deploy` `chmod 600`; repo'da `.env.staging.example`. Coolify env UI gibi opaque katman yok — env'in nerede olduğu net.
+
+**Tradeoff'lar:**
+
+- **Coolify avantajları kayıp:** Otomatik SSL, web UI ile env mgmt, deploy preview, rollback UI, log viewer. → Manuel: certbot komutu (bunker zaten kullanıyor olabilir), `.env.staging` SSH ile, `git checkout <prev-sha>` ile rollback, `docker compose logs -f` ile log. Demo ölçeğinde tolere edilir; v1.5 prod öncesi yeniden değerlendirilir.
+- **Bunker bağımlılığı:** bunker-nginx hayati — düşerse Alpfit de düşer. Tek SPOF (zaten Hetzner CPX32 SPOF olduğu için ek değil).
+- **Network external attach:** Alpfit backend bunker docker network'üne dahil olur → izolasyon yarı geçirgen. Bunker projesinden Alpfit DB'sine erişim mümkün (ama postgres portu external değil, sadece network içinden). KVKK açısından **iki proje aynı sunucuda zaten ortak**; network paylaşımı bunu artırmıyor. KVKK SCC notu KVKK.md'de TODO olarak takip ediliyor (Yakın 4 hukuki danışman).
+- **Disk %77 dolu:** Alpfit container imajları + Postgres veri ~5-10 GB ekleyecek. `_dev/memory/staging-infra.md`'de disk izleme notu; %85'i geçerse Hetzner volume eklenir veya Bunker temizlenir.
+
+**Risk + Mitigation:**
+
+- **Risk:** bunker-nginx config değişikliği yanlış yapılırsa Bunker düşer. **Mitigation:** Config ekleme sadece **yeni server block** (mevcut block'lara dokunma); önce `nginx -t` (container içinden) + `nginx -s reload`. Yedek: değişikliği rollback edebilmek için config dosyasının önce kopyası alınır.
+- **Risk:** GH Actions deploy script fail-fast olmazsa kısmi deploy. **Mitigation:** Script `set -euo pipefail`, her komut başarı zorunlu; migration fail olursa backend container restart loop'ta kalır, GH Actions step kırmızı.
+- **Risk:** `deploy` user yetkisi yetmez veya docker group olmaz → permission denied. **Mitigation:** hetzner-staging-setup.md'de user oluşturma + group ekleme + smoke `docker ps` adımları yazılı, ilk manuel deploy doğrular.
+- **Risk:** `prisma migrate deploy` ilk deploy'da boş şemada çalışır; migration dosyası TASK-1.03'te oluşturuldu. Sonraki migration'lar TASK-1.13'te (3 rol model) gelecek. **Mitigation:** Migration başarısızsa deploy fail; ilk deploy schema-only smoke (boş tablolar) yeterli.
+- **Risk:** Hetzner ödeme gecikmesi → sunucu suspend. **Mitigation:** Hetzner billing alert (kullanıcı sorumluluğu); Backblaze yedek TASK-1.16'da off-site garanti.
+- **Risk:** Bunker'ın bunker-postgres'i 5432'yi 0.0.0.0'da expose ediyor (keşifte görüldü) — güvenlik açığı ama **Bunker projesinin sorunu, Alpfit'in değil**. Memory'ye not düşülmedi (Alpfit bilgisi değil); kullanıcıya keşifte sözlü bildirildi.
+
+**Üst kararla ilişki:** 2026-05-29 "Hosting + Staging: Hetzner Cloud + Coolify" kararının **Coolify boyutu bu karar tarafından supersede edilir**; Hetzner + AB konum + tek-node SPOF kabulü + Backblaze yedek planı korunur. Üst karar tarihsel kayıt; pratikte bu DECISIONS girdisi yetkili (staging). Prod (v1 launch Yakın 5) ayrı sunucuda Coolify mi docker-compose mı kararı `prd-review` zamanı yeniden değerlendirilir.
+
+**İlgili Task/Faz:** TASK-1.10 (bu task) → TASK-1.11/1.12 (Sentry — staging deploy job'unda SENTRY_DSN env + source map upload) → TASK-1.13 (3 rol veri modeli — yeni migration staging `prisma migrate deploy` adımında otomatik uygulanır) → TASK-1.16 (Backblaze off-site yedek — Coolify built-in yok, manuel `pg_dump` cron + rclone gerekecek) → tüm sonraki backend task'ları (her main push staging'e deploy).
+
+---
+
 ### 2026-05-29 — CI PR Pipeline: 4 Paralel Job + Job-Container Postgres + Manuel Branch Protection
 
 **Bağlam:** TASK-1.09 — PHASE-1 §Kapsam Tartışması "her PR'da test+lint+typecheck otomatik, kırıksa merge bloke" + §Araştırma Tuzaklar #1.c (Prisma 7 `migrate dev`/`db push` artık `generate` çalıştırmıyor) mitigation'ı. Üst kararlar: GitHub Actions (research-phase tablosu), pnpm workspaces, Vitest+per-suite Postgres (TASK-1.04 DECISIONS), `node:22-bookworm` runtime, `postgres:17-alpine` (devcontainer ile aynı majör).

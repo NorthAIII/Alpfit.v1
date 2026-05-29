@@ -1,0 +1,79 @@
+name: Deploy Staging
+
+# Trigger: only after CI workflow succeeds on `main`.
+# Manual re-run also allowed (workflow_dispatch).
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: SSH deploy to Hetzner (shared VPS)
+    runs-on: ubuntu-latest
+    # Only deploy when the upstream CI run was successful AND it was a main-branch event.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    environment:
+      name: staging
+      url: https://alpfit-staging.kiwiailab.com
+    timeout-minutes: 15
+    steps:
+      - name: Resolve commit SHA
+        id: sha
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: 22
+          command_timeout: 12m
+          script: |
+            set -euo pipefail
+            cd /opt/alpfit
+            echo "===> fetching ${{ steps.sha.outputs.sha }}"
+            git fetch --depth=20 origin main
+            git reset --hard ${{ steps.sha.outputs.sha }}
+
+            cd _ops/staging
+            echo "===> building backend image"
+            docker compose --env-file .env.staging build alpfit-backend
+
+            echo "===> bringing stack up"
+            docker compose --env-file .env.staging up -d
+
+            echo "===> applying prisma migrations"
+            docker compose --env-file .env.staging exec -T alpfit-backend \
+              node_modules/.bin/prisma migrate deploy
+
+            echo "===> docker compose ps"
+            docker compose --env-file .env.staging ps
+
+            echo "===> healthz smoke (internal)"
+            for i in 1 2 3 4 5; do
+              if docker compose --env-file .env.staging exec -T alpfit-backend \
+                   node -e "require('http').get('http://127.0.0.1:3000/healthz',r=>{if(r.statusCode===200){process.exit(0)}else{process.exit(1)}}).on('error',()=>process.exit(1))"; then
+                echo "healthz OK"
+                exit 0
+              fi
+              echo "healthz attempt $i failed, retrying in 5s"
+              sleep 5
+            done
+            echo "healthz never returned 200"
+            exit 1

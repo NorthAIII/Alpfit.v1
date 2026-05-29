@@ -1,0 +1,47 @@
+# Build context cleanup for Alpfit Docker images.
+# Build context is repo root; this file shrinks it to what each Dockerfile needs.
+
+# ─── Always exclude (irrelevant or huge) ─────────────────────────────────
+.git
+.github
+.vscode
+.idea
+.claude
+.devcontainer
+
+# ─── DevFlow + project meta (not needed at runtime) ─────────────────────
+_dev
+CLAUDE.md
+CONTEXT-BRIEF.md
+README.md
+
+# ─── Workspace build artifacts (each stage rebuilds) ─────────────────────
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.nyc_output
+**/.tsbuildinfo
+**/tsconfig.tsbuildinfo
+**/__snapshots__
+
+# ─── Env files (only example variants ship in image) ────────────────────
+**/.env
+**/.env.*
+!**/.env.example
+!_ops/staging/.env.staging.example
+
+# ─── Mobile-specific (backend image doesn't need these) ─────────────────
+mobile/.expo
+mobile/.expo-export-smoke
+mobile/__tests__
+mobile/assets
+
+# ─── Logs / editor / OS ─────────────────────────────────────────────────
+**/*.log
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/.DS_Store
+**/Thumbs.db
+**/*.swp
+**/*.swo

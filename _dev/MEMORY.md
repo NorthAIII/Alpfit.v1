@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.06: TR locale util + ESLint kuralı disiplini eklendi (`tr-locale-util-zorunlu.md`).
+**Son Güncelleme:** 2026-05-29 — TASK-1.10: staging altyapısı (Hetzner CPX32 paylaşımlı VPS + docker-compose + bunker-nginx subdomain proxy) `staging-infra.md`'ye eklendi.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -30,6 +30,7 @@
 <!-- Environment, tooling, CI/CD, kalıcı operasyonel veri (VPS IP, repo path, folder yapısı) -->
 
 - [Referans: CONTEXT-BRIEF.md](memory/reference-context-brief.md) — `/workspaces/Alpfit.v1/CONTEXT-BRIEF.md` Alpfit'in PRD-öncesi tek kaynağı; host memory container'a mount EDİLMİYOR (2026-05-28 doğrulandı).
+- [Staging altyapısı: Hetzner CPX32 paylaşımlı VPS](memory/staging-infra.md) — `178.104.140.36` Nuremberg, Bunker projesiyle paylaşımlı; Alpfit `alpfit-staging.kiwiailab.com` (Squarespace DNS) → bunker-nginx → `alpfit-backend:3000` (docker-compose, Coolify YOK); deploy user + GH Actions SSH auto-deploy; sırlar `/opt/alpfit/_ops/staging/.env.staging`.
 
 ## Çapraz Öğrenimler
 

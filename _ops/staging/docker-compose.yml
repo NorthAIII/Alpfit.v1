@@ -1,0 +1,86 @@
+# Alpfit staging — docker-compose for shared Hetzner VPS (bunker + alpfit).
+# Deploy location: /opt/alpfit/_ops/staging/docker-compose.yml
+# Env file:        /opt/alpfit/_ops/staging/.env.staging  (chmod 600, owner deploy:deploy)
+#
+# Bunker network (`bunker_default` — verify with `docker network ls` on host)
+# is attached as external so bunker-nginx can reach `alpfit-backend:3000`.
+# Postgres + Redis stay on internal `alpfit-net` (no host port published).
+
+name: alpfit-staging
+
+services:
+  alpfit-backend:
+    container_name: alpfit-backend
+    image: alpfit-backend:staging
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env.staging
+    restart: unless-stopped
+    depends_on:
+      alpfit-postgres:
+        condition: service_healthy
+      alpfit-redis:
+        condition: service_healthy
+    networks:
+      - alpfit-net
+      - bunker-net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:3000/healthz',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  alpfit-postgres:
+    container_name: alpfit-postgres
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - alpfit-pgdata:/var/lib/postgresql/data
+    networks:
+      - alpfit-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  alpfit-redis:
+    container_name: alpfit-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - alpfit-redisdata:/data
+    networks:
+      - alpfit-net
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  alpfit-pgdata:
+    name: alpfit-pgdata
+  alpfit-redisdata:
+    name: alpfit-redisdata
+
+networks:
+  alpfit-net:
+    name: alpfit-net
+    driver: bridge
+  bunker-net:
+    # Bunker'ın docker network'ü. Adı SSH keşfinde doğrulanır:
+    #   docker network ls --filter name=bunker
+    # Bulunan ada göre name: alanı güncellenir.
+    external: true
+    name: bunker_default
