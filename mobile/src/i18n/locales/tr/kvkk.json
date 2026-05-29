@@ -1,13 +1,12 @@
 {
-  "headline": "Veri kullanımı ve onay",
-  "aydinlatmaMetni": "[Hukuki review bekliyor — Yakın 5 öncesi yerleşecek]",
-  "saglikVerisiAcikRiza": "[Hukuki review bekliyor — Yakın 5 öncesi yerleşecek]",
+  "title": "Devam etmeden önce",
+  "subtitle": "Lütfen aşağıdaki metni okuyup onayla",
+  "aydinlatmaMetni": "[KVKK Aydınlatma Metni — Hukuki review bekliyor. Yakın 5 öncesi yerleşecek.]\n\nBu uygulama 6698 sayılı KVKK ve KVKK Madde 6 (sağlık verisi) çerçevesinde işlenir. Detaylı metin için: alpfit.app/kvkk",
   "checkboxes": {
-    "aydinlatma": "KVKK aydınlatma metnini okudum, anladım.",
-    "saglikVerisi": "Boy, kilo, ölçüm ve yemek günlüğü gibi sağlık verilerimin işlenmesine açık rıza veriyorum."
+    "kvkk": "KVKK Aydınlatma Metnini okudum ve kabul ediyorum",
+    "saglik": "Sağlık verisi (ölçüm, yemek günlüğü) işlenmesine açık rızam vardır"
   },
-  "actions": {
-    "accept": "Kabul ediyorum ve devam et",
-    "viewFullText": "Tam metni görüntüle"
-  }
+  "infoOptional": "Sağlık verisi rızası vermesen de hesap açabilirsin ama ölçüm ve yemek günlüğü özelliklerini kullanamazsın. Sonradan ayarlardan değiştirebilirsin.",
+  "cta": "Devam",
+  "textVersion": "v2026-05-29-placeholder"
 }

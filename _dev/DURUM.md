@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.17 ✅: Mock SMS provider katmanı kuruldu — `SmsProvider` interface + `MockSmsProvider` (dev_otp_log'a yazar + pino redact'lı log) + `createSmsProvider` factory (env `SMS_PROVIDER` mock/live; live → Yakın 5 throw). `DevOtpLog` modeli + migration; `GET /internal/dev-otp/:phoneE164` dev OTP lookup (production→404, ADMIN_INTERNAL_TOKEN Bearer guard paylaşımlı, `extractBearer` → `routes/bearer.ts` DRY); OTP log/HTTP'ye `otpCode` adıyla gider (PII redact), ham `code` over-redaction önleme için listeye eklenmedi (DECISIONS "TASK-1.17"). Test: backend 63 PASS (52+11), shared 41 + mobile 23 regresyon, typecheck/lint/format temiz. Sıradaki TASK-1.18 OTP send endpoint (rate limit + Redis).
+**Son Güncelleme:** 2026-05-30 — TASK-1.28 ✅ (SIRA DIŞI, kullanıcı onaylı): KVKK rıza ekranı kuruldu — `mobile/app/auth/kvkk.tsx` iki ayrı tickbox (zorunlu KVKK aydınlatma + opsiyonel sağlık verisi), scroll placeholder metin, "Devam" sadece zorunlu tickbox işaretliyken aktif; inline Checkbox (Pressable, dış paket yok) + a11y rolleri. `kvkk.json` camelCase placeholder + `textVersion`. Consent store yerine `router.push('/auth/profile', params)` ile taşınır (store altyapısı yok, onaysız paket eklenmedi). mobile 30 PASS (23+7), typecheck/eslint/prettier (kendi dosyaları) temiz. ⚠️ Çalışma ağacında TASK-1.18 backend WIP (otp.ts/redis/auth-otp-send.ts) commit edilmeden duruyor — dokunulmadı, commit yalnızca 1.28 dosyaları.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 17/34 task tamam; sıradaki TASK-1.18 OTP send endpoint (rate limit + Redis)
+**İlerleme:** 18/34 task tamam (TASK-1.28 sıra dışı tamamlandı); lineer sıradaki TASK-1.18 OTP send endpoint (rate limit + Redis)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.17 ✅ tamamlandı, sıradaki TASK-1.18 (OTP send endpoint — rate limit + Redis) henüz başlatılmadı.
+**Task:** Yok — TASK-1.28 ✅ (sıra dışı) tamamlandı. Lineer sıradaki TASK-1.18 (OTP send endpoint — rate limit + Redis) henüz başlatılmadı; çalışma ağacında bu task'a ait commit edilmemiş backend WIP duruyor (aşağıdaki uyarıya bak).
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.18` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.18` ile devam et. ⚠️ Önce çalışma ağacındaki commit edilmemiş TASK-1.18 WIP (`backend/src/auth/otp.ts`, `backend/src/redis/`, `backend/src/routes/auth-otp-send.ts` + package.json/lock/server.ts/healthz.ts/errors.json değişiklikleri) gözden geçirilmeli — bu işin nereden geldiği/ne kadar tamam olduğu netleşmeli.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 17 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 18 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -59,7 +59,9 @@
 | 1.16 | Backblaze B2 yedek + restore drill prosedürü | ✅ Tamamlandı |
 | 1.17 | Mock SMS provider interface + dev_otp_log | ✅ Tamamlandı |
 | 1.18–1.25 | M1 Auth backend (OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (8) |
-| 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
+| 1.26–1.27 | M1 Mobile UI (açılış ekranı, telefon girişi) | ⬜ Bekliyor (2) |
+| 1.28 | KVKK rıza ekranı (2 tickbox + placeholder metin) | ✅ Tamamlandı (sıra dışı) |
+| 1.29–1.34 | M1 Mobile UI + akış + smoke (OTP ekranı, profil, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (6) |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -81,6 +83,14 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.28 — KVKK rıza ekranı (2 tickbox + placeholder metin) (2026-05-30) ✅ — SIRA DIŞI
+
+- **`mobile/app/auth/kvkk.tsx` (YENİ)** — KVKK rıza ekranı: header + scroll edilebilir aydınlatma metin alanı (placeholder) + iki ayrı tickbox (inline `Checkbox`: `Pressable` + custom kutu/✓, dış paket yok) — (1) KVKK aydınlatma ZORUNLU, (2) sağlık verisi OPSİYONEL — + opsiyonel-rıza info + "Devam" CTA (sadece zorunlu tickbox işaretliyken aktif). A11y: checkbox/button/text/header rolleri + `accessibilityState`.
+- **`mobile/src/i18n/locales/tr/kvkk.json` (GÜNCELLE)** — TASK-1.07 placeholder dolduruldu; proje **camelCase** konvansiyonu (`title`/`subtitle`/`aydinlatmaMetni`/`checkboxes.{kvkk,saglik}`/`infoOptional`/`cta`/`textVersion`). Metin "[Hukuki review bekliyor]" işaretli — Yakın 5 öncesi hukuki onayla dolacak, mimari sabit.
+- **Consent taşıma — store yerine navigation params:** State-store altyapısı yok; onaysız paket eklememek için consent `router.push('/auth/profile', { params: {kvkkConsent, healthConsent, kvkkTextVersion} })` ile profil adımına (TASK-1.20) taşınır. Backend gönderim bu task'ta yok.
+- **`mobile/app/auth/kvkk.test.tsx` (YENİ)** — 7 test (disabled/enabled CTA, opsiyonel tickbox, false/true healthConsent navigate, checkbox toggle, snapshot); `expo-router` mock. Test ✅ — mobile **30 PASS** (23+7), typecheck temiz, kendi dosyaları eslint+prettier temiz.
+- **⚠️ Yabancı WIP:** Çalışma ağacında commit edilmemiş TASK-1.18 backend WIP bulundu (`otp.ts`/`redis/`/`auth-otp-send.ts` + paket/server değişiklikleri) — kullanıcı onayıyla dokunulmadı, commit yalnızca 1.28 dosyaları. Repo geneli `pnpm lint` o yabancı dosya (import/order) yüzünden kırmızı; 1.28 dosyaları temiz.
+
 ### TASK-1.17 — Mock SMS provider interface + dev_otp_log (2026-05-30) ✅
 
 - **SMS soyutlaması (`backend/src/sms/`)** — `SmsProvider` interface (`sendOtp(phoneE164, code, ttlSec)`) + `MockSmsProvider` (dev_otp_log'a yazar, pino'ya `otpCode` redact'lı log düşer, `mock-<uuid>` döner) + `createSmsProvider` factory (env `SMS_PROVIDER` mock/live; `live` → Yakın 5 throw, exhaustive `never` guard). Tüm SMS çağrıları interface'ten geçer → Live driver Yakın 5'te tek dosya + env değeriyle eklenir.
@@ -89,16 +99,6 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 - **PII (`shared/src/pii-fields.ts`)** — OTP log/HTTP'ye hep `otpCode` adıyla gider (zaten redact); generic `code` BİLİNÇLİ eklenmedi (pg/HTTP hata kodları log'da okunabilir kalsın — over-redaction önleme). DECISIONS "TASK-1.17" Karar 4.
 - Test ✅ — backend **63 PASS** (52 + 11 yeni: mock insert/log-redact 2 + factory mock/live 2 + endpoint dev/prod/auth/503 7). `pnpm typecheck` + `lint` + `format:check` temiz (1 import/order auto-fix). Regresyon: shared 41 + mobile 23 PASS. Karar noktası: console.log yerine pino logger (redact otomatik); PII field `otpCode` lehine açık gerekçeyle çözüldü.
 
-### TASK-1.16 — Backblaze B2 yedek + restore drill prosedürü (2026-05-30) ✅
-
-- **`_dev/docs/backblaze-setup.md` (YENİ)** — Backblaze B2 manuel hesap+bucket+lifecycle+key kurulum rehberi: EU Central region zorunluluğu (geri alınamaz ⚠️), bucket private + SSE-B2, lifecycle 30 gün hide + 1 gün delete (KVKK veri minimizasyonu), scoped application key (master key kullanılmaz), client-side encryption password+salt üretimi, Backblaze DPA imza formu, password manager pointer disiplini. Maliyet tablosu (~$0.02/ay v1) + sorun giderme + provider seçim matrisi (B2 vs AWS Glacier vs Hetzner Storage Box).
-- **`_dev/docs/staging-pg-backup-cron.md` (YENİ)** — rclone install (B2 native driver, S3-uyumlu form alternatif) + non-interaktif config yazımı (B2 + crypt overlay, `rclone obscure` ile config dosyasında obfuscation, plain values shell history'den temizlenir) + smoke test (`rclone lsd`/`ls`/`rcat`/`cat` ile crypt overlay doğrulama) + `/usr/local/bin/alpfit-pg-backup.sh` template (`pg_dump --format=custom --single-transaction --no-owner --no-privileges --compress=6` → `/var/backups/alpfit/staging-YYYY-MM-DD.dump`, sanity guard `<1KB exit 2`, `rclone copy alpfit-b2-crypt: --transfers=1 --retries=3`, local 7-gün `find -mtime +7 -delete`) + crontab `0 2 * * *` UTC (TR 05:00 — retention purge UTC 00:00'dan 2 saat sonra; purge edilmiş hali yedeklenir) + logrotate haftalık×8 + doğrulama checklist.
-- **`_dev/docs/restore-drill.md` (YENİ)** — Aylık restore drill prosedürü 7 adım: SSH `deploy@178.104.140.36` → rclone B2'den son dump indir (`head -c 5` PGDMP magic byte sanity check) → ayrı `restore_test` DB oluştur (production'a dokunulmaz) → `docker cp` + `docker compose exec pg_restore --exit-on-error --verbose` (elapsed ölçer) → smoke query (`\dt` tablo listesi + `User count` + `AuditLog count + MAX(occurredAt)` + `_prisma_migrations` son migration adı) → temizlik (`DROP DATABASE restore_test` + dump dosyası sil) → drill kaydı `staging-infra.md`'ye (✅/❌ + süre + smoke özet). Hızlı komut özeti aşağıda referans için.
-- **`_dev/memory/restore-drill-disiplini.md` (YENİ)** — Süreç Disiplinleri kategorisinde aylık drill kuralı: her ayın 15'i hedef tarih (hatırlama kolay, ay ortası garanti tetiklenir), prosedür restore-drill.md, drift sinyalleri (B2 bucket boyutu sabit, log FAIL ardışık, local buffer dünkü dump yok), aksilik → `/devflow:quick` task; faz review-phase'lerinde "son drill başarılı mı" kontrol; bu projeye özgü (DevFlow geneli değil → faz retrosu).
-- **`_dev/memory/staging-infra.md` UPDATE** — "B2 Off-Site Yedek" tablosu (provider/region/endpoint/bucket/key+encryption pointer'ları/lifecycle/local buffer/cron/script/log/DPA tarihi — TBD alanları kullanıcı follow-up'da doldurur) + "Restore Drill Kayıtları" boş bölüm + "Yedekleme" rehber link'lerine güncellendi + TODO 3 follow-up'a bölündü (B2 hesap, cron deploy, ilk drill).
-- **`_dev/MEMORY.md` + `_dev/KVKK.md` + `_dev/docs/DECISIONS.md`** — MEMORY index pointer `restore-drill-disiplini` + son güncelleme; KVKK "Üçüncü Taraf Sözleşmeler" listesinde B2 region kararı ✅ (eu-central-003 SCC + DPA savunulabilir, mekanizma özeti, ~$0.02/ay) + ayrı DPA TODO; DECISIONS.md "TASK-1.16" karar (5 seçenek matrisi: provider/mekanizma/encryption/lifecycle/drill sıklığı + 8 tamamlayıcı + 4 ILKELER gerekçe + 6 risk-mitigation + 6 follow-up kullanıcı manuel adımı).
-- Test kriterleri ✅ — `bash -n` script blokları temiz (backup script 59 satır + rclone config + drill snippet). Regresyon: backend 52 PASS + shared 41 PASS + mobile 23 PASS (snapshot dahil). `pnpm typecheck` (recursive) + `pnpm lint` + `pnpm format:check` temiz. AskUserQuestion 3 karar: (1) script + host crontab (önerilen, TASK-1.15 paterniyle), (2) B2 hesabı sonra kurulacak (manuel TODO), (3) ilk drill sonraya (kullanıcı kendisi yapar, memory'ye yazar). Follow-up: B2 hesap+bucket+key+DPA, rclone install+config+script deploy+crontab, ilk restore drill — sonuçlar `staging-infra.md`'ye yazılır.
-
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
 <!-- KURAL: "Son Tamamlanan Faz", "Son Tamamlanan Sprint" gibi ek özet bölümleri EKLEME — faz durum özeti PHASES.md'de, faz detayları PHASE-N.md'de. DURUM yalnızca aktif durum + son 2 task özeti. -->
@@ -106,8 +106,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.17 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.28 ✅ (sıra dışı) tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.18` (OTP send endpoint — rate limit + Redis)
+**Sıradaki:** `/devflow:run-task TASK-1.18` (OTP send endpoint — rate limit + Redis) ⚠️ commit edilmemiş backend WIP önce gözden geçirilmeli

@@ -1,0 +1,285 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`KvkkConsentScreen snapshot eşleşir (refactor güvencesi) 1`] = `
+<View
+  style={
+    {
+      "backgroundColor": "#0F1115",
+      "flex": 1,
+      "paddingBottom": 32,
+      "paddingHorizontal": 24,
+      "paddingTop": 64,
+    }
+  }
+>
+  <Text
+    accessibilityRole="header"
+    style={
+      {
+        "color": "#FFFFFF",
+        "fontSize": 24,
+        "fontWeight": "600",
+        "marginBottom": 8,
+      }
+    }
+  >
+    Devam etmeden önce
+  </Text>
+  <Text
+    style={
+      {
+        "color": "#9AA3B2",
+        "fontSize": 14,
+        "marginBottom": 16,
+      }
+    }
+  >
+    Lütfen aşağıdaki metni okuyup onayla
+  </Text>
+  <RCTScrollView
+    contentContainerStyle={
+      {
+        "paddingVertical": 16,
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#151922",
+        "borderColor": "#2A2F3A",
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "flex": 1,
+        "marginBottom": 20,
+        "paddingHorizontal": 16,
+      }
+    }
+  >
+    <View>
+      <Text
+        accessibilityRole="text"
+        style={
+          {
+            "color": "#C7CEDB",
+            "fontSize": 14,
+            "lineHeight": 21,
+          }
+        }
+      >
+        [KVKK Aydınlatma Metni — Hukuki review bekliyor. Yakın 5 öncesi yerleşecek.]
+
+Bu uygulama 6698 sayılı KVKK ve KVKK Madde 6 (sağlık verisi) çerçevesinde işlenir. Detaylı metin için: alpfit.app/kvkk
+      </Text>
+    </View>
+  </RCTScrollView>
+  <View
+    accessibilityLabel="KVKK Aydınlatma Metnini okudum ve kabul ediyorum"
+    accessibilityRole="checkbox"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": false,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "alignItems": "flex-start",
+        "flexDirection": "row",
+        "marginBottom": 14,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderColor": "#3A4150",
+            "borderRadius": 6,
+            "borderWidth": 2,
+            "height": 24,
+            "justifyContent": "center",
+            "marginRight": 12,
+            "width": 24,
+          },
+          false,
+        ]
+      }
+    />
+    <Text
+      style={
+        {
+          "color": "#E4E8EF",
+          "flex": 1,
+          "fontSize": 15,
+          "lineHeight": 21,
+        }
+      }
+    >
+      KVKK Aydınlatma Metnini okudum ve kabul ediyorum
+    </Text>
+  </View>
+  <View
+    accessibilityLabel="Sağlık verisi (ölçüm, yemek günlüğü) işlenmesine açık rızam vardır"
+    accessibilityRole="checkbox"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": false,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "alignItems": "flex-start",
+        "flexDirection": "row",
+        "marginBottom": 14,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderColor": "#3A4150",
+            "borderRadius": 6,
+            "borderWidth": 2,
+            "height": 24,
+            "justifyContent": "center",
+            "marginRight": 12,
+            "width": 24,
+          },
+          false,
+        ]
+      }
+    />
+    <Text
+      style={
+        {
+          "color": "#E4E8EF",
+          "flex": 1,
+          "fontSize": 15,
+          "lineHeight": 21,
+        }
+      }
+    >
+      Sağlık verisi (ölçüm, yemek günlüğü) işlenmesine açık rızam vardır
+    </Text>
+  </View>
+  <Text
+    style={
+      {
+        "color": "#9AA3B2",
+        "fontSize": 13,
+        "lineHeight": 19,
+        "marginBottom": 20,
+      }
+    }
+  >
+    Sağlık verisi rızası vermesen de hesap açabilirsin ama ölçüm ve yemek günlüğü özelliklerini kullanamazsın. Sonradan ayarlardan değiştirebilirsin.
+  </Text>
+  <View
+    accessibilityLabel="Devam"
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": true,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "alignItems": "center",
+          "backgroundColor": "#3B82F6",
+          "borderRadius": 10,
+          "paddingVertical": 16,
+        },
+        {
+          "backgroundColor": "#2A2F3A",
+        },
+      ]
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#FFFFFF",
+          "fontSize": 16,
+          "fontWeight": "600",
+        }
+      }
+    >
+      Devam
+    </Text>
+  </View>
+</View>
+`;

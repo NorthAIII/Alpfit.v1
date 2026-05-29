@@ -1,6 +1,6 @@
 # TASK-1.28: KVKK rıza ekranı (2 tickbox + placeholder metin)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -139,7 +139,25 @@ mobile/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `mobile/app/auth/kvkk.tsx` (YENİ) — KVKK rıza ekranı. Header (title + subtitle) + scroll edilebilir aydınlatma metin alanı (`ScrollView`, placeholder içerik) + iki ayrı tickbox (inline `Checkbox` component'i: `Pressable` + custom kutu/✓ ikonu, dış paket eklenmedi) + opsiyonel-rıza info metni + "Devam" CTA (sadece zorunlu KVKK tickbox işaretliyken aktif).
+- `mobile/src/i18n/locales/tr/kvkk.json` (GÜNCELLE) — TASK-1.07 placeholder'ı dolduruldu. Proje konvansiyonuna uyularak **camelCase** anahtarlar (auth.json/profile.json gibi): `title`, `subtitle`, `aydinlatmaMetni`, `checkboxes.{kvkk,saglik}`, `infoOptional`, `cta`, `textVersion: "v2026-05-29-placeholder"`. (Task dokümanındaki snake_case örnek JSON yerine mevcut camelCase konvansiyon izlendi.)
+- `mobile/app/auth/kvkk.test.tsx` (YENİ) — 7 test: (1) tickbox 1 işaretsiz → Devam disabled, (2) tickbox 1 işaretli → Devam aktif, (3) sağlık tickbox tek başına Devam'ı aktive etmez (opsiyonel), (4) KVKK+sağlık-yok → `healthConsent: 'false'` ile navigate, (5) KVKK+sağlık → `healthConsent: 'true'` ile navigate, (6) checkbox `accessibilityState.checked` toggle, (7) snapshot. `expo-router` `useRouter` mock'landı.
+- Accessibility: tickbox `accessibilityRole="checkbox"` + `accessibilityState={{checked}}` + `accessibilityLabel`; metin alanı `accessibilityRole="text"`; CTA `accessibilityRole="button"` + `accessibilityState={{disabled}}`; başlık `accessibilityRole="header"`.
+
+**Karar / Sapma Notları:**
+- **Consent taşıma — store yerine navigation params:** Alt görev #2 "onboarding store'da set" diyordu, ancak henüz state-store altyapısı (zustand vb.) yok. Şimdi store eklemek onaysız mimari/paket kararı olurdu (memory: feedback-no-assumptions). Bunun yerine consent (`kvkkConsent`/`healthConsent`/`kvkkTextVersion`) `router.push({ pathname: '/auth/profile', params })` ile profil adımına (TASK-1.20 `POST /auth/profile`) taşınıyor — bağımlılık eklemeyen, temiz expo-router pattern'i. Backend'e gönderim bu task'ta YOK (task kapsamıyla uyumlu).
+- **Sıra dışı çalıştırma:** TASK-1.18–1.27 atlanarak çalıştırıldı (kullanıcı onayı). Bağımlılıklar (1.07+1.08) tamam, ekran kendi başına test edilebilir — teknik engel olmadı.
+- **Yabancı WIP tespiti:** Çalışma ağacında TASK-1.18'e ait commit edilmemiş backend WIP bulundu (`otp.ts`, `redis/`, `auth-otp-send.ts` + paket değişiklikleri). Kullanıcı onayıyla **dokunulmadı**; commit yalnızca TASK-1.28 dosyalarını içerir (selektif `git add`). Repo geneli `pnpm lint` bu yabancı `auth-otp-send.ts` (import/order) yüzünden kırmızı — TASK-1.28 dosyaları lint'ten temiz.
+
+**Test Sonucu:**
+- `mobile` jest: **30 PASS** (önceki 23 + 7 yeni), 2 snapshot. `pnpm typecheck` (mobile) temiz — typedRoutes açık ama `.expo/types` generate edilmediğinden `/auth/profile` href permissive `string` olarak geçti.
+- TASK-1.28 dosyaları `eslint` + `prettier --check` temiz.
+
+**Kalan İşler:** Yok.
 
 ---
 
