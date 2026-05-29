@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — research-phase 1: TECH-STACK.md dolduruldu (Expo+Fastify+Prisma 7+Hetzner+Sentry); 5 mimari karar DECISIONS.md'ye eklendi; sıradaki adım plan-phase.
+**Son Güncelleme:** 2026-05-29 — plan-phase 1: 34 task dokümanı oluşturuldu (M0 altyapı 1.01-1.16 + M1 Auth backend 1.17-1.25 + M1 Mobile UI 1.26-1.34); sıradaki adım verify-plan.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
-**Adım:** plan
-**İlerleme:** 0/0 task — research-phase tamamlandı (TECH-STACK kararları verildi), task'lar plan-phase'de yazılacak
+**Adım:** verify-plan
+**İlerleme:** 0/34 task — plan-phase tamamlandı (34 task dokümanı yazıldı); sıradaki adım `/devflow:verify-plan 1` ile plan review
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,21 @@
 
 ## Aktif Task
 
-**Task:** Yok — research-phase tamamlandı, sıradaki adım plan-phase; task'lar burada yazılacak.
+**Task:** Yok — plan-phase tamamlandı, sıradaki adım verify-plan (plan review oturumu).
 **Durum:** ⬜ Bekliyor
-**İlerleme:** Bir sonraki oturumda `/devflow:plan-phase 1` çalıştırılacak.
+**İlerleme:** Bir sonraki oturumda `/devflow:verify-plan 1` çalıştırılacak.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-Henüz task yazılmadı — task'lar plan-phase 1'de yazılacak.
+34 task yazıldı, hiçbiri başlatılmadı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+
+| # | Task | Durum |
+|---|------|-------|
+| 1.01–1.16 | M0 Altyapı (monorepo, backend, mobile, test, CI, hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (16) |
+| 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
+| 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -74,11 +80,11 @@ Henüz tamamlanmış task yok.
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — plan-phase 1'de yazılacak
+**Aktif Task:** Yok — verify-plan 1'de plan review yapılacak
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — research-phase 1: TECH-STACK.md dolduruldu (Expo+Fastify+Prisma 7+Hetzner+Sentry); 5 mimari karar DECISIONS.md'ye eklendi; sıradaki adım plan-phase.
+**Son Güncelleme:** 2026-05-29 — plan-phase 1: 34 task dokümanı oluşturuldu (M0 altyapı 1.01-1.16 + M1 Auth backend 1.17-1.25 + M1 Mobile UI 1.26-1.34); sıradaki adım verify-plan.

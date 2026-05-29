@@ -239,10 +239,44 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 
 ## Task Listesi
 
-> Bu bölüm `/devflow:plan-phase 1` oturumunda doldurulacak.
+> Bu bölüm `/devflow:plan-phase 1` oturumunda (2026-05-29) dolduruldu — 34 task. Bağımlılık sırasıyla M0 altyapı → M1 Auth backend → M1 Mobile UI + akış → uçtan uca smoke.
 
 | # | Task | Durum | Açıklama |
 |---|------|-------|----------|
+| 1.01 | TASK-1.01 | ⬜ Bekliyor | Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier + shared/) |
+| 1.02 | TASK-1.02 | ⬜ Bekliyor | Backend Fastify iskeleti + zod env + healthcheck |
+| 1.03 | TASK-1.03 | ⬜ Bekliyor | Prisma 7 + adapter-pg + ilk migration + generate smoke |
+| 1.04 | TASK-1.04 | ⬜ Bekliyor | Backend test altyapısı (Vitest + Testcontainers) |
+| 1.05 | TASK-1.05 | ⬜ Bekliyor | Mobile Expo SDK 56 + Expo Router iskelet |
+| 1.06 | TASK-1.06 | ⬜ Bekliyor | TR locale util + lint kuralı (toLowerCase yasağı) |
+| 1.07 | TASK-1.07 | ⬜ Bekliyor | i18n shell (i18next mobile + backend, TR-only) |
+| 1.08 | TASK-1.08 | ⬜ Bekliyor | Mobile test altyapısı (Jest + RTL) |
+| 1.09 | TASK-1.09 | ⬜ Bekliyor | CI PR pipeline (GitHub Actions: test + lint + typecheck) |
+| 1.10 | TASK-1.10 | ⬜ Bekliyor | Hetzner+Coolify staging kurulumu + auto-deploy webhook |
+| 1.11 | TASK-1.11 | ⬜ Bekliyor | Backend Sentry + PII scrubber + KVKK test |
+| 1.12 | TASK-1.12 | ⬜ Bekliyor | Mobile Sentry crash reporting + PII scrubber |
+| 1.13 | TASK-1.13 | ⬜ Bekliyor | 3 rol veri modeli (User + role enum + ilişki tabloları) |
+| 1.14 | TASK-1.14 | ⬜ Bekliyor | KVKK consent schema + audit log |
+| 1.15 | TASK-1.15 | ⬜ Bekliyor | Soft delete + 30 gün retention job |
+| 1.16 | TASK-1.16 | ⬜ Bekliyor | Backblaze B2 yedek + restore drill prosedürü |
+| 1.17 | TASK-1.17 | ⬜ Bekliyor | Mock SMS provider interface + dev_otp_log |
+| 1.18 | TASK-1.18 | ⬜ Bekliyor | OTP send endpoint (rate limit + Redis) |
+| 1.19 | TASK-1.19 | ⬜ Bekliyor | OTP verify endpoint + brute force (5 hatalı = 15dk kilit) |
+| 1.20 | TASK-1.20 | ⬜ Bekliyor | JWT access token + auth middleware + profil create |
+| 1.21 | TASK-1.21 | ⬜ Bekliyor | Refresh token rotation (30 gün + replay detection) |
+| 1.22 | TASK-1.22 | ⬜ Bekliyor | Logout + tüm cihazlardan çıkış endpoints |
+| 1.23 | TASK-1.23 | ⬜ Bekliyor | PT davet linki üretim endpoint |
+| 1.24 | TASK-1.24 | ⬜ Bekliyor | Davet kabul endpoint (lazy expiry + PT-Member ilişki) |
+| 1.25 | TASK-1.25 | ⬜ Bekliyor | Deep link (Universal/App Link + .well-known/) |
+| 1.26 | TASK-1.26 | ⬜ Bekliyor | Açılış ekranı (rol seçimi + manuel davet kodu + deep link) |
+| 1.27 | TASK-1.27 | ⬜ Bekliyor | Telefon girişi ekranı (+90 inline validation) |
+| 1.28 | TASK-1.28 | ⬜ Bekliyor | KVKK rıza ekranı (2 tickbox + placeholder metin) |
+| 1.29 | TASK-1.29 | ⬜ Bekliyor | OTP girişi ekranı (timer + yeniden gönder + dev lookup) |
+| 1.30 | TASK-1.30 | ⬜ Bekliyor | Profil oluşturma ekranı (üye + PT) |
+| 1.31 | TASK-1.31 | ⬜ Bekliyor | PT "Üyeler" sekmesi UI (Bekleyen + Aktif + Linki kopyala + QR) |
+| 1.32 | TASK-1.32 | ⬜ Bekliyor | Davet kabul banner + liste real-time güncellemesi |
+| 1.33 | TASK-1.33 | ⬜ Bekliyor | 30 gün cihaz hatırlama (secure storage + auto-login) |
+| 1.34 | TASK-1.34 | ⬜ Bekliyor | Uçtan uca smoke testi (Mock SMS → OTP → profil → bağlanma) |
 
 **Durum simgeleri:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -275,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — discuss-phase 1 tamamlandı; kapsam tartışması yazıldı, 14 gri alan + 4 sahipsiz alan kararı kaydedildi.
+**Son Güncelleme:** 2026-05-29 — plan-phase 1 tamamlandı; 34 task dokümanı oluşturuldu, sıradaki adım verify-plan.
