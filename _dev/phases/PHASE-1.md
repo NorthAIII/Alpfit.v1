@@ -247,7 +247,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.02 | TASK-1.02 | ✅ Tamamlandı | Backend Fastify iskeleti + zod env + healthcheck |
 | 1.03 | TASK-1.03 | ✅ Tamamlandı | Prisma 7 + adapter-pg + ilk migration + generate smoke |
 | 1.04 | TASK-1.04 | ✅ Tamamlandı | Backend test altyapısı (Vitest + per-suite Postgres) |
-| 1.05 | TASK-1.05 | ⬜ Bekliyor | Mobile Expo SDK 56 + Expo Router iskelet |
+| 1.05 | TASK-1.05 | ✅ Tamamlandı | Mobile Expo SDK 56 + Expo Router iskelet |
 | 1.06 | TASK-1.06 | ⬜ Bekliyor | TR locale util + lint kuralı (toLowerCase yasağı) |
 | 1.07 | TASK-1.07 | ⬜ Bekliyor | i18n shell (i18next mobile + backend, TR-only) |
 | 1.08 | TASK-1.08 | ⬜ Bekliyor | Mobile test altyapısı (Jest + RTL) |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — TASK-1.04 ✅ (Vitest 4 + per-suite Postgres + healthz integration test 3 passed); Testcontainers araç boyutunda revize (DECISIONS); sıradaki TASK-1.05.
+**Son Güncelleme:** 2026-05-29 — TASK-1.05 ✅ (Expo SDK 56 + RN 0.85.3 + Expo Router + pnpm `node-linker=hoisted`; web bundle smoke 767 modül 1.1MB; typecheck/lint/format temiz; backend regresyonsuz); RN 0.81 → 0.85.3 versiyon revizyonu DECISIONS'ta; sıradaki TASK-1.06.

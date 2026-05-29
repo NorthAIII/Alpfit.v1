@@ -2,6 +2,7 @@
 import js from '@eslint/js';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -17,6 +18,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/build/**',
       '**/.expo/**',
+      '**/.expo-export-smoke/**',
       '**/coverage/**',
       '**/generated/**',
       '**/*.tsbuildinfo',
@@ -62,6 +64,21 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
+    },
+  },
+  // CommonJS configs (Expo's metro.config.js + babel.config.js, vb.) —
+  // require()/module/__dirname kullanır; tseslint recommended bunları yasaklar.
+  {
+    files: ['**/metro.config.js', '**/babel.config.js', '**/*.config.cjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   prettierConfig,

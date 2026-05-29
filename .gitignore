@@ -33,5 +33,8 @@ Thumbs.db
 coverage/
 .nyc_output/
 
-# Mobile (Expo — TASK-1.05'te aktive olur)
+# Mobile (Expo)
 .expo/
+.expo-export-smoke/
+# Expo Router otomatik tip dosyası (typedRoutes) — repo'da tutulmaz
+**/expo-env.d.ts.bak

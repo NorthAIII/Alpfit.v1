@@ -9,6 +9,61 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — Mobile Bootstrap: Expo SDK 56 + RN 0.85.3 + Expo Router + pnpm `node-linker=hoisted`
+
+**Bağlam:** TASK-1.05 mobile iskelet. Üst karar (research 2026-05-29 → Expo (React Native) + EAS Build) iki noktada implementation-time revize gerekti: (a) task doc + research notu "RN 0.81" yazıyordu ama Expo SDK 56'nın bundled native modules JSON'u (resmi pairing) `react-native: 0.85.3 + react: 19.2.3 + react-server-dom-webpack: ~19.2.4` zorluyor — RN 0.81 yüklemek peer-dep çatışması üretirdi (Expo SDK 55 ile pairlenirdi); (b) Expo + Metro + pnpm üçlüsünün klasik tuzağı (expo-modules-core gibi transitive native module Metro'nun flat resolution'undan göremiyor).
+
+**Seçenekler (RN version):**
+1. **Expo SDK 56 bundled (RN 0.85.3 + React 19.2.6)** — SDK 56'nın "blessed" pairing'i; New Arch zaten RN 0.82'den sonra zorunlu olduğundan `newArchEnabled: true` doğal; peer-dep çatışması yok.
+2. **Task doc'a sadık RN 0.81** — Expo 56 peer-dep matrisini tutmaz; install `--legacy-peer-deps` veya overrides gerektirir, runtime'da TurboModule/Fabric uyumsuzlukları çıkar.
+
+**Seçenekler (pnpm + Metro):**
+1. **mobile/`.npmrc` + `node-linker=hoisted`** — pnpm 8+ standardı, sadece mobile workspace'i flat node_modules'e çevirir; backend/shared default pnpm layout'ta kalır. Metro hierarchical lookup standart RN ekosistemi gibi çalışır.
+2. **`pnpm install --shamefully-hoist`** — Task'ın risk planındaki fallback; flag her install'da hatırlanmalı, kalıcı değil. `.npmrc` kalıcı + idiomatic.
+3. **Custom Metro resolver (`resolver.resolveRequest`)** — pnpm `.pnpm/<pkg>/node_modules/<pkg>` zincirini yakalayan custom resolver; community pattern ama bakım yükü.
+
+**Seçenekler (scaffold yöntemi):**
+1. **Manuel scaffold** — Dosyaları elle yaz (app.json, app.config.ts, app/_layout.tsx, app/index.tsx, babel/metro), `pnpm -F @alpfit/mobile add ...` ile pnpm lock korunur.
+2. **`pnpm create expo-app .`** — Klasör boş değil + npm install ile çağırır; mevcut workspace placeholder'ı üzerine yazar + pnpm lock yeniden generate gerekir.
+
+**Seçenekler (boot smoke):**
+1. **`expo export -p web --output-dir .expo-export-smoke`** — Metro tüm modüllere göre bundle yapar; iOS sim / Android emu olmadan dev container'da çalışır; bundle başarılı → import zinciri sağlam.
+2. **Sadece `expo config`** — Yalnızca config resolution; Metro bundle import zincirini test etmez.
+
+**Karar:** Üç seçenekte de **1**. Kullanıcı `AskUserQuestion` ile üçünü de onayladı (CLAUDE.md feedback §"Varsayım Yok"). Task doc'taki "RN 0.81" revize edildi; SDK 56 + RN 0.85.3 + React 19.2.6 (rsdw 19.2.4 peer üst-bound'unu da örtüştürür) kalıcı pairing.
+
+**Tamamlayıcı uygulama kararları:**
+- **`app.json` + `app.config.ts` ikili yapı** — `app.json` statik konfig (scheme `alpfit`, bundleIdentifier `app.alpfit.mobile`, `newArchEnabled: true`, `plugins: ["expo-router"]`, `experiments.typedRoutes: true`, `web.bundler: metro`); `app.config.ts` `EXPO_PUBLIC_*` env'leri okur ve `extra: { apiBaseUrl, sentryDsn }` olarak inject eder. Sır env değildir (EXPO_PUBLIC_ prefix bundle'a girer); Sentry DSN ve API base URL ortama göre değişir.
+- **`mobile/tsconfig.json` override paterni** — `extends: ../tsconfig.base.json` korunur (proje-geneli strict opsiyonlar: `noPropertyAccessFromIndexSignature`, `noUncheckedIndexedAccess` vb.); mobile-only override: `jsx: react-jsx`, `module: ESNext`, `moduleResolution: bundler`, `lib: [DOM, ESNext]`, `target: ESNext`, `allowJs: true`, `noEmit: true`, `types: [expo/types, react/canary]`. Base'in `noPropertyAccessFromIndexSignature` `process.env.X` syntax'ını yasaklıyor → `app.config.ts` `process.env['EXPO_PUBLIC_X']` bracket access kullanır.
+- **`mobile/babel.config.js`** — Minimum: `babel-preset-expo` (expo paketinin dep'i, ek install yok). `expo-router/babel` plugin'i SDK 50'den itibaren `babel-preset-expo` içinde gömülü.
+- **`mobile/metro.config.js`** — `getDefaultConfig(projectRoot)` + `watchFolders: [workspaceRoot]` (shared paketi Metro'nun watch ağına girer) + `resolver.nodeModulesPaths: [projectRoot/node_modules, workspaceRoot/node_modules]` (hoisted layout zaten flat çözüyor; bu satır savunma) + `disableHierarchicalLookup: true` (pnpm'in `.pnpm` symlink ağacına dalmasını engeller).
+- **`mobile/.npmrc` `node-linker=hoisted`** — Sadece mobile workspace; backend/shared etkilenmez. Devcontainer install ~20s, `expo export -p web` 4.2s (767 modül, 1.1MB bundle).
+- **ESLint config eklemesi** (`eslint.config.mjs`) — Expo'nun CommonJS config'leri (`metro.config.js`, `babel.config.js`) için ayrı section: `sourceType: 'commonjs'`, `globals.node`, `@typescript-eslint/no-require-imports: off`. `globals` paketi root devDep. `.expo-export-smoke/` ESLint + Prettier + git ignore'a eklendi.
+- **Asset stratejisi** — `assets/` (icon, splash) yok; Expo default placeholder'ları kullanılır. Brand asset'leri Yakın 5 launch öncesi tasarımla gelir (task doc karar noktası).
+- **Boot smoke verification** — Devcontainer'da iOS sim/Android emu yok. `pnpm exec expo export --platform web` Metro'nun tam bundle'ı yapabildiğini doğrular (767 modül resolve ✓). Native build'ler EAS Build ile Yakın 5'te (TASK-1.16 dışında bu fazda gerek yok).
+- **`expo-env.d.ts` repo'da tutuldu** — Expo CLI normalde `.gitignore`'a koyar ama proje strict tsconfig'ı reference gerektiriyor; minimal `/// <reference types="expo/types" />` ile sabit, auto-regen no-op.
+- **Root `package.json` `dev` script** — `pnpm -r --parallel run dev` mobile (`expo start`) + backend (`tsx watch`) eşzamanlı; "concurrently" gibi ek dep yok.
+
+**Gerekçe (RN 0.85.3):** [[ilkeler]] §"Kalıcılık önceliği" — Expo'nun bundled pairing'i SDK ile ileriye dönük garanti edilir (her SDK minor'ı bu pairing'i test etmiş yayınlar). RN 0.81 zorlamak Expo SDK 56'nın güvenliğinden çıkmak demek; runtime'da TurboModule/Fabric uyumsuzluk riski + her paket yükseltmesinde manuel peer dep yönetimi.
+
+**Gerekçe (hoisted linker):** [[ilkeler]] §"Kalıcılık önceliği" + RN ekosisteminin flat node_modules varsayımı = pnpm symlink ağacı uyumsuz; hoisted linker mobile için Yarn classic / npm gibi davranır, RN topluluğunun "olduğu gibi" sayılan layout'unu verir. Backend ve shared pnpm'in disk-verimli default'unda kalır — kayıp yok, yalnızca mobile için trade-off.
+
+**Tradeoff'lar:**
+- **Hoisted layout:** Mobile/node_modules ~50K dosya (vs pnpm default ~3K symlink); disk maliyeti var ama dev DX (Metro debug, package "where") ekosistem normuna döner.
+- **`app.json` + `app.config.ts` ikili:** Tek config dosyası daha az drift; ama statik (app.json — IDE auto-complete, Expo CLI direkt parse) + dinamik (app.config.ts — env injection) ayrımı production'da değer üretir.
+
+**Risk + Mitigation:**
+- **Risk:** Hoisted layout pnpm'in transitive dep çakışma uyarılarını gizler (mobile/node_modules'te tüm v-major'lar yan yana). **Mitigation:** Yeni paket eklerken `pnpm install` peer dep warning'lerini izle; Expo SDK upgrade'larda `expo install` kullan (SDK bundled versiyonu seçer).
+- **Risk:** Native module eklerken (örn. expo-secure-store TASK-1.33'te) New Arch + SDK 56 uyumu doğrulanmaz → runtime Fabric crash. **Mitigation:** Paket README'sinde "New Architecture supported" + Expo bundled native modules JSON'u referans; PHASE-1 §Araştırma Tuzaklar #2'ye disiplin yazılı.
+- **Risk:** `.expo-export-smoke/` artifact'i unutulup commit edilir. **Mitigation:** `.gitignore` + `.prettierignore` + ESLint ignore üçüne ekli; CI smoke ayrıca `--clear` flag'i ile cache reset.
+- **Risk:** `EXPO_PUBLIC_*` env'leri bundle'a girer; sır KOYULURsa public exposure. **Mitigation:** `.env.example`'da uyarı + `app.config.ts` yalnızca `apiBaseUrl` + `sentryDsn` (DSN public-by-design Sentry; backend write-only secret değildir). TASK-1.11 + TASK-1.12 Sentry kurulumunda DSN scoping doğrulanır.
+
+**Üst kararla ilişki:** Research 2026-05-29 "Mobile = Expo (React Native) + EAS Build" kararı korunur. "RN 0.81" satırı bu DECISIONS girdisi tarafından **versiyon boyutunda supersede** edilir (Expo SDK 56 → RN 0.85.3); PHASE-1 §Araştırma Bulguları tablosunda research kararı tarihsel kalır (kayıt).
+
+**İlgili Task/Faz:** TASK-1.05 (bu task) → TASK-1.06 (TR locale util + lint kuralı — mobile/.npmrc hoisted layout'unda `globals` paketinin ESLint config'ten görünmesi etkiler) → TASK-1.07 (i18n shell — mobile workspace'inde `i18next` + `react-i18next` install) → TASK-1.08 (Jest + RTL — Expo SDK 56 Jest preset entegrasyonu) → TASK-1.25 (Deep link `.well-known/` + EAS Hosting — Expo Router scheme'inin canlı kullanımı) → tüm sonraki mobile UI task'ları (1.26–1.34).
+
+---
+
 ### 2026-05-29 — Backend Test İzolasyonu: Per-Suite Postgres Database (Testcontainers'tan Sapma)
 
 **Bağlam:** TASK-1.04 backend test altyapısı. Üst karar (2026-05-29 research → Vitest + Testcontainers) bu task'ın devcontainer ortamında **Docker daemon olmadan** çalıştırılamayacağını kıyamadan keşfetmeden alınmıştı. Devcontainer (`.devcontainer/Dockerfile`) `mcr.microsoft.com/devcontainers/typescript-node` üstüne kurulu — Docker CLI yok, `/var/run/docker.sock` mount edilmemiş, `docker-in-docker` / `docker-outside-of-docker` feature'ı eklenmemiş. Testcontainers `GenericContainer.start()` Docker daemon'a TCP/socket bağlanır; daemon yoksa boot edemez.

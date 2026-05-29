@@ -3,6 +3,7 @@ dist
 build
 coverage
 .expo
+.expo-export-smoke
 **/generated/**
 *.tsbuildinfo
 pnpm-lock.yaml

@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Alpfit",
+    "slug": "alpfit-mobile",
+    "version": "0.0.0",
+    "scheme": "alpfit",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "app.alpfit.mobile",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "app.alpfit.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
