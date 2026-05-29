@@ -1,0 +1,18 @@
+node_modules
+dist
+build
+coverage
+.expo
+*.tsbuildinfo
+pnpm-lock.yaml
+
+# VCS + tooling
+.git
+.claude
+.devcontainer
+
+# DevFlow dokümanları + repo metni (markdown otonomu)
+_dev
+CONTEXT-BRIEF.md
+CLAUDE.md
+README.md

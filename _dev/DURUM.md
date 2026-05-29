@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — verify-plan 1: 3 mekanik düzeltme + 5 yapısal iyileştirme uygulandı (TASK-1.14 enum konsolidasyonu, TASK-1.08 MSW kurulumu, TASK-1.07 test paradoksu, TASK-1.27 akış metinleri, TASK-1.06 shared vitest config); sıradaki adım run-task.
+**Son Güncelleme:** 2026-05-29 — TASK-1.01 ✅: pnpm workspaces monorepo iskeleti (mobile/backend/shared), tsconfig.base strict NodeNext, ESLint flat + Prettier, 227 dep install, typecheck/lint/format temiz; sıradaki TASK-1.02.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 0/34 task — verify-plan tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.01'i çalıştırmak
+**İlerleme:** 1/34 task — TASK-1.01 tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.02 (Backend Fastify iskeleti)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,7 +29,7 @@
 
 ## Aktif Task
 
-**Task:** TASK-1.01 — Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier + shared/)
+**Task:** TASK-1.02 — Backend Fastify iskeleti + zod env + healthcheck
 **Durum:** ⬜ Bekliyor
 **İlerleme:** Bir sonraki oturumda `/devflow:run-task` ile çalıştırılacak.
 
@@ -37,11 +37,12 @@
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, hiçbiri başlatılmadı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 1 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
-| 1.01–1.16 | M0 Altyapı (monorepo, backend, mobile, test, CI, hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (16) |
+| 1.01 | Monorepo iskeleti | ✅ Tamamlandı |
+| 1.02–1.16 | M0 Altyapı (backend, mobile, test, CI, hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (15) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
@@ -65,7 +66,11 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-Henüz tamamlanmış task yok.
+### TASK-1.01 — Monorepo iskeleti (2026-05-29) ✅
+
+- pnpm workspaces (mobile/backend/shared) + Node 22 + packageManager lock; root `tsconfig.base.json` strict NodeNext + paths; ESLint flat + Prettier kuruldu
+- Devcontainer'a dokunulmadı (corepack zaten pnpm@latest aktif); ESLint config `.mjs` olarak isimlendirildi
+- Test kriterleri ✅ — typecheck/lint/format temiz; tsconfig extend zinciri ve `@alpfit/shared` workspace bağı doğrulandı (227 dep, 9.6s install)
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -80,11 +85,11 @@ Henüz tamamlanmış task yok.
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-1.01 — Monorepo iskeleti
+**Aktif Task:** TASK-1.02 — Backend Fastify iskeleti + zod env + healthcheck
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — verify-plan 1: 3 mekanik düzeltme + 5 yapısal iyileştirme uygulandı (TASK-1.14 enum konsolidasyonu, TASK-1.08 MSW kurulumu, TASK-1.07 test paradoksu, TASK-1.27 akış metinleri, TASK-1.06 shared vitest config); sıradaki adım run-task.
+**Son Güncelleme:** 2026-05-29 — TASK-1.01 ✅: pnpm workspaces monorepo iskeleti (mobile/backend/shared), tsconfig.base strict NodeNext, ESLint flat + Prettier, 227 dep install, typecheck/lint/format temiz; sıradaki TASK-1.02.

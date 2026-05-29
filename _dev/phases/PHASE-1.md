@@ -243,7 +243,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 
 | # | Task | Durum | Açıklama |
 |---|------|-------|----------|
-| 1.01 | TASK-1.01 | ⬜ Bekliyor | Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier + shared/) |
+| 1.01 | TASK-1.01 | ✅ Tamamlandı | Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier + shared/) |
 | 1.02 | TASK-1.02 | ⬜ Bekliyor | Backend Fastify iskeleti + zod env + healthcheck |
 | 1.03 | TASK-1.03 | ⬜ Bekliyor | Prisma 7 + adapter-pg + ilk migration + generate smoke |
 | 1.04 | TASK-1.04 | ⬜ Bekliyor | Backend test altyapısı (Vitest + Testcontainers) |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — verify-plan 1 tamamlandı; 3 mekanik + 5 yapısal düzeltme uygulandı; sıradaki adım run-task ile TASK-1.01.
+**Son Güncelleme:** 2026-05-29 — TASK-1.01 ✅ (monorepo iskeleti ayakta); sıradaki TASK-1.02.

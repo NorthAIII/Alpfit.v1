@@ -1,6 +1,6 @@
 # TASK-1.01: Monorepo iskeleti
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M0 — Çekirdek Altyapı (`modules/M0-cekirdek-altyapi.md`)
 **Feature:** M0 cross-cutting altyapı
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -36,35 +36,35 @@ Discuss-phase'de monorepo kararı verildi (tek geliştirici → atomic PR'lar, p
 
 ## Alt Görevler
 
-- [ ] **1. pnpm workspaces konfigürasyonu**
+- [x] **1. pnpm workspaces konfigürasyonu**
   - `pnpm-workspace.yaml` oluştur (`packages: ['mobile', 'backend', 'shared']`)
   - Kök `package.json`: `"private": true`, `"packageManager": "pnpm@<lock-edilmiş>"`, workspace script'leri (`typecheck`, `lint`, `format`, `test`)
   - Node `engines: ">=22"`
   - Dosya: `package.json`, `pnpm-workspace.yaml`, `.nvmrc` (22 LTS)
 
-- [ ] **2. TypeScript baseline**
+- [x] **2. TypeScript baseline**
   - `tsconfig.base.json` (root) — strict, target ES2022, moduleResolution NodeNext, paths alias (`@shared/*` → `shared/src/*`)
   - `mobile/tsconfig.json`, `backend/tsconfig.json`, `shared/tsconfig.json` base'i extend eder
   - Dosya: `tsconfig.base.json`, `*/tsconfig.json`
 
-- [ ] **3. ESLint + Prettier toolchain**
+- [x] **3. ESLint + Prettier toolchain**
   - ESLint flat config (eslint.config.js) — TypeScript, import order, no-restricted-syntax slot'u (toLowerCase yasağı sonraki task'ta eklenir)
   - Prettier config (`.prettierrc`) + `.prettierignore`
   - `pnpm lint` + `pnpm format` script'leri çalışır
   - Dosya: `eslint.config.js`, `.prettierrc`, `.prettierignore`
 
-- [ ] **4. shared/ paket iskelet**
+- [x] **4. shared/ paket iskelet**
   - `shared/package.json` — `name: "@alpfit/shared"`, sadece TypeScript export
   - `shared/src/index.ts` — boş re-export entry point
   - Dosya: `shared/package.json`, `shared/src/index.ts`
 
-- [ ] **5. mobile/ ve backend/ klasör placeholder'ları**
+- [x] **5. mobile/ ve backend/ klasör placeholder'ları**
   - `mobile/package.json` + `mobile/src/.gitkeep` (içeriği sonraki task'larda dolar — şimdilik boş paket)
   - `backend/package.json` + `backend/src/.gitkeep`
   - Bu task'ta uygulama kodu yok, sadece tsconfig + lint çalışsın diye iskelet
   - Dosya: `mobile/package.json`, `backend/package.json`
 
-- [ ] **6. .gitignore + .editorconfig**
+- [x] **6. .gitignore + .editorconfig**
   - `node_modules/`, `dist/`, `.env*` (örnek hariç), `*.log`, OS dosyaları
   - `.editorconfig` (LF, 2-space indent, utf-8)
   - Dosya: `.gitignore`, `.editorconfig`
@@ -113,12 +113,12 @@ Discuss-phase'de monorepo kararı verildi (tek geliştirici → atomic PR'lar, p
 
 ## Test Kriterleri
 
-- [ ] `pnpm install` hatasız tamamlanır, `pnpm-lock.yaml` oluşur
-- [ ] `pnpm typecheck` üç workspace'i de hatasız geçer (boş iskelet)
-- [ ] `pnpm lint` hatasız çalışır
-- [ ] `pnpm format --check` hatasız çalışır
-- [ ] `tsc --showConfig` ile mobile + backend tsconfig'lerinin base'i extend ettiği doğrulanır
-- [ ] `pnpm -F @alpfit/shared exec tsc --noEmit` çalışır (shared paket import edilebilir)
+- [x] `pnpm install` hatasız tamamlanır, `pnpm-lock.yaml` oluşur — 227 paket, 9.6s
+- [x] `pnpm typecheck` üç workspace'i de hatasız geçer (boş iskelet) — `pnpm -r --parallel run typecheck` 3/3 done
+- [x] `pnpm lint` hatasız çalışır — sıfır warning (eslint.config.mjs)
+- [x] `pnpm format:check` hatasız çalışır — "All matched files use Prettier code style"
+- [x] `tsc --showConfig` ile mobile + backend tsconfig'lerinin base'i extend ettiği doğrulanır — paths `@shared/*`, target ES2022, strict opsiyonlar üçünde de aynı
+- [x] `pnpm -F @alpfit/shared exec tsc --noEmit` çalışır — exit 0
 
 ---
 
@@ -138,18 +138,37 @@ Discuss-phase'de monorepo kararı verildi (tek geliştirici → atomic PR'lar, p
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (`feat(TASK-1.01): scaffold pnpm monorepo with tsconfig and lint`)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
-- [ ] PHASE-1.md task tablosu güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (`feat(TASK-1.01): scaffold pnpm monorepo with tsconfig and lint`)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
+- [x] PHASE-1.md task tablosu güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-29
+
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- Root `package.json` + `pnpm-workspace.yaml` + `.nvmrc` (Node 22, pnpm@10.11.0 packageManager lock)
+- `tsconfig.base.json` strict baseline (ES2022 + NodeNext + paths `@shared/*` → `shared/src/*` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes`); `shared/tsconfig.json` composite (project references için), `backend/` + `mobile/` base'i extend edip `shared`'a referans verir
+- ESLint flat config (`eslint.config.mjs`) — typescript-eslint recommended + import order + prettier-config; TASK-1.06 için TR locale (`toLowerCase`/`toUpperCase`) yasağı yorum-slot olarak işaretli
+- Prettier (`.prettierrc` + `.prettierignore`) — `_dev/`, `.claude/`, `.devcontainer/`, markdown otonomu hariç tutuldu
+- `shared/`, `backend/`, `mobile/` workspace iskeletleri (`@alpfit/shared`, `@alpfit/backend`, `@alpfit/mobile`); backend + mobile shared'a `workspace:*` ile bağlı
+- `.gitignore` (mevcut) `*.tsbuildinfo` + `.expo/` eklendi; `.editorconfig` (LF + 2-space + utf-8 + markdown trim-istisnası)
+
+**Karar Notları:**
+- Devcontainer'a dokunulmadı — Dockerfile'da `corepack enable && corepack prepare pnpm@latest --activate` zaten var; Node 22 hazır. Task'taki karar noktası bu yüzden devre dışı.
+- ESLint config `eslint.config.js` → `eslint.config.mjs` olarak isimlendirildi (Node ES module warning'i temizler; root `package.json`'a `type: module` eklemek workspace'leri tetiklemediği için `.mjs` daha temiz çözüm).
+- Prettier `--check` script'i `format:check` olarak adlandırıldı (CI'da `format` write değil check olmalı); `pnpm format` write yapar, `pnpm format:check` doğrular.
+
+**Sonuç:**
+- 227 dev dependency kuruldu (pnpm install 9.6s).
+- Tüm test kriterleri ✅ — typecheck/lint/format temiz, tsconfig extend zinciri doğrulandı, shared paket workspace üzerinden import edilebilir.
 
 ---
 

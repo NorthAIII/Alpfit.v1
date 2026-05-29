@@ -275,7 +275,10 @@ Bu dosyaları değiştirme (kullanıcı izni olmadan):
 - `.devcontainer/` — Dev container konfigürasyonu; çalışan kurulumu kırma.
 - `.claude/commands/devflow/` — DevFlow komut tanımları; proje özelinde düzenlenmez.
 - `CONTEXT-BRIEF.md` — Tarihsel başlangıç bağlamı; donmuş kayıt.
-- (Henüz kod yok — Yakın 1'de `.env*`, migration ve secret dosyaları eklendiğinde bu liste güncellenir.)
+- `pnpm-workspace.yaml` — Workspace manifest'i; package'lar buradan ekleniyor. Yeni paket için açık karar gerekir.
+- `tsconfig.base.json` — Tüm workspace'lerin extend ettiği TS baseline; strict opsiyonlar tek elden yönetilir. Değişiklik tüm faza yayılır.
+- Kök `package.json` — Workspace + Node engine + paket yöneticisi versiyonu burada lock'lu (`packageManager: pnpm@10.11.0`).
+- (TASK-1.05'te `.env*`, TASK-1.10'da Coolify/Hetzner deploy konfigleri eklenince bu liste güncellenir.)
 
 ---
 

@@ -7,6 +7,7 @@ dist/
 build/
 .next/
 out/
+*.tsbuildinfo
 
 # Environment
 .env
@@ -31,3 +32,6 @@ Thumbs.db
 # Test / coverage
 coverage/
 .nyc_output/
+
+# Mobile (Expo — TASK-1.05'te aktive olur)
+.expo/
