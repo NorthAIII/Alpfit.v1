@@ -261,7 +261,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.16 | TASK-1.16 | ✅ Tamamlandı | Backblaze B2 yedek + restore drill prosedürü (dokümantasyon teslim; B2 hesap + cron deploy + ilk drill kullanıcı follow-up) |
 | 1.17 | TASK-1.17 | ✅ Tamamlandı | Mock SMS provider interface + dev_otp_log (SmsProvider + MockSmsProvider + factory + dev OTP lookup endpoint) |
 | 1.18 | TASK-1.18 | ✅ Tamamlandı | OTP send endpoint (rate limit + Redis) — POST /auth/otp/send + Redis storage/TTL + atomik SET NX rate limit + healthz Redis PING |
-| 1.19 | TASK-1.19 | ⬜ Bekliyor | OTP verify endpoint + brute force (5 hatalı = 15dk kilit) |
+| 1.19 | TASK-1.19 | ✅ Tamamlandı | OTP verify endpoint + brute force — POST /auth/otp/verify + atomik GETDEL consume + otp:attempts INCR + 5 hatalı → otp:lockout 15dk + timingSafeEqual |
 | 1.20 | TASK-1.20 | ⬜ Bekliyor | JWT access token + auth middleware + profil create |
 | 1.21 | TASK-1.21 | ⬜ Bekliyor | Refresh token rotation (30 gün + replay detection) |
 | 1.22 | TASK-1.22 | ⬜ Bekliyor | Logout + tüm cihazlardan çıkış endpoints |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-30 — TASK-1.18 ✅: OTP send endpoint (`POST /auth/otp/send`) — telefon doğrula → atomik `SET NX EX 60` rate limit → `crypto.randomInt` 6 hane OTP → Redis `otp:send:` TTL 300 → MockSmsProvider → `otp_sent` audit. Redis backend'e tanıtıldı (`redis/client.ts`, `app.redis`, `/healthz` Redis PING + `redis` alanı); test izolasyonu gerçek Redis 7 + per-suite keyPrefix (Testcontainers değil). backend 70 PASS (63+7), shared 41 + mobile 30 regresyon yeşil.
+**Son Güncelleme:** 2026-05-30 — TASK-1.19 ✅: OTP verify endpoint (`POST /auth/otp/verify`) + brute-force kilidi — kilit kontrolü (423 + Retry-After) → `peekOtp` (yok → 410) → `codesMatch` (timingSafeEqual) yanlışsa `otp:attempts` atomik INCR + `otp_verify_failed` audit, 5'te `otp:lockout` 15dk (423) → doğruysa atomik `GETDEL` consume (race → 410) + `otp_verified` + dev_otp_log consumedAt + user lookup (userExists/isNew). backend 81 PASS (70+11), typecheck/lint/format temiz.

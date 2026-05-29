@@ -7,6 +7,7 @@ import { getPrisma } from './db/prisma.js';
 import { getRedis, type Redis } from './redis/client.js';
 import { adminInternalRoutes } from './routes/admin-internal.js';
 import { authOtpSendRoutes } from './routes/auth-otp-send.js';
+import { authOtpVerifyRoutes } from './routes/auth-otp-verify.js';
 import { healthzRoutes } from './routes/healthz.js';
 import { internalDevOtpRoutes } from './routes/internal-dev-otp.js';
 
@@ -50,6 +51,7 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(adminInternalRoutes({ env: opts.env }));
   await app.register(internalDevOtpRoutes({ env: opts.env }));
   await app.register(authOtpSendRoutes({ env: opts.env }));
+  await app.register(authOtpVerifyRoutes);
 
   return app;
 }

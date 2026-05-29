@@ -9,6 +9,28 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.19: OTP Verify Endpoint — Atomik Consume + Brute-Force Lockout + Hatalı-Deneme Sayacı Ayrı Key
+
+**Bağlam:** F1.1 PRD: "5 hatalı kod girişinden sonra 15 dakika kilit (brute force koruması)". `POST /auth/otp/verify` send'in (TASK-1.18) ürettiği `otp:send:` kaydını doğrular. İki güvenlik invariant'ı gerekir: (a) doğru kod **yalnızca bir kez** tüketilebilmeli (replay/concurrent-race koruması), (b) hatalı denemeler atomik sayılıp eşikte telefon kilitlenmeli. Bu task JWT issue/user-create **yapmaz** (TASK-1.20) — yalnızca doğrula + lockout + audit + dev_otp_log consume.
+
+**Karar 1 — Hatalı-deneme sayacı ayrı atomik key (`otp:attempts:<phone>` INCR), `OtpRecord` içinde DEĞİL.** TASK-1.18 `otp:send:` value'sunu `{ code, attempts: 0 }` olarak tutuyordu; sayacı bu JSON içinde artırmak **read-modify-write yarışı** yaratırdı (concurrent iki hatalı deneme aynı değeri okuyup 1 artırır → sayım kaçar). Çözüm: sayım ayrı `otp:attempts:<phone>` key'inde `INCR` (atomik), ilk denemede `EXPIRE` OTP TTL'iyle (300sn — kod-başına sayım; yeni `send` zaten OTP key'ini sıfırlar). `OtpRecord` `{ code }`'a indirildi (vestigial `attempts` alanı kaldırıldı; `auth-otp-send.test.ts`'teki `attempts===0` assertion'ı buduldu).
+- *Alternatif (red):* Lua script / WATCH-MULTI ile JSON içi atomik artış — tek `INCR` key'ine kıyasla gereksiz karmaşık.
+
+**Karar 2 — Doğru kod atomik `GETDEL` ile tüketilir (consume-once).** Eşleşmede `GETDEL otp:send:<phone>` değeri döndürür **ve** aynı anda siler; concurrent iki verify aynı doğru kodu denerse yalnızca biri kaydı alır (200), diğeri `null` görür → 410 expired. Karşılaştırma `crypto.timingSafeEqual` (uzunluk farkı önce elenir — `timingSafeEqual` eşit-uzunluk şartı). Kilit kontrolü **kod kontrolünden önce** gelir: kilitliyken doğru kod bile 423.
+- *Alternatif (red):* `GET` sonra ayrı `DEL` — iki komut arası başka istek araya girer, race penceresi açık.
+
+**Karar 3 — HTTP statü haritası.** 400 `invalid_phone` (TR-dışı/geçersiz, sızdırmaz) · 423 `locked` (kilit aktif **veya** bu denemede 5'e ulaşıldı; `Retry-After: <ttl>`) · 410 `expired` (aktif OTP yok / zaten tüketildi) · 401 `invalid_code` (yanlış, attempts < 5) · 200 `{ verified, userExists, isNew }`. 423 (Locked) WebDAV statüsüdür ama "geçici kilit" semantiği 429'dan ayrışsın diye seçildi (429 send rate-limit'e ait). i18n: `auth.otpExpired` eklendi; `auth.otpInvalid`/`auth.otpTooManyAttempts` mevcut.
+
+**Karar 4 — Audit + dev_otp_log consume.** Her hatalı deneme `otp_verify_failed` (`metadata.attemptCount` ya da kilit halinde `reason:'locked'`); başarı `otp_verified` (yalnız `ip`). Telefon audit metadata'ya YAZILMAZ (TASK-1.14 zod whitelist; `userId=e164` zaten hash'lenir). Doğru verify'da en yeni `dev_otp_log` row'u `consumedAt=now` (tarihsel kayıt; production'da tablo boş → no-op). User lookup `findFirst({ phoneE164, deletedAt: null })` — soft-delete'li hesap "yok" sayılır.
+
+**Karar 5 — Lockout sonrası attempts reset (kümülatif DEĞİL).** Kilit düşünce (15dk TTL) yeni `send` → yeni `otp:send:` + sıfır sayaç. "1 saatte toplam 5 hatalı = kilit" gibi kümülatif sayım v1'de YOK (basit + UX iyi); IP-bazlı rate limit ile birlikte Yakın 5 (gerçek SMS) öncesi yeniden değerlendirilir. v1 mock SMS — kabul edilebilir risk.
+
+**Test:** backend 81 PASS (önceki 70 + 11 auth-otp-verify: 200 consume+audit / userExists:true / dev_otp_log consumed / 401 attempts=1 / 5→423+5 fail-audit / locked→423 / lockout-sonrası 200 / 410 expired / 400 yabancı / concurrent 200+410 / brute-force smoke 1000-kod). typecheck + lint + format temiz.
+
+**Sonuç:** Auth verify akışı uçtan uca; TASK-1.20 bu endpoint'in `{ userExists, isNew }` çıktısını alıp JWT issue + user create/profil akışına bağlar.
+
+---
+
 ### 2026-05-30 — TASK-1.18: OTP Send Endpoint — Redis Storage + Telefon-Bazlı Rate Limit + Gerçek-Redis Test İzolasyonu
 
 **Bağlam:** F1.1 PRD: "6 haneli OTP SMS gönderilir, 5 dakika geçerli, 1 dakika sonra 'Yeniden gönder' aktif". `POST /auth/otp/send` bu akışın backend tarafı. OTP storage için TTL + hız gerekir (her istekte DB yazıp cron'la temizlemek yerine); rate limit için atomik bir "1dk'da 1 send" garantisi gerekir. Redis bu task'ta tanıtılıyor (`REDIS_URL` env + devcontainer servisi zaten mevcuttu).

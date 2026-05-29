@@ -1,6 +1,6 @@
 # TASK-1.19: OTP verify endpoint + brute force (5 hatalı = 15dk kilit)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -135,7 +135,23 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `backend/src/auth/otp.ts` (GÜNCELLE) — verify/brute-force helper'ları: key'ler `otpAttemptsKey`/`otpLockoutKey`; sabitler `OTP_MAX_ATTEMPTS=5`/`OTP_LOCKOUT_SEC=900`; fonksiyonlar `getLockoutTtl`, `peekOtp` (GET), `consumeOtp` (atomik **GETDEL**), `registerFailedAttempt` (INCR + ilk denemede EXPIRE), `lockoutPhone` (SET 900 + OTP/sayaç DEL), `clearAttempts`, `codesMatch` (`timingSafeEqual`, uzunluk ön-eleme). **`OtpRecord.attempts` kaldırıldı** — JSON read-modify-write yarışı yerine ayrı atomik `otp:attempts` key (Karar 1).
+- `backend/src/routes/auth-otp-verify.ts` (YENİ) — `POST /auth/otp/verify`. Sıra: telefon doğrula (400) → kilit (423 + Retry-After, `otp_verify_failed` reason:'locked') → `peekOtp` yok ise 410 → `codesMatch` yanlışsa attempts INCR + audit, 5'te lockout (423) yoksa 401 → doğruysa `GETDEL` consume (race → 410) + `clearAttempts` + dev_otp_log `consumedAt` + aktif user lookup (`deletedAt: null`) + `otp_verified` audit → 200 `{ verified, userExists, isNew }`. JWT yok (TASK-1.20).
+- `backend/src/server.ts` (GÜNCELLE) — `authOtpVerifyRoutes` register.
+- `backend/src/i18n/locales/tr/errors.json` (GÜNCELLE) — `auth.otpExpired` eklendi (410 mesajı).
+- `backend/src/routes/auth-otp-verify.test.ts` (YENİ) — 11 test (7 zorunlu senaryo + userExists + dev_otp_log consumed + 400 + brute-force smoke).
+- `backend/src/routes/auth-otp-send.test.ts` (GÜNCELLE) — `OtpRecord.attempts` kaldırıldığından `attempts===0` assertion'ı buduldu.
+
+**Test Sonucu:** backend **81 PASS** (önceki 70 + 11 verify). typecheck + lint + prettier temiz. Senaryolar: 200 consume+audit / userExists:true→isNew:false / dev_otp_log consumedAt (gerçek send akışı) / 401 attempts=1 / 5 hatalı→5.si 423 + 5 fail-audit / kilitli→doğru kod yine 423 / kilit düşünce yeni send+verify 200 / 410 expired / 400 yabancı / concurrent 200+410 (GETDEL) / brute-force smoke 1000 random kod.
+
+**Kararlar (detay DECISIONS.md "TASK-1.19"):**
+- Hatalı-deneme sayacı ayrı atomik key (read-modify-write yarışından kaçınma).
+- Doğru kod atomik GETDEL ile consume-once (replay/race koruması).
+- Lockout sonrası attempts reset (kümülatif değil); IP rate limit Yakın 5 öncesi.
 
 ---
 

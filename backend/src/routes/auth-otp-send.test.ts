@@ -68,7 +68,6 @@ describe('TASK-1.18 — POST /auth/otp/send', () => {
     expect(raw).not.toBeNull();
     const record = JSON.parse(raw as string) as OtpRecord;
     expect(record.code).toMatch(/^\d{6}$/);
-    expect(record.attempts).toBe(0);
 
     // dev_otp_log row'u Redis kodu ile birebir aynı.
     const row = await server.prisma.devOtpLog.findFirst({
