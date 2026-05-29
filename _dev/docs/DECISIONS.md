@@ -9,6 +9,91 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.16: Backblaze B2 EU Off-Site Yedek + rclone Crypt Overlay + Host Crontab + Aylık Drill
+
+**Bağlam:** PHASE-1 Araştırma §Tuzak #4 "Hetzner tek-node SPOF — sunucu çökerse 30-60 dk downtime" mitigation'ı: günlük off-site DB yedeği + ayda 1 manuel restore drill. Task doc'u orijinal olarak "Coolify built-in backup B2'ye yönlendirir" diyordu; TASK-1.10'da Coolify'dan docker-compose'a geçildi (DECISIONS 2026-05-29 "TASK-1.10"), Coolify built-in yedek yok → yedek mekaniği baştan tasarlanmalı. Bu task TASK-1.15'in `staging-retention-cron.md` deseniyle hizalı, vendor-neutral bir backup pipeline kurar; B2 hesap açılışı + key + ilk drill kullanıcının manuel adımları olarak doküman + rehber halinde teslim edilir.
+
+**Seçenekler — Yedek hedefi (off-site storage):**
+
+1. **Backblaze B2 EU Central (Amsterdam, `eu-central-003`) (seçilen)** — $0.005/GB/ay storage + $0.01/GB download; v1 DB ~100 MB → ~$0.02/ay; AB region (KVKK m.9 SCC + DPA savunulabilir); S3 API uyumlu (rclone native B2 driver da var, biraz daha ucuz); DPA template hazır. ✅
+2. **AWS S3 Glacier Frankfurt** — $0.004/GB/ay + Glacier retrieval ücreti; AB region; managed; ama drill için Glacier retrieval delay 1-12 saat → aylık drill workflow'una uymuyor (ya Standard tier → daha pahalı). Hesap setup karmaşık (IAM roles, KMS). ❌
+3. **Hetzner Storage Box** — €3.20/ay 1TB fix (overkill); SFTP/SMB only (S3 API yok → rclone alternatif backend ama daha kırılgan); AB region. v1 maliyet/fayda dengesizliği. ❌
+4. **Aynı sunucu (host disk)** — ❌ SPOF tamamen aşılmaz; mitigation amacı off-site.
+
+**Seçenekler — Yedek mekanizması (Coolify yok → ne kullanılır):**
+
+1. **Host crontab + `docker compose exec pg_dump` + rclone (seçilen)** — TASK-1.15 `staging-retention-cron.md` deseniyle ayni; vendor-neutral; rclone resmi B2 driver; bash script audit edilir + git'te (markdown'da gömülü). ✅
+2. **Container içi backup job (alpfit-backend'de node + node-cron)** — ❌ Backup container'la aynı yaşam döngüsünde; restart sırasında kaçırma riski; pg_dump'a `docker exec` yerine direkt postgres protokolüyle bağlanma daha karmaşık (DB user + connection string container-internal); node-cron PHASE-1 araştırma "cron framework eklemiyoruz" disiplinine aykırı.
+3. **Sadece Hetzner snapshot (manuel/scheduled)** — ❌ Snapshot tüm sunucudur, granular DB restore zor; Hetzner snapshot'lar aynı bölgede (off-site değil); maliyet €/GB.
+4. **Postgres streaming replication → ikinci sunucu** — ❌ Aşırı (v1 1 PT + 4 üye); ikinci sunucu maliyeti + ops yükü; basitlik prensibini aşıyor.
+
+**Seçenekler — Encryption stratejisi:**
+
+1. **B2 SSE-B2 (server-side AES-256) only** — B2 transparent encryption; ama B2 hesabına erişen biri (key leak, hesap kompromisi) tüm dump'ları okuyabilir. ❌ Tek katman.
+2. **rclone crypt overlay (client-side AES) + B2 SSE-B2 (seçilen)** — Dump host'ta plain, rclone yüklerken AES-256 ile şifreler, B2'ye şifreli yükler; B2 hesabı kompromise olsa bile encryption key olmadan dosyalar işe yaramaz. Filename de şifrelenir (B2 console'da hangi tarihte yedek olduğu görünmez). Key password manager'da. ✅
+3. **GPG sign + encrypt** — ❌ Asymmetric overkill; key rotation zorlu; rclone crypt yeterli (drop-in symmetric AES).
+4. **Cloud-side KMS (AWS KMS, B2 yok)** — ❌ B2 KMS desteği yok; AWS'e geçmek gerek.
+
+**Seçenekler — Lifecycle policy:**
+
+1. **30 gün hide + 1 gün delete (seçilen)** — 30 gün yeterli retention (aylık drill arası); KVKK veri minimizasyonu prensibi; v1 DB küçük → maliyet etkisi yok. ✅
+2. **7 gün hide + 1 gün delete** — Drill için yeterli (aylık) ama beklenmedik incident'ta "iki hafta önceki yedek" bulunamaz.
+3. **90 gün hide + 1 gün delete** — Aşırı; v1 DB 100 MB için maliyet etkisi yok ama "ne kadar geri dönebiliriz?" sorusu için yön yok; KVKK denetiminde "neden 90 gün?" cevabı zayıf.
+4. **Sınırsız** — ❌ KVKK veri minimizasyonu ihlali; sonsuza birikir.
+
+**Seçenekler — Drill sıklığı:**
+
+1. **Ayda 1 — her ayın 15'i (seçilen)** — Hatırlanması kolay sabit tarih; ay ortası → her ay garanti tetiklenir; backup-pipeline drift'ini fark etmek için makul yatay aralık. ✅
+2. **Haftada 1** — Aşırı; v1'de pratik olarak kullanıcı yorulur, drift'i fark etmek için 30 gün penceresi yeterli.
+3. **Faz sonunda 1** — ❌ Düzenli değil; faz uzayınca drill gecikir.
+4. **Sadece incident'tan sonra** — ❌ "Drill yapmadığımız için fark edemedik" tuzağı.
+
+**Karar:**
+- **Provider:** Backblaze B2 EU Central (Amsterdam) — bucket `alpfit-staging-db-backup`, private, SSE-B2 server-side encryption.
+- **Mekanizma:** Host VPS crontab (`deploy` user) → `/usr/local/bin/alpfit-pg-backup.sh` → `docker compose exec alpfit-postgres pg_dump --format=custom --single-transaction --no-owner --no-privileges --compress=6` → `/var/backups/alpfit/staging-YYYY-MM-DD.dump` (local 7 gün buffer) → `rclone copy alpfit-b2-crypt:` (B2 + crypt overlay).
+- **Encryption:** rclone crypt overlay (client-side AES) üzerine B2 SSE-B2 (server-side AES). Password + salt password manager'da (kayıp = tüm yedekler kullanılamaz, ayrı kopya zorunlu).
+- **Lifecycle:** 30 gün hide + 1 gün delete (B2 console).
+- **Cron schedule:** UTC 02:00 = TR 05:00 (retention purge UTC 00:00 → 2 saat sonra; purge edilmiş hali yedeklenir).
+- **Drill:** Ayda 1 (her ayın 15'i), `_dev/docs/restore-drill.md` rehberi, kullanıcı tek başına yapar (Claude oturumu gerekmez), sonuç `_dev/memory/staging-infra.md` "Restore Drill Kayıtları"na yazılır.
+- **Manuel adımlar (kullanıcı tarafından, follow-up):** B2 hesap + bucket + lifecycle + application key + encryption password üretimi + DPA imzası + rclone install/config + cron deploy + ilk drill. Bu task'ta sadece **rehber + script template + doküman + DECISIONS + KVKK güncellemesi + memory disiplini** yazıldı.
+
+**Tamamlayıcı kararlar:**
+- **rclone B2 driver (S3 API değil)** — B2 native API rclone'da iki form sunar: `b2` type (B2 native, API call başına daha ucuz) ve `s3` type (S3-compatible). `b2` seçildi — daha az API ücreti, B2-spesifik flag'ler (`--b2-hard-delete`, lifecycle integration). S3 form'una geçmek 1 satır config değişikliği.
+- **Local 7 günlük buffer (`/var/backups/alpfit/`)** — B2 yüklemesi başarısız olursa script exit 3 + local dump kalır; ertesi gün retry; 7 gün sonra `find -mtime +7 -delete`. B2 hesabı suspend olursa son hafta hemen elde.
+- **`pg_dump --single-transaction`** — pg_dump tek transaction'da tüm tabloları okur; backup sırasında DB'ye yazma olursa snapshot bozulmaz (Postgres MVCC). `--no-owner --no-privileges` restore_test DB'sinde role mismatch'i önler.
+- **`pg_dump --format=custom --compress=6`** — zlib seviye 6 (default 0 → sıkıştırma yok), custom format selective restore destekler (`pg_restore -t tablo`).
+- **Drill `restore_test` DB ayrı, production'a dokunmaz** — restore production DB üstüne yapılırsa veri silinir; ayrı DB drill'i production'dan tamamen izole eder.
+- **Drill smoke query: `\dt` + `User count` + `AuditLog count + MAX(occurredAt)` + `_prisma_migrations`** — schema bütünlüğü (tablo var mı) + veri bütünlüğü (sayı plausible mı) + migration drift (en son migration adı production ile uyumlu mu). v1'de User=0 normal (M1 onboarding henüz tamamlanmadı); AuditLog cron başladıktan sonra > 0 olacak.
+- **Backup cron retention purge'den 2 saat sonra (UTC 02:00 vs UTC 00:00)** — Retention purge önce → silinen sağlık verisi backup'a girmez. KVKK "yedekte de silinmiş veri yok" ilkesi (KVKK denetiminde önemli).
+- **Aylık drill memory disiplini** (`_dev/memory/restore-drill-disiplini.md`) — Süreç Disiplinleri kategorisinde; faz review-phase'lerinde "son drill başarılı mı" kontrolü; drill başarısızsa `/devflow:quick` ile task aç.
+- **Aylık drill faz review-phase'inde de kontrol** — PHASE-1 retrospektifine "Aylık restore drill 15'inci" satırı eklenir (faz sonu hatırlatma).
+
+**Gerekçe:**
+- **ILKELER §"Kalıcılık önceliği":** Yedek altyapısı şimdi kurulursa Yakın 4 (sağlık verisi) öncesi "off-site yedek + drill aktif" denetlenebilir durumda olur; veri kaybı = ürün ölümü riski mitigated.
+- **ILKELER §"Sır ve konfigürasyon yönetimi":** İki katman encryption (rclone crypt + B2 SSE); key password manager'da + ayrı kopya; B2 application key bucket-scope (master key kullanılmaz); `.gitignore` rclone config dosyasını dışlar (chmod 600 deploy:deploy host'ta).
+- **ILKELER §"Kümülatif test altyapısı":** Aylık drill sürdürülebilir disiplin — backup pipeline'ın test'i drill'in kendisidir, sessiz drift'i yakalar.
+- **ILKELER §"Pazarlık Konusu Olmayanlar":** KVKK m.9 + Madde 6 (sağlık verisi) → AB region zorunluluğu (m.9 SCC ile savunulabilir AB hosting); DPA + lifecycle 30 gün veri minimizasyonu.
+
+**Risk + Mitigation:**
+- **Risk:** rclone crypt encryption password/salt kaybedilirse tüm yedekler kullanılamaz (B2'de şifreli, çözülemez). **Mitigation:** Password manager (1Password/Bitwarden) + ayrı kopya (sealed envelope veya ayrı device); `backblaze-setup.md` Adım 5 + 7 + task doc Risk bölümü 3 yerde uyarıyor.
+- **Risk:** B2 hesabı suspend olursa (billing problem, ToS ihlali iddiası) yedeklere erişim kesilir. **Mitigation:** Local 7 günlük buffer `/var/backups/alpfit/` host'ta; v1.5+'da ikincil yedek hedefi (AWS S3 Glacier Frankfurt) eklenebilir (TASK-1.16 follow-up değil, v1.5 PRD-refine).
+- **Risk:** Backup script silently fail eder (pg_dump exit 0 ama dump boş; rclone exit 0 ama upload yok). **Mitigation:** Script `if [[ "$DUMP_SIZE" -lt 1024 ]]` sanity check; aylık drill = manuel teyit; `/var/log/alpfit/pg-backup.log` logrotate 8 hafta.
+- **Risk:** Region yanlış seçilir (ABD), KVKK m.9 ihlali. **Mitigation:** `backblaze-setup.md` Adım 1 region uyarısı *bold + ⚠️*; "geri alınamaz" notu açık; ilk açılış password manager'a kayıt anında region da not edilir.
+- **Risk:** Drill kullanıcı tarafından unutulur, backup pipeline sessizce çürür. **Mitigation:** `restore-drill-disiplini.md` memory'de süreç disiplini (her oturumda yüklenir); faz review-phase'inde drill kontrolü; B2 bucket boyutu sabit kalırsa cron çalışmıyor demek (drift sinyali memory'de yazılı).
+- **Risk:** Aynı sunucu (Bunker container'ları) bir gün B2 bandwidth'ini büyük dosya transfer'iyle tüketirse backup gecikir. **Mitigation:** rclone `--transfers=1 --retries=3 --low-level-retries=5`; backup zamanı saat 02:00 UTC (TR 05:00) — gece düşük trafik.
+
+**İlgili Task/Faz:** TASK-1.16 (bu task). TASK-1.10 (Coolify yerine docker-compose — bu task'in pipeline'ı bu sapmaya uyumlu). TASK-1.15 (retention purge — drill smoke query'leri AuditLog'u kullanır; cron schedule purge sonrası 2 saat). TASK-1.13/1.14 (3 rol veri modeli + KVKK schema — drill smoke query tabloları kullanır). PHASE-1 Araştırma §Tuzak #4 (Hetzner SPOF mitigation kaynağı). KVKK.md "Üçüncü Taraf Sözleşmeler" (DPA TODO ✅).
+
+**Follow-up (kullanıcı tarafından manuel):**
+1. Backblaze hesap + bucket + lifecycle ([`_dev/docs/backblaze-setup.md`](backblaze-setup.md))
+2. B2 application key + encryption password üretimi + password manager
+3. Backblaze DPA imzası
+4. rclone install + config + script deploy + crontab ([`_dev/docs/staging-pg-backup-cron.md`](staging-pg-backup-cron.md))
+5. İlk restore drill ([`_dev/docs/restore-drill.md`](restore-drill.md))
+6. Sonuçlar `_dev/memory/staging-infra.md` "B2 Off-Site Yedek" + "Restore Drill Kayıtları" bölümlerine yazılır.
+
+---
+
 ### 2026-05-30 — TASK-1.15: 30 Gün Retention Purge + Anonimizasyon vs Hard Delete + Host Crontab Tetikleme
 
 **Bağlam:** KVKK Madde 6 (sağlık verisi özel nitelikli) + Madde 11 (silme hakkı) → "rıza geri çekilirse 30 gün içinde sağlık verisi silinir" ve "üye hesap kapatma → 30 gün retention sonrası purge". TASK-1.13 schema'sındaki `User.deletedAt` + `retentionDeadline` + `TrainerMember.endedAt` alanları bu task'in tetikleyicisi. Discuss-phase-1 §"PT üye çıkarma — veri akıbeti": *"Soft delete + 30 gün saklama. ... KVKK rızası aktif kaldıkça veri 30 gün saklanır; rıza geri çekilirse veya 30 gün dolarsa otomatik silinir."* Yakın 4'te (M6 sağlık verisi) silinecek tablolar eklenir; bu task'ta interface + cron sözleşmesi şimdi kurulur ki Yakın 4 sadece silinecek tablo listesini genişletir.

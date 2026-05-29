@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.14 ✅: `kvkk-pii-scrubbing-matrisi.md`'ye "IP Audit Nüansı" eklendi — `ipAddress`/`userAgent` ConsentRecord/AuditLog DB'sine bilinçli yazılır, log/Sentry yoluna sızarsa pino redact + Sentry beforeSend redaktedir; PII_FIELDS güncellendi (`ip`/`ipAddress`/`userAgent`).
+**Son Güncelleme:** 2026-05-30 — TASK-1.16 ✅: `restore-drill-disiplini.md` (YENİ) eklendi — staging Postgres yedeklerinin gerçekten restore edilebilirliği ayda 1 (her ayın 15'i) elle teyit edilir; prosedür `_dev/docs/restore-drill.md`'de, kayıt `staging-infra.md`'de; backup cron drift sinyalleri (B2 boyutu sabit, log FAIL) drill beklemeden müdahale. `staging-infra.md` "B2 Off-Site Yedek" + "Restore Drill Kayıtları" bölümleri açıldı (kullanıcı B2 kurulumunu tamamladıkça doldurur).
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -49,6 +49,7 @@
 - [KVKK PII scrubbing matrisi](memory/kvkk-pii-scrubbing-matrisi.md) — DB schema/zod yeni alan eklendiğinde `shared/src/pii-fields.ts` PII_FIELDS listesine ekle (camelCase + snake_case); backend 3 katmanlı savunma (Sentry sendDefaultPii: false + beforeSend scrubber + pino redact); PR review + faz review'da toplu kontrol. **IP Audit Nüansı (TASK-1.14):** `ipAddress`/`userAgent` DB'ye bilinçli yazılır AMA log/Sentry yoluna sızarsa redaktedir.
 - [Prisma + PostgreSQL partial unique index](memory/prisma-partial-unique-index.md) — Soft-delete deseninde "aynı anda tek aktif satır" invariant'ı için Prisma DSL `@@unique([..., nullableTimestamp])` YETMEZ (PostgreSQL NULL ≠ NULL); `migrate dev --create-only` + raw SQL `CREATE UNIQUE INDEX ... WHERE "endedAt" IS NULL` şart, integration test deploy garantisini yakalar.
 - [Snapshot testleri tarih-bağımsız olmalı](memory/feedback-snapshot-tarih-pin.md) — UI component `formatTrDate(new Date())` gibi non-deterministik değer üretiyorsa snapshot test'inde `jest.useFakeTimers().setSystemTime(...)` ile pin'le; aksi halde ertesi gün CI fail. Backend'de gerek yok, mobile UI smell'i.
+- [Restore drill ayda 1 yapılır](memory/restore-drill-disiplini.md) — staging Postgres B2 yedeği her ayın 15'i restore_test DB'sinde elle doğrulanır; aksilik = backup süreci kırık demek, restore gerektiğinde fark etmek geç olur; prosedür `_dev/docs/restore-drill.md`, kayıt `staging-infra.md` "Restore Drill Kayıtları".
 
 ---
 

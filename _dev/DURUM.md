@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.15 ✅: Soft delete + 30 gün retention purge altyapısı yerleşti — `backend/src/kvkk/soft-delete.ts` üç giriş noktası (`softDeleteUser` → deletedAt + retentionDeadline + AuditLog member_removed; `endTrainerMember` → relation endedAt + member retentionDeadline; `revokeHealthConsent` → ConsentRecord revoked + cache null + retentionDeadline + AuditLog consent_revoked) `$transaction` içinde audit ile atomik; `backend/src/kvkk/retention-job.ts` `runRetentionPurge` deadline geçen User'ları işler (`deletedAt IS NOT NULL` → anonimize: firstName/lastName/profilePhotoUrl/gymName/certificateNote null + phoneE164=`deleted_<sha256-12hex>` collision-safe + retentionDeadline null; aksi → sadece deadline reset/sağlık-purge); `purgeDeletableTablesForUser(_tx, _userId)` v1'de boş imza (Yakın 4 tablo ekleyecek); her user kendi transaction'ında + toplu AuditLog `retention_purge` userId='retention-job' sentinel hash; `backend/src/routes/admin-internal.ts` `POST /admin/internal/retention-purge` Bearer auth (503 env yok, 401 token, 200 report); `logAuditEvent` imzası `AuditLogClient = Pick<PrismaClient, 'auditLog'>` yapısal tipe genişledi (tx + full client); env+`.env.example`+`.env.staging.example` `ADMIN_INTERNAL_TOKEN` (32+ char optional); `_dev/docs/staging-retention-cron.md` host VPS crontab (deploy user) → `docker compose exec` → curl rehberi (Coolify YOK / TASK-1.10 sapma, endpoint internet'e açık değil); `_dev/KVKK.md` "Veri Saklama Politikası" bölümü; DECISIONS.md "TASK-1.15" karar (anonimize vs hard delete vs hibrit, tek retentionDeadline + deletedAt akıbet ayrımı, host crontab vs Coolify/GH Actions/node-cron/ek container); yan fix mobile snapshot drift (landing-screen.test.tsx fake timer ile 2026-05-29 pin'lendi → her gün CI fail yok), memory `feedback-snapshot-tarih-pin.md` süreç disiplini; backend 52 PASS (önceki 38 + 14 yeni: 3 helper + 5 retention + 6 endpoint), shared 41 + mobile 23 regresyon yok; typecheck + lint + format temiz; sıradaki TASK-1.16 Backblaze B2 yedek + restore drill.
+**Son Güncelleme:** 2026-05-30 — TASK-1.16 ✅: Backblaze B2 off-site yedek + restore drill prosedürü dokümantasyon teslim edildi — Coolify-bağımsız mekanizma (TASK-1.10 sapması uyumlu): host VPS crontab + `docker compose exec pg_dump` + rclone (B2 native driver + crypt overlay client-side AES); `_dev/docs/backblaze-setup.md` (manuel hesap+EU bucket+lifecycle 30g+scoped key+DPA), `_dev/docs/staging-pg-backup-cron.md` (rclone install+non-interaktif config+`/usr/local/bin/alpfit-pg-backup.sh` template — pg_dump custom format/single-transaction/no-owner/compress=6, sanity guard <1KB exit 2, crontab UTC 02:00=TR 05:00 retention purge'den 2 saat sonra, local 7g buffer, logrotate haftalık×8), `_dev/docs/restore-drill.md` (7-adım: rclone indir+PGDMP magic byte sanity → restore_test ayrı DB → pg_restore --exit-on-error+elapsed → smoke query `\dt`/User count/AuditLog count+MAX/_prisma_migrations → temizlik+drill kaydı); `_dev/memory/restore-drill-disiplini.md` (her ayın 15'i süreç disiplini, drift sinyalleri, faz review-phase kontrolü); `_dev/memory/staging-infra.md` "B2 Off-Site Yedek" tablosu (TBD alanları kullanıcı follow-up) + "Restore Drill Kayıtları" boş başlangıç + TODO 3 follow-up'a bölündü; `_dev/MEMORY.md` index pointer + son güncelleme; `_dev/KVKK.md` B2 region kararı ✅ (eu-central-003 SCC+DPA savunulabilir) + ayrı DPA TODO; DECISIONS.md "TASK-1.16" karar (5 seçenek matrisi provider/mekanizma/encryption/lifecycle/drill sıklığı + 8 tamamlayıcı + 4 ILKELER gerekçesi + 6 risk-mitigation + 6 follow-up). AskUserQuestion 3 karar: script+host crontab (önerilen), B2 sonra kurulacak, ilk drill sonraya. Test paketleri regresyon: backend 52 + shared 41 + mobile 23 PASS, typecheck/lint/format temiz; bash -n script blokları syntax temiz. Sıradaki TASK-1.17 Mock SMS provider interface + dev_otp_log.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 15/34 task tamam; sıradaki TASK-1.16 Backblaze B2 yedek + restore drill
+**İlerleme:** 16/34 task tamam; sıradaki TASK-1.17 Mock SMS provider interface + dev_otp_log
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.15 ✅ tamamlandı, sıradaki TASK-1.16 (Backblaze B2 yedek + restore drill prosedürü) henüz başlatılmadı.
+**Task:** Yok — TASK-1.16 ✅ tamamlandı, sıradaki TASK-1.17 (Mock SMS provider interface + dev_otp_log) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.16` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.17` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 15 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 16 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -56,8 +56,9 @@
 | 1.13 | 3 rol veri modeli (User + role enum + ilişki tabloları) | ✅ Tamamlandı |
 | 1.14 | KVKK consent schema + audit log | ✅ Tamamlandı |
 | 1.15 | Soft delete + 30 gün retention job | ✅ Tamamlandı |
-| 1.16 | Backblaze B2 yedek + restore drill prosedürü | ⬜ Bekliyor |
-| 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
+| 1.16 | Backblaze B2 yedek + restore drill prosedürü | ✅ Tamamlandı |
+| 1.17 | Mock SMS provider interface + dev_otp_log | ⬜ Bekliyor |
+| 1.18–1.25 | M1 Auth backend (OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (8) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
@@ -80,6 +81,16 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.16 — Backblaze B2 yedek + restore drill prosedürü (2026-05-30) ✅
+
+- **`_dev/docs/backblaze-setup.md` (YENİ)** — Backblaze B2 manuel hesap+bucket+lifecycle+key kurulum rehberi: EU Central region zorunluluğu (geri alınamaz ⚠️), bucket private + SSE-B2, lifecycle 30 gün hide + 1 gün delete (KVKK veri minimizasyonu), scoped application key (master key kullanılmaz), client-side encryption password+salt üretimi, Backblaze DPA imza formu, password manager pointer disiplini. Maliyet tablosu (~$0.02/ay v1) + sorun giderme + provider seçim matrisi (B2 vs AWS Glacier vs Hetzner Storage Box).
+- **`_dev/docs/staging-pg-backup-cron.md` (YENİ)** — rclone install (B2 native driver, S3-uyumlu form alternatif) + non-interaktif config yazımı (B2 + crypt overlay, `rclone obscure` ile config dosyasında obfuscation, plain values shell history'den temizlenir) + smoke test (`rclone lsd`/`ls`/`rcat`/`cat` ile crypt overlay doğrulama) + `/usr/local/bin/alpfit-pg-backup.sh` template (`pg_dump --format=custom --single-transaction --no-owner --no-privileges --compress=6` → `/var/backups/alpfit/staging-YYYY-MM-DD.dump`, sanity guard `<1KB exit 2`, `rclone copy alpfit-b2-crypt: --transfers=1 --retries=3`, local 7-gün `find -mtime +7 -delete`) + crontab `0 2 * * *` UTC (TR 05:00 — retention purge UTC 00:00'dan 2 saat sonra; purge edilmiş hali yedeklenir) + logrotate haftalık×8 + doğrulama checklist.
+- **`_dev/docs/restore-drill.md` (YENİ)** — Aylık restore drill prosedürü 7 adım: SSH `deploy@178.104.140.36` → rclone B2'den son dump indir (`head -c 5` PGDMP magic byte sanity check) → ayrı `restore_test` DB oluştur (production'a dokunulmaz) → `docker cp` + `docker compose exec pg_restore --exit-on-error --verbose` (elapsed ölçer) → smoke query (`\dt` tablo listesi + `User count` + `AuditLog count + MAX(occurredAt)` + `_prisma_migrations` son migration adı) → temizlik (`DROP DATABASE restore_test` + dump dosyası sil) → drill kaydı `staging-infra.md`'ye (✅/❌ + süre + smoke özet). Hızlı komut özeti aşağıda referans için.
+- **`_dev/memory/restore-drill-disiplini.md` (YENİ)** — Süreç Disiplinleri kategorisinde aylık drill kuralı: her ayın 15'i hedef tarih (hatırlama kolay, ay ortası garanti tetiklenir), prosedür restore-drill.md, drift sinyalleri (B2 bucket boyutu sabit, log FAIL ardışık, local buffer dünkü dump yok), aksilik → `/devflow:quick` task; faz review-phase'lerinde "son drill başarılı mı" kontrol; bu projeye özgü (DevFlow geneli değil → faz retrosu).
+- **`_dev/memory/staging-infra.md` UPDATE** — "B2 Off-Site Yedek" tablosu (provider/region/endpoint/bucket/key+encryption pointer'ları/lifecycle/local buffer/cron/script/log/DPA tarihi — TBD alanları kullanıcı follow-up'da doldurur) + "Restore Drill Kayıtları" boş bölüm + "Yedekleme" rehber link'lerine güncellendi + TODO 3 follow-up'a bölündü (B2 hesap, cron deploy, ilk drill).
+- **`_dev/MEMORY.md` + `_dev/KVKK.md` + `_dev/docs/DECISIONS.md`** — MEMORY index pointer `restore-drill-disiplini` + son güncelleme; KVKK "Üçüncü Taraf Sözleşmeler" listesinde B2 region kararı ✅ (eu-central-003 SCC + DPA savunulabilir, mekanizma özeti, ~$0.02/ay) + ayrı DPA TODO; DECISIONS.md "TASK-1.16" karar (5 seçenek matrisi: provider/mekanizma/encryption/lifecycle/drill sıklığı + 8 tamamlayıcı + 4 ILKELER gerekçe + 6 risk-mitigation + 6 follow-up kullanıcı manuel adımı).
+- Test kriterleri ✅ — `bash -n` script blokları temiz (backup script 59 satır + rclone config + drill snippet). Regresyon: backend 52 PASS + shared 41 PASS + mobile 23 PASS (snapshot dahil). `pnpm typecheck` (recursive) + `pnpm lint` + `pnpm format:check` temiz. AskUserQuestion 3 karar: (1) script + host crontab (önerilen, TASK-1.15 paterniyle), (2) B2 hesabı sonra kurulacak (manuel TODO), (3) ilk drill sonraya (kullanıcı kendisi yapar, memory'ye yazar). Follow-up: B2 hesap+bucket+key+DPA, rclone install+config+script deploy+crontab, ilk restore drill — sonuçlar `staging-infra.md`'ye yazılır.
+
 ### TASK-1.15 — Soft delete + 30 gün retention job (2026-05-30) ✅
 
 - **`backend/src/kvkk/soft-delete.ts` (YENİ)** — Üç giriş noktası, hepsi atomik `$transaction` ile audit yazar: `softDeleteUser` (deletedAt + retentionDeadline + AuditLog member_removed) / `endTrainerMember` (TrainerMember.endedAt + member.retentionDeadline, deletedAt SET EDİLMEZ → hesap kalır) / `revokeHealthConsent` (ConsentRecord saglik_verisi/revoked append-only + healthConsentAt null + retentionDeadline + AuditLog consent_revoked). `RETENTION_DAYS = 30` SSOT export. `logAuditEvent` imzası `AuditLogClient = Pick<PrismaClient, 'auditLog'>` yapısal tipe genişledi (tx + full PrismaClient ikisi de geçer; eski TASK-1.14 testleri değişmeden geçer).
@@ -91,17 +102,6 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 - **`backend/src/kvkk/retention-job.test.ts` 14 PASS** — 3 soft-delete helper davranışı (cache + AuditLog + metadata) + 5 runRetentionPurge senaryosu (deadline-geçmemiş-skip, anonimize+AuditLog, sadece-reset, v1.5-ready-boş, idempotent) + 1 env-yok 503 + 5 endpoint senaryosu (401 üç çeşit, 200 boş, 200 gerçek anonimize). **Yan fix:** mobile `landing-screen.test.tsx` snapshot drift (pre-existing test smell — `formatTrDate(new Date())` snapshot'ta sabitti) `jest.useFakeTimers().setSystemTime(2026-05-29T12:00:00Z)` ile pin'lendi.
 - Test kriterleri ✅ — `pnpm -F @alpfit/backend test` **52 PASS** (önceki 38 + yeni 14). `pnpm typecheck` (recursive) temiz. `pnpm lint` + `pnpm format:check` temiz (1 prettier auto-fix). `pnpm -F @alpfit/shared test` 41 PASS + `pnpm -F @alpfit/mobile test` 23 PASS (snapshot drift fix sonrası). Karar noktaları AskUserQuestion ile netleşti: (1) anonimize (önerilen), (2) host crontab (önerilen), (3) sadece rehber + endpoint (önerilen) + yan fix mobile snapshot pin onaylandı.
 
-### TASK-1.14 — KVKK consent schema + audit log (2026-05-29) ✅
-
-- **Prisma schema** — 3 yeni enum (`ConsentType` kvkk_aydinlatma/saglik_verisi/pazarlama_iletisim; `ConsentEventType` granted/revoked/auto_revoked; `AuditEventType` 16 v1 event) + 2 yeni tablo: `ConsentRecord` (cuid, userId FK, consentType, eventType, `textVersion` tarih-bazlı string, `occurredAt` default now, opsiyonel `ipAddress`/`userAgent` KVKK denetim için bilinçli toplanır; index `userId+consentType`/`occurredAt`) + `AuditLog` (cuid, **`userIdHash` ham userId değil** sha256 prefix 12 hex, eventType, occurredAt, `metadata Json?`; index userIdHash/occurredAt/eventType). `User.consentRecords ConsentRecord[]` relation eklendi; mevcut `kvkkConsentAt`/`healthConsentAt` denormalized cache olarak kalır, truth source ConsentRecord query.
-- **Migration `20260529205040_kvkk_consent_audit`** — Prisma `migrate dev --create-only` ile saf DDL (2 enum + 2 tablo + 6 index + 1 FK ConsentRecord→User). Raw SQL yok (TASK-1.13'tekinden farklı: partial unique index gereksinimi yok burada). `migrate deploy` ile DB'ye uygulandı; test/db.ts her suite için aynı komutu çalıştırdığından integration test'ler deploy garantisini doğrular.
-- **`backend/src/kvkk/consent.ts` (YENİ)** — `recordConsent(prisma, args)` Prisma `$transaction` ile (a) ConsentRecord insert + (b) User denormalized cache update: `kvkk_aydinlatma` → `User.kvkkConsentAt`, `saglik_verisi` → `User.healthConsentAt`, `pazarlama_iletisim` → cache YOK (v1 alan yok); `granted` → `occurredAt`, `revoked`/`auto_revoked` → null. `getActiveConsent(prisma, userId, type)` en son event'i `orderBy occurredAt desc limit 1` ile çeker, `granted` mı kontrolü (truth source).
-- **`backend/src/kvkk/audit.ts` (YENİ)** — `AuditMetadataSchema` zod **`.strict()` whitelist** 10 alan (`ip`/`deviceType`/`userAgent`/`invitationId`/`refreshTokenId`/`consentType`/`textVersion`/`attemptCount`/`count`/`reason`) — bilinmeyen anahtar ZodError fırlatır. `logAuditEvent(prisma, args)` — metadata varsa parse, `hashUserId(args.userId)` (pii-scrubber.ts'ten re-use: sha256 prefix 12 hex; **Sentry event correlation ile aynı algoritma** → audit ↔ Sentry hash hizalı), append-only insert. `null` literal'i Prisma 7 strict `Json?` tipinde reddedildiği için `validated === undefined` durumda field-omit (DB default NULL) — `Prisma.DbNull` yerine daha sade.
-- **`shared/src/pii-fields.ts` (UPDATE)** — `ip`/`ipAddress`/`ip_address`/`userAgent`/`user_agent` eklendi (camelCase+snake_case SSOT). Inline yorum **IP audit nüansı**: ConsentRecord/AuditLog DB'sine bilinçli yazılır + AuditLog metadata zod whitelist'inde `ip`/`userAgent` izinli; ama log/Sentry yoluna sızarsa **pino redact + Sentry beforeSend** scrubber bunu yakalar. `kvkk-pii-scrubbing-matrisi.md` memory güncellendi.
-- **`backend/src/kvkk/audit.test.ts` 8 PASS** — zod whitelist red 3 senaryo (`phone` + `weight` + `firstName`/`email` parseAsync) + `count() === 0` ile DB'ye row YAZILMADI kanıtı; whitelist içi kabul 3 senaryo (ip+deviceType, metadata-yok=null, consent event consentType+textVersion); userIdHash 2 senaryo (12-hex regex + `JSON.stringify(row).not.toContain(rawUserId)` negatif kanıt; correlation = aynı userId → aynı hash farklı event'lerde).
-- **`backend/src/kvkk/consent.test.ts` 4 PASS** — granted → getActiveConsent true + 1 row PASS; granted+revoked → false + iki event hala DB'de append-only kanıtı; denormalized cache senkron — kvkkConsentAt + healthConsentAt set+null geçişleri + auto_revoked da null; pazarlama_iletisim User cache'e dokunmaz ama getActiveConsent doğru (truth source).
-- Test kriterleri ✅ — `pnpm -F @alpfit/backend test` **38 PASS** (önceki 26 + yeni 12). `pnpm typecheck` (recursive) temiz. `pnpm lint` temiz (auto-fix 2 dosya import sırası). `pnpm format:check` temiz. `pnpm -F @alpfit/shared test` 41 PASS + `pnpm -F @alpfit/mobile test` 23 PASS regresyon yok. DECISIONS.md "KVKK Consent Versiyonlu + AuditLog Whitelist Metadata + UserIdHash" kararı eklendi (textVersion tarih-bazlı vs semver, metadata whitelist vs blacklist, raw userId vs hash 3 ana karar + risk-mitigation). Karar noktaları "best practice" altında task dokümanındaki önerilerle hizalı çözüldü (sormadan).
-
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
 <!-- KURAL: "Son Tamamlanan Faz", "Son Tamamlanan Sprint" gibi ek özet bölümleri EKLEME — faz durum özeti PHASES.md'de, faz detayları PHASE-N.md'de. DURUM yalnızca aktif durum + son 2 task özeti. -->
@@ -109,12 +109,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.15 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.16 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.16` (Backblaze B2 yedek + restore drill prosedürü)
-
----
-
-**Son Güncelleme:** 2026-05-30 — TASK-1.15 ✅: Soft delete + 30 gün retention purge altyapısı yerleşti — `backend/src/kvkk/soft-delete.ts` üç giriş noktası (`softDeleteUser` / `endTrainerMember` / `revokeHealthConsent`) `$transaction` içinde audit ile atomik; `backend/src/kvkk/retention-job.ts` `runRetentionPurge` deadline geçen User'ları işler (deletedAt=null sade reset; deletedAt set → anonimize: PII null + phoneE164=`deleted_<sha256-12hex>` collision-safe); `purgeDeletableTablesForUser` v1'de boş imza (Yakın 4); her user kendi tx + toplu AuditLog `retention_purge` userId='retention-job' sentinel hash; `routes/admin-internal.ts` `POST /admin/internal/retention-purge` Bearer auth 401/503/200 — endpoint internet'e açık değil (container DNS only); `logAuditEvent` imzası `AuditLogClient` yapısal tip; `ADMIN_INTERNAL_TOKEN` 32+ char optional env + .env.example + .env.staging.example; `_dev/docs/staging-retention-cron.md` host crontab + `docker compose exec` rehberi (Coolify YOK, TASK-1.10 sapmasıyla uyumlu); KVKK.md "Veri Saklama Politikası" + DECISIONS.md karar (anonimize vs hard delete + retentionDeadline akıbet ayrımı + host crontab vs 4 alternatif); yan fix mobile snapshot drift (jest fake timer pin) + memory `feedback-snapshot-tarih-pin.md` süreç disiplini; backend 52 PASS (önceki 38 + 14 yeni: 3 helper + 5 retention + 6 endpoint), shared 41 + mobile 23 regresyon yok; typecheck + lint + format temiz; sıradaki TASK-1.16 Backblaze B2 yedek + restore drill.
+**Sıradaki:** `/devflow:run-task TASK-1.17` (Mock SMS provider interface + dev_otp_log)

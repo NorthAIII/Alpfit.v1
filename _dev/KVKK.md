@@ -203,7 +203,8 @@ KVKK m.9 reformu (7499 sayılı Kanun, 01.06.2024) sonrası yurt dışı veri ak
 - [ ] **GitHub Actions** — CI/CD build/test sürecinde repo kodu Microsoft (US) sunucularında işleniyor. Genelde geliştirme metadata SCC kapsamı dışında ama sağlık verisi test fixture'ı asla CI'a girmemeli (zaten yok).
 - [ ] **SMS provider (Yakın 4 — TASK-1.17/1.18)** — Twilio (US) mı Netgsm (TR) mi kararı SCC gerekliliğini değiştirir. PRD-refine'da.
 - [ ] **Push provider** (Yakın 3) — FCM (Google US) zorunlu Android için; APNs (Apple US) zorunlu iOS için. SCC + push payload'ında PII olmaması (sadece üye ID hash + event tipi).
-- [ ] **Backblaze B2 yedek** (TASK-1.16) — US-West (Sacramento) varsayılan; AB region (`eu-central-003`, Amsterdam) tercih edilmeli + SCC.
+- [x] **Backblaze B2 region kararı** (TASK-1.16, 2026-05-30) — **EU Central `eu-central-003` (Amsterdam, AB)** seçildi. KVKK m.9 SCC + DPA ile savunulabilir konum. Hesap açılışı + bucket + rclone kurulum rehberleri repo'da: [`_dev/docs/backblaze-setup.md`](docs/backblaze-setup.md) + [`_dev/docs/staging-pg-backup-cron.md`](docs/staging-pg-backup-cron.md) + [`_dev/docs/restore-drill.md`](docs/restore-drill.md). Yedek mekanizması: host crontab + `pg_dump` (`docker compose exec`) + rclone B2 + crypt overlay (client-side AES; key password manager'da). Lifecycle 30 gün hide + 1 gün delete (KVKK veri minimizasyonu). v1 DB ~100 MB → ~$0.02/ay maliyet.
+- [ ] **Backblaze B2 DPA imzası** (TASK-1.16 follow-up — kullanıcı, Yakın 4 öncesi) — B2 [DPA sayfası](https://www.backblaze.com/company/legal/dpa) formu doldurulur; imzalı PDF KVKK denetim arşivine + `_dev/memory/staging-infra.md` "B2 Off-Site Yedek" tablosunda imza tarihi notu. Hukuki danışman onayı SCC ile birlikte.
 - [ ] **Sentry** (TASK-1.11/1.12) — EU Frankfurt residency seçildi (DECISIONS 2026-05-29 "Observability: Sentry Developer"); EU veri merkezi SCC gerektirebilir, sözleşme metnine bak.
 
 ---

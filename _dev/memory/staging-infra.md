@@ -73,8 +73,43 @@
 ## Yedekleme
 
 - **Bunker tarafı:** Bunker projesinin kendi yedek stratejisi (bu repoya ait değil)
-- **Alpfit tarafı:** TASK-1.16'da Backblaze B2 off-site (Coolify built-in yok; `pg_dump` cron + rclone)
+- **Alpfit tarafı:** Backblaze B2 off-site (Coolify built-in yok — TASK-1.10 sapması); `pg_dump` + rclone + host crontab — kurulum rehberi: [`_dev/docs/staging-pg-backup-cron.md`](../docs/staging-pg-backup-cron.md), B2 manuel adımları: [`_dev/docs/backblaze-setup.md`](../docs/backblaze-setup.md)
 - **Hetzner snapshot:** Manuel — kritik değişiklik öncesi (`hcloud server create-image --type snapshot`)
+
+## B2 Off-Site Yedek (TASK-1.16 — kurulum kullanıcı tarafından yapılacak)
+
+> Sabit veriler (bucket adı, key ID prefix, encryption key pointer) **kullanıcı manuel adımlarını tamamladıktan sonra** buraya yazılır. Hassas değerler (key secret, encryption password) password manager'da, repo'da değil.
+
+| Alan | Değer |
+|------|-------|
+| **Provider** | Backblaze B2 |
+| **Region** | EU Central (Amsterdam) — `eu-central-003` |
+| **Endpoint** | `s3.eu-central-003.backblazeb2.com` |
+| **Bucket** | `alpfit-staging-db-backup` *(planlı; kullanıcı oluşturacak)* |
+| **B2 Application Key ID** | TBD — kullanıcı password manager'a kaydeder |
+| **B2 Application Key Secret** | password manager (1Password/Bitwarden entry: "Alpfit B2 Staging Backup Key") |
+| **rclone Encryption Password** | password manager (entry: "Alpfit B2 rclone crypt — encryption + salt") |
+| **rclone Encryption Salt** | password manager (aynı entry, `password2`) |
+| **Lifecycle** | 30 gün hide + 1 gün delete |
+| **Local Buffer** | `/var/backups/alpfit/` host'ta 7 gün |
+| **Cron Schedule** | UTC 02:00 (TR 05:00) — retention purge (UTC 00:00) sonrası |
+| **Backup Script** | `/usr/local/bin/alpfit-pg-backup.sh` (deploy:deploy, chmod +x) |
+| **Backup Log** | `/var/log/alpfit/pg-backup.log` (logrotate haftalık × 8) |
+| **DPA İmza Tarihi** | TBD — Backblaze DPA template + Kıvanç imzası, KVKK denetim arşivine |
+
+**Doğrulama smoke (kurulum sonrası):**
+```bash
+rclone ls alpfit-b2-crypt:                    # bucket içi liste
+ls -lh /var/backups/alpfit/                   # local 7 günlük buffer
+sudo -u deploy crontab -l | grep pg-backup    # cron satırı
+tail /var/log/alpfit/pg-backup.log            # son çalıştırma
+```
+
+## Restore Drill Kayıtları
+
+> **Sıklık:** Ayda 1 (her ayın 15'i hedef). Prosedür: [`_dev/docs/restore-drill.md`](../docs/restore-drill.md). Disiplin: [`restore-drill-disiplini.md`](restore-drill-disiplini.md).
+
+- *(Henüz drill yapılmadı — B2 setup tamamlandıktan sonra ilk drill kullanıcı tarafından yapılacak. Sonuç buraya yazılır: `YYYY-MM-DD: ✅/❌ özet`.)*
 
 ## İzleme Eşikleri
 
@@ -91,6 +126,8 @@
 ## TODO
 
 - [ ] **KVKK SCC imzası** (Yakın 4 öncesi) — Hetzner Cloud Standart Sözleşme, hukuki danışman onayı. `_dev/KVKK.md`'de TODO satırı.
-- [ ] **Backblaze B2 off-site yedek** (TASK-1.16) — `pg_dump` + rclone cron, restore drill.
+- [ ] **B2 hesap + bucket + key + DPA kurulumu** (TASK-1.16 follow-up — kullanıcı tarafından, rehber: [`backblaze-setup.md`](../docs/backblaze-setup.md)) → tamamlanınca yukarıdaki "B2 Off-Site Yedek" tablosundaki TBD alanları doldurulur.
+- [ ] **Backup cron deploy** (TASK-1.16 follow-up — kullanıcı, rehber: [`staging-pg-backup-cron.md`](../docs/staging-pg-backup-cron.md)) → rclone install, config, script, crontab, logrotate.
+- [ ] **İlk restore drill** (TASK-1.16 follow-up — backup cron çalışmaya başladıktan sonra, rehber: [`restore-drill.md`](../docs/restore-drill.md)) → sonuç "Restore Drill Kayıtları" bölümüne yazılır.
 - [ ] **Sentry DSN** (TASK-1.11/1.12) — `.env.staging`'e ek değişken, source map upload deploy workflow'una.
 - [ ] **Prod ortam** (Yakın 5 öncesi) — Ayrı sunucu mı, ortak mı, prd-review'da karar.
