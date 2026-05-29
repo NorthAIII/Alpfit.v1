@@ -9,6 +9,20 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.20: JWT Access Token + Kayıt Jetonu + Auth Middleware + Profil Create
+
+**Bağlam:** TASK-1.19 verify yalnızca doğruluyordu; bu task oturum/kayıt token'larını ve profil oluşturmayı ekler. JWT kararı TECH-STACK'te netti (`@fastify/jwt` + HS256, access 15dk; refresh 30dk opaque DB-stored TASK-1.21). Plan dokümanında bir **çelişki** vardı: `POST /auth/profile` gövdesinde OTP kodunu "tekrar doğrula" diyordu, ama TASK-1.19 doğru kodu atomik `GETDEL` ile **anında tüketiyor** — profil adımında kod artık yok. Akış kararı kullanıcıya soruldu (auth/security mimari kararı; [[feedback-no-assumptions]]).
+
+**Karar 1 — Kayıt jetonu (registration token) deseni (kullanıcı onaylı).** Yeni üye için OTP verify adımında OTP **tüketilir** (tek-kullanımlık korunur), karşılığında kısa ömürlü (10dk) bir **kayıt jetonu** verilir. `POST /auth/profile` bu jetonu `Authorization: Bearer` ile alır; OTP kodu gövdede taşınmaz (kod ağ üzerinde iki kez gezmez). Jeton tek-amaçlı, telefon sahipliğini profil adımına güvenle taşıyan kanıttır.
+- *Alternatif (red):* "Aynı kodu profil adımında tekrar kullan" — verify'ı yeni üyede peek (silmeme) davranışına çevirip TASK-1.19'un consume semantiğini + 3 testini değiştirmeyi gerektirirdi; tek-kullanımlık invariant'ını zayıflatırdı.
+
+**Karar 2 — İki token tipi tek secret, `typ` claim'iyle ayrışır.** `access` (sub=userId, role, 15dk) ve `registration` (sub=phoneE164, 10dk) aynı `JWT_ACCESS_SECRET` (HS256) ile imzalanır; `typ` claim'i ayırır. `authenticate` middleware yalnızca `typ:'access'` kabul eder (registration jetonu korumalı route'a giremez); `/auth/profile` yalnızca `typ:'registration'`. Her token'a `jti` (UUID) eklenir — ileride jti-bazlı revoke için hazır, v1'de kullanılmaz. `jti` `crypto.randomUUID` ile üretilir (cuid yerine — yeni bağımlılık eklemez). **Ampirik not:** `@fastify/jwt` `expiresIn` **saniye** cinsindedir (`900` → `exp-iat=900`), ms değil.
+- *Alternatif (red):* RS256 (public-key verify) — solo dev + tek backend için gereksiz; HS256 yeterli (TASK karar notu).
+
+**Karar 3 — `authenticate` decorator + DB aktiflik kontrolü.** `app.decorate('authenticate', ...)` → `req.jwtVerify()` → `typ` kontrolü → `prisma.user.findFirst({ id, deletedAt: null })`. Role JWT'de cache'li ama **soft-delete'li hesap** her istekte DB'den elenir (TASK-1.15 uyumu; perf maliyeti kabul). Tüm hata yolları aynı 401 + sızdırmayan mesaj. Middleware'in canlı tüketicisi `GET /auth/me` (oturum kontrolü; mobile auto-login TASK-1.33) — bu task'ta eklendi ki guard'ın HTTP entegrasyon yüzeyi olsun.
+
+**Karar 4 — Profil create tek `$transaction` (atomik).** `POST /auth/profile`: User + ConsentRecord(`kvkk_aydinlatma` zorunlu, `saglik_verisi` opsiyonel) + AuditLog (`user_created` + `consent_granted`) tek transaction'da — biri fail → hepsi rollback. `kvkkConsent !== true` → 403; aktif telefon zaten varsa → 409 (ayrıca `P2002` unique-race yakalanıp 409). `kvkkConsentAt`/`healthConsentAt` denormalized cache transaction içinde set edilir (truth source ConsentRecord — [[prisma-partial-unique-index]] komşusu `recordConsent` deseni inline). `KVKK_TEXT_VERSION='v2026-05-29-placeholder'` mobile `kvkk.json` ile hizalı. v1 onboarding yalnızca `member`/`trainer` açar (`gym_owner` kayıt yolu yok; model slot'u korunur). Mevcut user verify → `accessToken` + `user_login` audit.
+
 ### 2026-05-30 — TASK-1.19: OTP Verify Endpoint — Atomik Consume + Brute-Force Lockout + Hatalı-Deneme Sayacı Ayrı Key
 
 **Bağlam:** F1.1 PRD: "5 hatalı kod girişinden sonra 15 dakika kilit (brute force koruması)". `POST /auth/otp/verify` send'in (TASK-1.18) ürettiği `otp:send:` kaydını doğrular. İki güvenlik invariant'ı gerekir: (a) doğru kod **yalnızca bir kez** tüketilebilmeli (replay/concurrent-race koruması), (b) hatalı denemeler atomik sayılıp eşikte telefon kilitlenmeli. Bu task JWT issue/user-create **yapmaz** (TASK-1.20) — yalnızca doğrula + lockout + audit + dev_otp_log consume.

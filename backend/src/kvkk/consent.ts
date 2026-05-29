@@ -24,6 +24,14 @@ import { ConsentEventType as ConsentEventTypeEnum } from '../generated/prisma/en
 import type { PrismaClient } from '../db/prisma.js';
 import type { ConsentEventType, ConsentType } from '../generated/prisma/enums.js';
 
+/**
+ * Aktif KVKK metin sürümü (tarih-bazlı). v1'de placeholder — gerçek hukuki
+ * metin Yakın 5 öncesi yerleşir; mobile `kvkk.json` `textVersion` ile **hizalı**
+ * tutulur (üyenin onayladığı metnin sürümü). Sürüm değişince yeni ConsentRecord
+ * yeni sürümle yazılır (append-only — eski rızalar tarihsel kalır).
+ */
+export const KVKK_TEXT_VERSION = 'v2026-05-29-placeholder';
+
 export interface RecordConsentArgs {
   userId: string;
   consentType: ConsentType;

@@ -1,6 +1,6 @@
 # TASK-1.20: JWT access token (@fastify/jwt + claims yapısı)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -151,8 +151,25 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Akış kararı (kullanıcıya soruldu):** Plan dokümanında çelişki vardı — `/auth/profile` OTP kodunu "tekrar doğrula" diyordu ama TASK-1.19 doğru kodu atomik `GETDEL` ile anında tüketiyor (kod profil adımında yok). Kullanıcı **kayıt jetonu (registration token)** yaklaşımını seçti: OTP verify'da tüketilir, yeni üyeye 10dk'lık kayıt jetonu verilir, profil bu jetonla açılır. TASK-1.19 consume semantiği + testleri korundu. (Detay: DECISIONS "TASK-1.20".)
+
+**Yapılanlar:**
+- `@fastify/jwt` eklendi; `server.ts` register (HS256, access `expiresIn` 15dk — **saniye** cinsinden, ampirik doğrulandı). `JWT_ACCESS_SECRET` env zaten vardı (TASK-1.05).
+- `auth/jwt.ts` (YENİ): `AccessTokenClaims`/`RegistrationTokenClaims` + `issueAccessToken` (15dk, sub=userId+role+typ:'access'+jti) + `issueRegistrationToken` (10dk, sub=phone+typ:'registration'). `jti` = `crypto.randomUUID` (yeni paket yok). `@fastify/jwt` modül augmentation (payload/user tipleri).
+- `auth/middleware.ts` (YENİ): `registerAuthGuard` → `app.authenticate` decorator (`jwtVerify` → `typ:'access'` zorla → DB `deletedAt:null` aktiflik kontrolü → 401 sızdırmaz).
+- `routes/auth-me.ts` (YENİ): `GET /auth/me` korumalı — guard'ın canlı tüketicisi + mobile auto-login (TASK-1.33) için oturum kontrolü.
+- `routes/auth-profile.ts` (YENİ): `POST /auth/profile` — Bearer kayıt jetonu → tek `$transaction`: User + ConsentRecord (kvkk zorunlu / saglik opsiyonel) + AuditLog (`user_created`+`consent_granted`). 401/400/403(kvkk)/409(telefon var + P2002 race)/201. `KVKK_TEXT_VERSION` mobile `kvkk.json` ile hizalı.
+- `routes/auth-otp-verify.ts` (GÜNCELLE): mevcut user → `accessToken` + `user_login` audit; yeni user → `registrationToken`.
+- `errors.json` (GÜNCELLE): `auth.kvkkConsentRequired`, `auth.phoneAlreadyRegistered`. `kvkk/consent.ts` (GÜNCELLE): `KVKK_TEXT_VERSION` export.
+
+**Test:** backend **99 PASS** (81 → +18: jwt.test 4 + middleware.test 5 + auth-profile.test 7 + auth-otp-verify +2). typecheck + lint + format temiz. Test kriterleri (TTL 15dk, soft-delete authenticate edemez, transaction atomik, audit user_created/user_login, KVKK false reddi) karşılandı.
+
+**Sapma notu:** Plan `jti: cuid()` öneriyordu → `randomUUID` kullanıldı (bağımlılık eklememek için). Plan `/auth/me` listelemiyordu → guard'ın test edilebilir/kullanışlı tüketicisi olarak eklendi (F1.1 oturum yönetimi kapsamında).
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-30 (run-task)

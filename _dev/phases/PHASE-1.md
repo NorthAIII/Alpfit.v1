@@ -262,7 +262,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.17 | TASK-1.17 | ✅ Tamamlandı | Mock SMS provider interface + dev_otp_log (SmsProvider + MockSmsProvider + factory + dev OTP lookup endpoint) |
 | 1.18 | TASK-1.18 | ✅ Tamamlandı | OTP send endpoint (rate limit + Redis) — POST /auth/otp/send + Redis storage/TTL + atomik SET NX rate limit + healthz Redis PING |
 | 1.19 | TASK-1.19 | ✅ Tamamlandı | OTP verify endpoint + brute force — POST /auth/otp/verify + atomik GETDEL consume + otp:attempts INCR + 5 hatalı → otp:lockout 15dk + timingSafeEqual |
-| 1.20 | TASK-1.20 | ⬜ Bekliyor | JWT access token + auth middleware + profil create |
+| 1.20 | TASK-1.20 | ✅ Tamamlandı | JWT access token + auth middleware + profil create — @fastify/jwt HS256, access 15dk + kayıt jetonu 10dk (typ claim), app.authenticate (deletedAt:null), POST /auth/profile atomik $transaction, GET /auth/me |
 | 1.21 | TASK-1.21 | ⬜ Bekliyor | Refresh token rotation (30 gün + replay detection) |
 | 1.22 | TASK-1.22 | ⬜ Bekliyor | Logout + tüm cihazlardan çıkış endpoints |
 | 1.23 | TASK-1.23 | ⬜ Bekliyor | PT davet linki üretim endpoint |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-30 — TASK-1.19 ✅: OTP verify endpoint (`POST /auth/otp/verify`) + brute-force kilidi — kilit kontrolü (423 + Retry-After) → `peekOtp` (yok → 410) → `codesMatch` (timingSafeEqual) yanlışsa `otp:attempts` atomik INCR + `otp_verify_failed` audit, 5'te `otp:lockout` 15dk (423) → doğruysa atomik `GETDEL` consume (race → 410) + `otp_verified` + dev_otp_log consumedAt + user lookup (userExists/isNew). backend 81 PASS (70+11), typecheck/lint/format temiz.
+**Son Güncelleme:** 2026-05-30 — TASK-1.20 ✅: JWT access token + auth middleware + profil create. `@fastify/jwt` HS256; access (15dk) + kayıt jetonu (10dk) `typ` claim ayrımı. `app.authenticate` decorator (jwtVerify→typ:access→DB deletedAt:null). `GET /auth/me` korumalı; `POST /auth/profile` tek `$transaction` (User+ConsentRecord+audit, kvkk zorunlu/403, telefon var/409). verify mevcut user→accessToken+user_login / yeni→registrationToken. Akış: kullanıcı **kayıt jetonu** yaklaşımını seçti (OTP tek-kullanımlık korundu). backend 99 PASS (81+18), typecheck/lint/format temiz.

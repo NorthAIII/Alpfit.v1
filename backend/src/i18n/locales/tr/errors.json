@@ -13,7 +13,9 @@
     "tokenInvalid": "Yetkilendirme geçersiz.",
     "tokenExpired": "Oturumun sona erdi.",
     "userNotFound": "Kullanıcı bulunamadı.",
-    "roleForbidden": "Bu işlem için yetkin yok."
+    "roleForbidden": "Bu işlem için yetkin yok.",
+    "kvkkConsentRequired": "KVKK aydınlatma metnini onaylamadan hesap açılamaz.",
+    "phoneAlreadyRegistered": "Bu telefon zaten kayıtlı, giriş yap."
   },
   "invite": {
     "notFound": "Davet linki bulunamadı.",

@@ -91,6 +91,37 @@ describe('TASK-1.19 — POST /auth/otp/verify', () => {
     expect(res.json()).toMatchObject({ verified: true, userExists: true, isNew: false });
   });
 
+  it('200 — existing user login issues accessToken + writes user_login audit (TASK-1.20)', async () => {
+    const phone = '+905551110100';
+    await server.prisma.user.create({
+      data: { phoneE164: phone, role: 'trainer', firstName: 'Mert', lastName: 'Demir' },
+    });
+    await storeOtp(server.redis, phone, KNOWN_CODE);
+
+    const res = await verify(server, phone, KNOWN_CODE);
+    expect(res.statusCode).toBe(200);
+    const json = res.json() as { accessToken?: string; registrationToken?: string };
+    expect(typeof json.accessToken).toBe('string');
+    expect(json.registrationToken).toBeUndefined();
+
+    const login = await server.prisma.auditLog.findMany({ where: { eventType: 'user_login' } });
+    expect(login).toHaveLength(1);
+  });
+
+  it('200 — new user receives a registrationToken (no accessToken) (TASK-1.20)', async () => {
+    const phone = '+905551110111';
+    await storeOtp(server.redis, phone, KNOWN_CODE);
+
+    const res = await verify(server, phone, KNOWN_CODE);
+    expect(res.statusCode).toBe(200);
+    const json = res.json() as { accessToken?: string; registrationToken?: string };
+    expect(typeof json.registrationToken).toBe('string');
+    expect(json.accessToken).toBeUndefined();
+
+    const login = await server.prisma.auditLog.findMany({ where: { eventType: 'user_login' } });
+    expect(login).toHaveLength(0);
+  });
+
   it('200 — marks the latest dev_otp_log row consumed (via real send flow)', async () => {
     const phone = '+905551110022';
     const sent = await server.app.inject({

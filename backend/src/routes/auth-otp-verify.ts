@@ -7,15 +7,19 @@
  *     - 410 expired       : aktif OTP yok (süresi doldu / zaten tüketildi)
  *     - 401 invalid_code  : kod yanlış (deneme sayacı arttı, < 5)
  *     - 423 locked        : bu hatalı deneme 5'e ulaştı → telefon kilitlendi
- *     - 200 { verified, userExists, isNew } : kod doğru, OTP tüketildi
+ *     - 200 mevcut üye  : { verified, userExists:true, isNew:false, accessToken }
+ *     - 200 yeni üye    : { verified, userExists:false, isNew:true, registrationToken }
  *
- * F1.1 PRD: "5 hatalı kod girişinden sonra 15 dakika kilit". Bu endpoint
- * **JWT döndürmez** — user create/login + token issue TASK-1.20'de. Burada
- * yalnızca doğrulama + lockout + audit + dev_otp_log consume var.
+ * F1.1 PRD: "5 hatalı kod girişinden sonra 15 dakika kilit". OTP doğru kod
+ * doğrulanınca atomik tüketilir; ardından (TASK-1.20):
+ *   - **mevcut aktif kullanıcı** → giriş: `accessToken` (15dk) + `user_login` audit,
+ *   - **yeni kullanıcı** → `registrationToken` (10dk); profil `POST /auth/profile`
+ *     ile bu jeton üzerinden açılır (kod tekrar gönderilmez). refreshToken 1.21'de.
  */
 import { parseTrPhone } from '@alpfit/shared';
 import { z } from 'zod';
 
+import { issueAccessToken, issueRegistrationToken } from '../auth/jwt.js';
 import {
   OTP_MAX_ATTEMPTS,
   clearAttempts,
@@ -116,13 +120,11 @@ export const authOtpVerifyRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    // 7) Kullanıcı var mı? (JWT/create TASK-1.20). Soft-delete'li hesap "yok"
-    //    sayılır — aktif hesap kontrolü `deletedAt: null`.
+    // 7) Kullanıcı var mı? Soft-delete'li hesap "yok" sayılır (`deletedAt: null`).
     const user = await app.prisma.user.findFirst({
       where: { phoneE164: e164, deletedAt: null },
-      select: { id: true },
+      select: { id: true, role: true },
     });
-    const userExists = user !== null;
 
     await logAuditEvent(app.prisma, {
       userId: e164,
@@ -130,10 +132,29 @@ export const authOtpVerifyRoutes: FastifyPluginAsync = async (app) => {
       metadata: { ip: req.ip },
     });
 
+    // 8a) Mevcut aktif kullanıcı → giriş: access token + user_login audit.
+    if (user !== null) {
+      const accessToken = issueAccessToken(app, { id: user.id, role: user.role });
+      await logAuditEvent(app.prisma, {
+        userId: user.id,
+        eventType: 'user_login',
+        metadata: { ip: req.ip },
+      });
+      return reply.code(200).send({
+        verified: true as const,
+        userExists: true as const,
+        isNew: false as const,
+        accessToken,
+      });
+    }
+
+    // 8b) Yeni kullanıcı → kayıt jetonu (profil POST /auth/profile ile açılır).
+    const registrationToken = issueRegistrationToken(app, e164);
     return reply.code(200).send({
       verified: true as const,
-      userExists,
-      isNew: !userExists,
+      userExists: false as const,
+      isNew: true as const,
+      registrationToken,
     });
   });
 };

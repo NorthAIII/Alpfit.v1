@@ -1,13 +1,18 @@
 import { getPinoRedactPaths } from '@alpfit/shared';
 import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance } from 'fastify';
 
+import { ACCESS_TOKEN_TTL_SEC } from './auth/jwt.js';
+import { registerAuthGuard } from './auth/middleware.js';
 import { getPrisma } from './db/prisma.js';
 import { getRedis, type Redis } from './redis/client.js';
 import { adminInternalRoutes } from './routes/admin-internal.js';
+import { authMeRoutes } from './routes/auth-me.js';
 import { authOtpSendRoutes } from './routes/auth-otp-send.js';
 import { authOtpVerifyRoutes } from './routes/auth-otp-verify.js';
+import { authProfileRoutes } from './routes/auth-profile.js';
 import { healthzRoutes } from './routes/healthz.js';
 import { internalDevOtpRoutes } from './routes/internal-dev-otp.js';
 
@@ -45,6 +50,15 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   app.decorate('redis', redis);
   redis.on('error', (err) => app.log.error({ err }, 'redis client error'));
 
+  // JWT (TASK-1.20): access + kayıt jetonu tek secret (HS256) ile imzalanır.
+  // `expiresIn` saniye cinsinden (access default; registration per-call override).
+  await app.register(jwt, {
+    secret: opts.env.JWT_ACCESS_SECRET,
+    sign: { algorithm: 'HS256', expiresIn: ACCESS_TOKEN_TTL_SEC },
+  });
+  // `app.authenticate` decorator'ı — korumalı route'lardan ÖNCE register edilir.
+  registerAuthGuard(app);
+
   await app.register(sensible);
   await app.register(cors, { origin: false });
   await app.register(healthzRoutes);
@@ -52,6 +66,8 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(internalDevOtpRoutes({ env: opts.env }));
   await app.register(authOtpSendRoutes({ env: opts.env }));
   await app.register(authOtpVerifyRoutes);
+  await app.register(authProfileRoutes);
+  await app.register(authMeRoutes);
 
   return app;
 }
