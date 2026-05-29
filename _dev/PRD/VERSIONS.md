@@ -27,12 +27,11 @@
 | Üye Program Görüntüleme + Tamamlama | [features/05-member-program-view.md](features/05-member-program-view.md) | v1 |
 | PT Dashboard — Üye Listesi | [features/06-pt-dashboard.md](features/06-pt-dashboard.md) | v1 |
 | Üye Ölçüm Takibi | [features/07-member-measurements.md](features/07-member-measurements.md) | v1 |
+| Üye Yemek Günlüğü | [features/08-member-food-log.md](features/08-member-food-log.md) | v1 |
 
-### Henüz Yazılmamış v1 Feature'ları (PRD-refine'da yazılacak)
+### v1 Feature Kapsamı: Tamamlandı
 
-Bu feature'lar v1 kapsamındadır ama henüz feature dosyası yok — sonraki PRD oturumlarında yazılacak:
-
-- **Üye Yemek Günlüğü** — Üyenin yediklerini (kalori/makro form) günlük olarak girmesi. v1'de AI önerisi YOK, sadece kayıt.
+v1 kapsamındaki tüm feature dosyaları yazıldı. Yeni v1 feature'ı eklemek scope büyütme — ILKELER §"Pazarlık Konusu Olmayanlar" §3 kontrolünden geçmeden eklenmez.
 
 ### v1.5 Feature Adayları
 
@@ -63,4 +62,4 @@ Bu feature'lar v1 kapsamındadır ama henüz feature dosyası yok — sonraki PR
 
 ---
 
-**Son Güncelleme:** 2026-05-29 (Üye Ölçüm Takibi feature eklendi)
+**Son Güncelleme:** 2026-05-29 (Üye Yemek Günlüğü feature eklendi — v1 feature kapsamı tamamlandı)

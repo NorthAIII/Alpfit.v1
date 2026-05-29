@@ -291,7 +291,7 @@ v0.1 (v1)
 - **[Bildirim Sistemi](04-notifications.md)** — Banner stack §04'teki push olaylarının in-app yansımasıdır. PT'nin app içinde gördüğü tüm "şimdi yap" sinyalleri §04 ile aynı kaynaktan.
 - **[Üye Program Görüntüleme + Tamamlama](05-member-program-view.md)** — Üyenin "Antrenmanı bitir" eylemi PT dashboard'ta o üyenin satırını real-time günceller (son aktivite, streak).
 - **[Üye Ölçüm Takibi](07-member-measurements.md)** — Üye detayında "Ölçüm ekle" CTA buraya gider. "Son ölçümler" özet bölümü detay sayfasında §07 davranış kurallarına göre yaşar. "Son ölçüm: X gün önce" hint motorun değil §07'nin çıktısıdır.
-- **Üye Yemek Günlüğü** (henüz yazılmadı) — Üye detayında "Yemek günlüğü" CTA PT'nin okuma erişimini açar.
+- **[Üye Yemek Günlüğü](08-member-food-log.md)** — Üye detayında "Yemek günlüğü" CTA PT'nin okuma erişimini açar. Üyenin gizlilik toggle'ı kapalıysa CTA disabled. "Son giriş: X gün önce" hint §08 davranışı.
 
 ---
 

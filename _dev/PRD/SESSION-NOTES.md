@@ -7,9 +7,7 @@
 ## Açık Sorular (PRD-refine'da netleşecek)
 
 ### Yazılması Bekleyen v1 Feature'ları
-Aşağıdaki feature'lar v1 kapsamında olduğu kabul edildi ama dedicated feature dosyası henüz yok. PRD-refine oturumunda yazılmalı:
-
-- **Üye Yemek Günlüğü** — Üyenin yediklerini girdiği form. Kalori/makro yapısı, manuel mi, hazır yemek seçimi mi (v1'de muhtemelen sadece serbest metin + manuel kalori). v1.5 AI önerisinin temelini hazırlamalı. PT Dashboard'tan "Yemek günlüğü" CTA okuma erişimi açacak (§06).
+**v1 feature kapsamı tamamlandı** (07 Ölçüm + 08 Yemek Günlüğü 2026-05-29'da yazıldı). Yeni v1 feature'ı eklenmeden önce ILKELER §"Pazarlık Konusu Olmayanlar" §3 disiplin kontrolü uygulanır.
 
 ### Teknik Mimari (kickoff'a bırakılan)
 Bu kararlar PRD seviyesi değil, `/devflow:kickoff`'ta verilecek — ama PRD'yi etkileyen yönü varsa not düşülmüş:
