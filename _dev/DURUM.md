@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — discuss-phase 1: Faz 1 (Çekirdek altyapı + Auth — M0 + M1) kapsam tartışması tamamlandı; PHASE-1.md oluştu; sıradaki adım research-phase.
+**Son Güncelleme:** 2026-05-29 — research-phase 1: TECH-STACK.md dolduruldu (Expo+Fastify+Prisma 7+Hetzner+Sentry); 5 mimari karar DECISIONS.md'ye eklendi; sıradaki adım plan-phase.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
-**Adım:** research
-**İlerleme:** 0/0 task — discuss-phase tamamlandı, task'lar plan-phase'de yazılacak
+**Adım:** plan
+**İlerleme:** 0/0 task — research-phase tamamlandı (TECH-STACK kararları verildi), task'lar plan-phase'de yazılacak
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** Yok — kapsam tartışması tamamlandı, sıradaki adım research-phase; task'lar plan-phase'de yazılacak.
+**Task:** Yok — research-phase tamamlandı, sıradaki adım plan-phase; task'lar burada yazılacak.
 **Durum:** ⬜ Bekliyor
-**İlerleme:** Bir sonraki oturumda `/devflow:research-phase 1` çalıştırılacak (TECH-STACK kararı dahil).
+**İlerleme:** Bir sonraki oturumda `/devflow:plan-phase 1` çalıştırılacak.
 
 ---
 
@@ -81,4 +81,4 @@ Henüz tamamlanmış task yok.
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — discuss-phase 1: Faz 1 (Çekirdek altyapı + Auth — M0 + M1) kapsam tartışması tamamlandı; PHASE-1.md oluştu; sıradaki adım research-phase.
+**Son Güncelleme:** 2026-05-29 — research-phase 1: TECH-STACK.md dolduruldu (Expo+Fastify+Prisma 7+Hetzner+Sentry); 5 mimari karar DECISIONS.md'ye eklendi; sıradaki adım plan-phase.

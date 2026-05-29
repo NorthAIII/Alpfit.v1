@@ -93,7 +93,147 @@ Bu fazda **yapılmayacak** ama net olarak hatırlamak gereken konular:
 
 ## Araştırma Bulguları
 
-> Bu bölüm `/devflow:research-phase 1` oturumunda doldurulacak. Faz 1'in en kritik teknik kararı: **TECH-STACK.md** içeriği (mobile + backend + DB + SMS provider + push provider + hosting). Bu kararlar bu fazda alınır ve sonraki tüm fazlar bu zeminin üstüne kurulur.
+> Bu bölüm `/devflow:research-phase 1` oturumunda (2026-05-29) dolduruldu.
+
+### Değerlendirilen Yaklaşımlar
+
+**Mobile Stack** — Expo (React Native) / Flutter / Native (Swift+Kotlin)
+- **Expo RN:** Tek TS, EAS Build zero-config, push+deep link otomasyonu, 90 gün için en hızlı.
+- **Flutter:** UI consistency güçlü, performans iyi; ama push+deep link manuel, Dart öğrenmek gerek, Hive/Isar topluluğa bırakıldı.
+- **Native:** En esnek; 2 codebase → solo dev için 90 günde gerçekçi değil.
+- **Seçilen:** Expo (React Native) — solo dev + 90 gün + push/deep link kritikliği + tek TypeScript dilinde mobile+backend.
+
+**Backend Framework** — Express 5 / Fastify 5 / NestJS 11 / Hono
+- **Fastify 5:** "Az sihir + bol batarya", TS ergonomisi iyi, `@fastify/jwt` hazır, 2-3× Express performansı.
+- **Express 5:** En geniş ekosistem ama TS ergonomisi zayıf, JWT/validation/schema elle.
+- **NestJS 11:** Yapısal disiplin güçlü ama dik öğrenme eğrisi + magic riski (90 gün riskli).
+- **Hono:** Modern + edge-native ama KVKK audit/queue/cron ekosistemi henüz olgunlaşmadı.
+- **Seçilen:** Fastify 5 — solo + zayıf teknik + 90 gün için ideal denge.
+
+**ORM (Postgres + TS)** — Prisma 7 / Prisma 6.x LTS / Drizzle / Knex / TypeORM
+- **Prisma 7:** Tek schema dosyası, graph-tabanlı migration (en olgun), en geniş docs, jsonb desteği iyi.
+- **Drizzle:** SQL'e yakın, hızlı; ama `drizzle-kit` prod tuzakları manuel SQL review zorunlu.
+- **Knex:** Tam kontrol; ama tip güvenliği elle, çok boilerplate.
+- **TypeORM:** Maintenance modda — önerilmez.
+- **Seçilen:** Prisma 7 — KVKK + [[ilkeler]] §"Kümülatif test altyapısı" için en güvenli migration; en geniş docs solo için kritik.
+
+**Hosting** — Hetzner+Coolify / Render Frankfurt / DigitalOcean Frankfurt / Fly.io FRA / Railway / AWS
+- **Hetzner+Coolify (Falkenstein, AB):** ~€10/ay, KVKK için en temiz konum (AB), staging+prod tek sunucu; tek-node SPOF.
+- **Render Frankfurt:** ~$37/ay, tam managed PITR; güvenlik ağı olarak.
+- **Fly.io FRA:** Managed PG pahalı + FRA WireGuard olayı.
+- **Railway:** 2024-2026 ciddi sicil (DDoS, GCP suspend, exploit) — önerilmez.
+- **Seçilen:** Hetzner Cloud + Coolify (Falkenstein) — KVKK m.9 reformu sonrası AB en savunulabilir konum, fiyat ölçeğe çok uygun.
+
+**Observability** — Sentry / GlitchTip / Better Stack / DataDog
+- **Sentry Developer (free):** EU Frankfurt residency free plan'a dahil, PII scrubbing 3 katmanlı, RN+Node tek araç.
+- **GlitchTip self-host:** ücretsiz ama ops yükü solo dev için fazla.
+- **Better Stack:** log management odaklı, crash reporting yok.
+- **DataDog:** $26/ay sınırını ilk aydan aşar.
+- **Seçilen:** Sentry Developer (free → 6. ay Team $26/ay) — KVKK + RN+Node tek araç + endüstri standardı.
+
+**Test Framework** — Vitest+Jest / Jest-her-yer / Vitest-her-yer
+- **Seçilen:** Vitest+Testcontainers (backend) + Jest+RTL (mobile); E2E Maestro Yakın 5'te.
+
+**Mock SMS Mimari** — Provider interface + 2 driver / sadece fonksiyon / 3. parti sandbox
+- **Seçilen:** Provider interface + `MockSmsProvider` (dev_otp_log tablosuna yazar) + `LiveSmsProvider` (Yakın 5).
+
+**Paket Yöneticisi** — pnpm / npm / yarn berry
+- **Seçilen:** pnpm workspaces — disk verimli, monorepo desteği yerleşik.
+
+### Kullanılacak Araçlar/Kütüphaneler
+
+| Katman | Araç | Versiyon | Ne için |
+|--------|------|----------|---------|
+| Mobile | Expo + React Native | SDK 56, RN 0.81 | Cross-platform iOS+Android |
+| Mobile | Expo Router | latest | File-based routing + deep link |
+| Mobile | expo-notifications | latest | APNs+FCM (M4'te aktive) |
+| Mobile | expo-linking | latest | Universal/App Link |
+| Mobile | i18next + react-i18next | latest | i18n shell (TR-only v1) |
+| Mobile | Jest + RTL | latest | Component test |
+| Backend | Node.js | 22 LTS | Runtime |
+| Backend | TypeScript | 5.x | Tip sistemi |
+| Backend | Fastify | 5.x | HTTP framework |
+| Backend | @fastify/jwt + fast-jwt | latest | JWT + refresh token |
+| Backend | Prisma | 7.x | ORM + migration |
+| Backend | @prisma/adapter-pg | latest | Postgres driver adapter (Prisma 7 explicit) |
+| Backend | zod | latest | Schema validation (shared backend+mobile) |
+| Backend | pino + fast-redact | latest | KVKK-safe logging |
+| Backend | Vitest + Testcontainers | latest | Unit + integration test |
+| Backend | i18next | latest | SMS/notification stringleri |
+| Backend | libphonenumber-js | latest | +90 telefon format/validate |
+| Backend | date-fns + tr locale | latest | TR tarih format |
+| DB | PostgreSQL | 16 | Veri tabanı |
+| Cache | Redis | 7 | Session, rate limit, OTP storage |
+| Observability | Sentry SDK (Node + RN) | latest | Error tracking + crash reporting |
+| Hosting | Hetzner Cloud CPX22 | — | Falkenstein/Nuremberg, EU |
+| Hosting | Coolify | latest stable | PaaS dashboard (GitHub push-to-deploy) |
+| Hosting | Backblaze B2 | — | Günlük DB yedek |
+| CI/CD | GitHub Actions | — | PR + deploy pipeline |
+| Mobile build | EAS Build | — | iOS+Android cloud build |
+| Pkg Mgr | pnpm | latest | Monorepo workspaces |
+
+### Dikkat Edilecekler (Risk + Tuzaklar)
+
+1. **Prisma 7 ESM + Rust-free geçişi yeni (Kasım 2025)** — 3 somut tuzak: (a) monorepo'da Expo/RN ile backend ayrı tsconfig şart; (b) `@prisma/adapter-pg` explicit kurulum atlanırsa runtime'da kırılır; (c) `migrate dev`/`db push` artık `prisma generate` çalıştırmıyor → CI + dev script'e explicit adım eklenmeli. **Mitigation:** İlk task'lerden biri "Prisma 7 setup smoke check" — generate adımı eksikse CI fail.
+
+2. **React Native 0.82 ile eski mimari kaldırıldı** — third-party kütüphane seçerken "New Arch + Expo SDK 56+ uyumlu" filtresi zorunlu. **Mitigation:** Paket seçim disiplinine yazıldı (kütüphane eklerken README'sini kontrol).
+
+3. **Sentry varsayılan PII gönderir** — `req.body` tam gönderilir → KVKK ihlali. **Mitigation:** İlk task'lerden biri "Sentry kurulumu + PII scrubber + unit test ile doğrulama" — kilo/boy/yemek alanları içeren mock event → Sentry payload'da bulunamaz assertion'u.
+
+4. **Hetzner tek-node SPOF** — sunucu çökerse 30-60 dk downtime. **Mitigation:** Günlük Backblaze B2 yedek (Coolify built-in), ayda 1 manuel restore drill (faz retrosuna ekle), DB+Coolify config ayrı dokümante, v1.5'te HA Postgres değerlendir.
+
+5. **TR locale tuzağı** — JS `toLowerCase()` Türk "İ" → "i" yapmaz (Unicode I-with-dot). **Mitigation:** `shared/locale.ts` util fonksiyonları (`trLower`/`trUpper`) kullanılır; lint kuralı ham `.toLowerCase()`/`.toUpperCase()` çağrılarını yasaklar.
+
+6. **KVKK m.9 reformu (2024)** — Yurt dışı veri aktarımı için yeterlilik kararı yok; AB hosting argümanını **Standart Sözleşme** (SCC) + üye açık rıza ikilisiyle savunabiliriz. **Mitigation:** Yakın 4 öncesi Hetzner ile SCC imzalanması (KVKK.md'ye not düştü; hukuki danışman görevi).
+
+7. **Sentry 5K event/ay sınırı silently drop** — production'da aşılırsa hatalar görünmez. **Mitigation:** `quota_exceeded` webhook'unu Slack/email'e bağla.
+
+8. **Fastify refresh-token rotation resmi recipe yok** — topluluk patternleri olgun ama bilinçli yazılıp test edilmeli. **Mitigation:** Pattern unit + integration test ile doğrulanır (rotation + revoke + replay attack senaryoları).
+
+### Teknik Kararlar
+
+| Karar | Gerekçe |
+|-------|---------|
+| Mobile = Expo (React Native) | Solo dev + 90 gün + push/deep link kritikliği + tek TS |
+| Backend = Fastify 5 + TypeScript | "Az sihir + bol batarya" — solo dev için ideal |
+| ORM = Prisma 7 + Postgres 16 | Graph-tabanlı migration (KVKK + kümülatif test) + en geniş docs |
+| Hosting = Hetzner+Coolify (Falkenstein, AB) | KVKK m.9 reformu sonrası AB en savunulabilir konum, ~€10/ay |
+| Observability = Sentry Developer (EU Frankfurt) | KVKK residency free plan'da, PII scrubbing 3 katmanlı, RN+Node tek araç |
+| Test = Vitest+Testcontainers (backend) + Jest+RTL (mobile) | TS-native hız + KVKK-uyumlu test DB |
+| Mock SMS = Provider interface + 2 driver | Yakın 5'te live driver eklemek küçük task |
+| Pkg Mgr = pnpm workspaces | Disk verimli + monorepo yerleşik |
+| JWT = @fastify/jwt + fast-jwt | Access 15dk + refresh 30 gün opaque DB-stored + rotate-on-use |
+| Migration = prisma migrate | ORM'in standart aracı; dev/staging/prod pipeline ayrı |
+| Deep link = Expo Router + EAS Hosting `.well-known/` | Universal/App Link otomatik servis |
+| i18n = i18next + react-i18next | JS ekosisteminin standardı; TR-only v1, shell v2 hazır |
+| Sessiz saat = backend timezone-aware (Europe/Istanbul) | M4'te implement; 22:00-08:00 push ertelenir |
+| Code style | ESLint + Prettier (devcontainer'da kurulu) |
+| Devcontainer | Postgres 16 + Redis 7 baseline korunur; pnpm + Node 22 eklenir |
+
+### Plan-Phase'e Aktarılan Notlar
+
+Plan-phase'de task yazılırken bu kararların somut karşılıkları aşağıdaki sıralamayla iş paketine bölünür (öneri; plan-phase'de teyit edilir):
+
+1. Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier hizalama)
+2. Backend iskeleti (Fastify + Prisma 7 setup + ilk migration + smoke check)
+3. Backend test altyapısı (Vitest + Testcontainers Postgres + first integration test)
+4. Mobile iskeleti (Expo SDK 56 + Expo Router + i18n shell + TR locale util)
+5. Mobile test altyapısı (Jest + RTL + first component test)
+6. CI/CD pipeline (GitHub Actions PR + main → staging Coolify webhook)
+7. Hetzner+Coolify hosting kurulumu (staging environment first)
+8. Sentry kurulumu + PII scrubber + zorunlu test
+9. 3 rol veri modeli + migration (Member + Trainer + Gym Owner)
+10. KVKK çerçevesi (rıza tabloları + audit log + soft delete + 30 gün retention job)
+11. Auth interface (Mock SMS provider + send/verify OTP + JWT issue/refresh)
+12. PT davet linki üretim + 30 gün lazy-check
+13. Deep link kurulumu (Universal/App Link + .well-known/ EAS Hosting)
+14. M1 onboarding ekranları (rol seçimi, telefon, OTP, KVKK rıza, profil)
+15. PT in-app davet kabul banner + liste güncellemesi
+16. "Tüm cihazlardan çıkış" akışı (refresh_tokens revoke)
+17. Soft delete + 30 gün retention job (üye çıkarma + KVKK rıza geri çekme)
+18. Backblaze yedek + restore drill prosedürü
+
+Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'de netleşir.
 
 ---
 
