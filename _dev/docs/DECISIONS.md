@@ -9,6 +9,43 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — Backend Test İzolasyonu: Per-Suite Postgres Database (Testcontainers'tan Sapma)
+
+**Bağlam:** TASK-1.04 backend test altyapısı. Üst karar (2026-05-29 research → Vitest + Testcontainers) bu task'ın devcontainer ortamında **Docker daemon olmadan** çalıştırılamayacağını kıyamadan keşfetmeden alınmıştı. Devcontainer (`.devcontainer/Dockerfile`) `mcr.microsoft.com/devcontainers/typescript-node` üstüne kurulu — Docker CLI yok, `/var/run/docker.sock` mount edilmemiş, `docker-in-docker` / `docker-outside-of-docker` feature'ı eklenmemiş. Testcontainers `GenericContainer.start()` Docker daemon'a TCP/socket bağlanır; daemon yoksa boot edemez.
+
+**Seçenekler:**
+1. **Mevcut Postgres + per-suite database (CREATE/DROP DATABASE per suite)** — Devcontainer'ın yanyana çalışan `postgres:17-alpine` servisini admin connection olarak kullan; her test suite başında `CREATE DATABASE alpfit_test_<rand>` → `prisma migrate deploy` → DB URL döndür; afterAll'da `DROP DATABASE ... WITH (FORCE)`. Docker bağımlılığı yok; CI'da aynı patern (GH Actions `services: postgres`).
+2. **`.devcontainer/devcontainer.json`'a `docker-outside-of-docker` feature ekle + socket mount** — Dokunulmaz dosyayı değiştirir, devcontainer rebuild gerekir, Testcontainers orijinal kararıyla çalışır.
+3. **Task'ı bloke et, ayrı oturumda devcontainer kurulumu yapılsın** — Faz akışını durdurur.
+
+**Karar:** **Seçenek 1 — Per-suite Postgres database.** Kullanıcı `AskUserQuestion` ile onayladı (CLAUDE.md feedback §"Varsayım Yok" — paket/mimari kararı onaysız değişmez).
+
+**Tamamlayıcı uygulama kararları:**
+- **`backend/test/db.ts`** — `createTestDatabase()` `pg` admin client (`process.env.DATABASE_URL` → `dev` DB) ile bağlanır, `randomBytes(6).toString('hex')` ile DB adı üretir (`alpfit_test_<12hex>`), `URL` parse + `pathname = /<dbName>` ile suite URL'i kurar, `execSync('pnpm exec prisma migrate deploy', { env: { ..., DATABASE_URL: suiteUrl } })` ile migration uygular. `dropTestDatabase(name)` admin connection + `DROP DATABASE IF EXISTS "..." WITH (FORCE)` (Postgres 13+ aktif connection'ları kapatır).
+- **`backend/test/setup.ts`** — `vi.stubEnv` ile baseline env stub (NODE_ENV=development, PORT=3000, LOG_LEVEL=silent, DATABASE_URL=admin URL, JWT secret'lar 32+ char test değerleri). Her suite kendi DB URL'sini override ediyor; setup yalnızca `loadEnv()` ön-koşulu için. `PORT=0` zod `positive()` validasyonundan geçmedi, 3000'e sabitlendi (`.inject()` listen çağırmıyor — semantik anlam yok).
+- **`backend/test/build-test-server.ts`** — `buildTestServer({ databaseUrl })`: `loadEnv()` env override + `createPrismaClient(databaseUrl)` + `buildServer({ env, logger: false, prisma })`. Fastify `.inject()` in-process HTTP, socket açılmıyor.
+- **`backend/src/routes/healthz.test.ts`** — İki describe: (a) DB reachable → 200/up; (b) DB unreachable (geçersiz host `alpfit-no-such-host` + `?connect_timeout=2`) → 503/down. Negatif test 1sn altı; toplam suite 1.4s.
+- **`backend/vitest.config.ts`** — `globals: false` (explicit import), `environment: node`, `setupFiles: ['./test/setup.ts']`, `testTimeout/hookTimeout: 30_000` (migrate deploy CLI ~2-3s payı), coverage v8 + text+lcov, generated/test/d.ts exclude. Vitest 4 `poolOptions` tipi `InlineConfig`'te yok — kaldırıldı; default `threads` pool zaten paralel suite çalıştırıyor.
+- **`backend/tsconfig.test.json`** — Ana `tsconfig.json` build composite'i bozmamak için ayrı test tsconfig (`rootDir: '.'`, `noEmit: true`, `include: ['src/**/*', 'test/**/*', 'vitest.config.ts']`). Ana `tsconfig.json` `exclude: ["src/**/*.test.ts"]` ile test dosyalarını build kapsamı dışına aldı. `typecheck` script artık her ikisini sırayla çağırıyor.
+
+**Gerekçe:**
+- **Pragmatik kalıcılık** — devcontainer'a docker feature eklemek (Seçenek 2) yapılabilir ama: (a) Dokunulmaz dosyayı değiştirir + rebuild masrafı; (b) CI'da yine `services: postgres` paterni gerekecek (GH Actions Docker overhead'ini taşımaz); (c) Per-suite database paterni Testcontainers boot'undan ~5-10× hızlı (1.4s vs 5-15s). KVKK izolasyon güvencesi (per-suite ayrı DB, test sonrası gerçek silme) aynı seviyede korunur.
+- **CI portabilitesi** — Aynı patern GH Actions `services: { postgres: { image: postgres:17-alpine, env: ... } }` ile değişiklik olmadan çalışır (TASK-1.09 CI pipeline). Testcontainers'ta CI runner'da Docker available olsa bile ek "TestContainers Cloud" / "container reuse" config gerekirdi.
+- **Düşük teknik borç** — Per-suite database paterni Postgres ekosisteminin standart test paterni; Jest+Knex/Drizzle/Prisma kitaplarında yıllardır kullanılır. Future-proof.
+
+**Tradeoff'lar:** Testcontainers'ın "container scope = ortam tüm bağımlılıklar" garantisi yok — admin Postgres versiyonu (host postgres:17-alpine) test versiyonu = aynı. Devcontainer host postgres servisi değişirse testler etkilenir; ama devcontainer DB versiyonu zaten projenin reference Postgres'idir (tek-DB-versiyon politikası).
+
+**Risk + Mitigation:**
+- **Risk:** Test başarısız iptal olursa DB sızıntısı (ilk coverage run'ında bir tane sızdı, ikinci run'da temiz). **Mitigation:** `afterAll` her zaman çalışır, `WITH (FORCE)` aktif connection'ları kapatır. Periyodik temizlik scripti (`DROP DATABASE` LIKE `alpfit_test_%`) gerekirse `test:clean` script eklenir; TASK-1.09 CI cleanup hook'unda değerlendirilir.
+- **Risk:** Test paralelleştirmesi (Vitest threads pool) admin connection'a yük bindirir. **Mitigation:** Her suite admin client'i çağrı sonu `end()` yapar; suite başına 2 admin query (CREATE + DROP) — pilot ölçeğinde sorun yok. TASK-1.13'te ilk gerçek model migration'ı geldiğinde suite-shared container + per-test truncate paterni değerlendirilir (task doc karar noktası).
+- **Risk:** `prisma migrate deploy` CLI çağrısı her suite başına ~2-3s (Prisma boot + apply). **Mitigation:** Pilot ölçeğinde tolere edilir; suite sayısı arttığında "template DB + clone" paterni (Postgres `CREATE DATABASE x WITH TEMPLATE y`) değerlendirilir.
+
+**Üst kararla ilişki:** "Backend test = Vitest+Testcontainers (research-phase 2026-05-29)" kararının **Testcontainers boyutu bu karar tarafından supersede edilir**; Vitest seçimi korunur. Research kararı `phases/PHASE-1.md` Araştırma Bulguları tablosunda kalır (tarihsel kayıt); pratikte bu DECISIONS girdisi yetkili.
+
+**İlgili Task/Faz:** TASK-1.04 (bu task) → TASK-1.09 (CI pipeline `services: postgres` ile aynı patern) → TASK-1.13 (3 rol model, suite-shared vs per-test truncate kararı) → tüm sonraki backend integration test'leri.
+
+---
+
 ### 2026-05-29 — Prisma 7 Setup Detayı: Yeni `prisma-client` Generator + `prisma.config.ts` + Singleton+Factory + Generate Hooks
 
 **Bağlam:** TASK-1.03 Prisma 7 setup. Üst karar (Prisma 7 + Postgres 16 + `@prisma/adapter-pg`) zaten 2026-05-29 (research) DECISIONS'ta yazılı; bu kayıt **implementation-time** alt-kararlarını tutar çünkü Prisma 7 Kasım 2025 release'i task doc'un öngörüsünden meaningfully farklı bir API ile geldi.

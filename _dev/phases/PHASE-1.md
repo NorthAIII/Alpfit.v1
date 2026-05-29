@@ -246,7 +246,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.01 | TASK-1.01 | ✅ Tamamlandı | Monorepo iskeleti (pnpm workspaces + tsconfig + ESLint/Prettier + shared/) |
 | 1.02 | TASK-1.02 | ✅ Tamamlandı | Backend Fastify iskeleti + zod env + healthcheck |
 | 1.03 | TASK-1.03 | ✅ Tamamlandı | Prisma 7 + adapter-pg + ilk migration + generate smoke |
-| 1.04 | TASK-1.04 | ⬜ Bekliyor | Backend test altyapısı (Vitest + Testcontainers) |
+| 1.04 | TASK-1.04 | ✅ Tamamlandı | Backend test altyapısı (Vitest + per-suite Postgres) |
 | 1.05 | TASK-1.05 | ⬜ Bekliyor | Mobile Expo SDK 56 + Expo Router iskelet |
 | 1.06 | TASK-1.06 | ⬜ Bekliyor | TR locale util + lint kuralı (toLowerCase yasağı) |
 | 1.07 | TASK-1.07 | ⬜ Bekliyor | i18n shell (i18next mobile + backend, TR-only) |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — TASK-1.03 ✅ (Prisma 7 + adapter-pg + `_init` migration + /healthz DB ping); sıradaki TASK-1.04.
+**Son Güncelleme:** 2026-05-29 — TASK-1.04 ✅ (Vitest 4 + per-suite Postgres + healthz integration test 3 passed); Testcontainers araç boyutunda revize (DECISIONS); sıradaki TASK-1.05.
