@@ -9,6 +9,28 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.17: SMS Provider Interface + Driver Pattern + dev_otp_log + Dev OTP Lookup
+
+**Bağlam:** M1 Auth, telefon + SMS OTP üzerine kurulu. Gerçek SMS provider (Netgsm/Twilio) kararı `TECH-STACK.md`'de ve entegrasyonu Yakın 5 (UAT + Pilot) öncesi. Geliştirme/staging boyunca gerçek SMS'e ihtiyaç yok — ama OTP gönderim kodu (TASK-1.18+) provider'a bağımlı yazılırsa Yakın 5'te dağınık değişiklik gerekir. Bu task SMS katmanını **şimdiden** soyutlar; sonradan provider eklemek tek dosya değişikliği olur ([[ilkeler]] §"Kalıcılık önceliği").
+
+**Karar 1 — Soyutlama: `SmsProvider` interface + 2 driver (factory).** `SmsProvider.sendOtp(phoneE164, code, ttlSec)` tek arayüz; tüm SMS çağrıları bundan geçer. `createSmsProvider(env, deps)` factory `env.SMS_PROVIDER`'a göre driver döner. `mock` → `MockSmsProvider`; `live` → şimdilik `throw` (Yakın 5'te `LiveSmsProvider` eklenir). `SMS_PROVIDER` env zod enum `['mock','live']`, default `mock`.
+- *Alternatif (red):* Provider'ı doğrudan OTP route'una gömmek — Yakın 5'te her çağrı yerini bulup değiştirmek; migration ağrısı. ❌
+
+**Karar 2 — Mock mekanizması: `dev_otp_log` tablosu + dev lookup endpoint.** `MockSmsProvider` gerçek SMS yerine OTP'yi `dev_otp_log` tablosuna (`phoneE164`, `code` plaintext, `ttlSec`, `createdAt`, `consumedAt`) yazar ve pino'ya bir satır düşer. `GET /internal/dev-otp/:phoneE164` son OTP'yi döner — mobile dev cihazının otomatik OTP girişi için (TASK-1.30).
+- **Production'da tablo BOŞ** (Live driver row üretmez) + **endpoint hard-404** (`NODE_ENV === 'production'`). İkinci savunma: bunker-nginx production'da `/internal/` proxy etmez.
+- *Alternatif (red):* OTP'yi sadece console.log'a yazmak — staging'de mobile dev cihazı OTP'yi okuyamaz; tablo + endpoint dev akışını gerçekçi kılar.
+
+**Karar 3 — Endpoint guard: TASK-1.15 `ADMIN_INTERNAL_TOKEN` Bearer (paylaşımlı).** Yeni sır eklemeden mevcut internal token tekrar kullanılır; guard sırası: production→404, token yok→503, token eksik/yanlış→401, kayıt yok→404, aksi→200. `extractBearer` helper'ı `admin-internal.ts`'ten `routes/bearer.ts`'e çıkarıldı (DRY; iki internal endpoint paylaşır).
+
+**Karar 4 — PII: OTP `otpCode` adıyla loglanır; ham generic `code` BİLİNÇLİ redact edilmez.** OTP plaintext'i DB'de `code` kolonunda durur ama log/Sentry/HTTP yüzeylerine her zaman **`otpCode`** alan adıyla verilir (MockSmsProvider log satırı + lookup endpoint cevabı). `PII_FIELDS`'te `otpCode`/`otp_code` zaten var → redact eder. Generic `code` alanı listeye **eklenmedi**: Prisma/pg hata kodları (P2002, 23505) ve HTTP statusCode gibi `code` alanlarının log'da okunabilir kalması için (over-redaction debug görünürlüğünü öldürür). Task subtask 7 "code veya otpCode" seçeneği sunmuştu; `otpCode` seçildi.
+- *Doğrulama:* `mock-sms-provider.test.ts` log satırında `phoneE164` + `otpCode` = `[REDACTED]`, ham kod/telefon plaintext görünmüyor.
+
+**Test:** backend 63 PASS (önceki 52 + 11 yeni: 2 mock insert/log-redact + 2 factory mock/live + 7 endpoint dev/prod/auth/503). typecheck + lint + format temiz. shared 41 + mobile 23 regresyon yeşil.
+
+**Sonuç:** SMS katmanı driver-agnostik; Yakın 5'te `LiveSmsProvider` + factory `live` case'i = tek dosya + env değeri. dev/staging OTP akışı gerçek SMS maliyeti olmadan uçtan uca test edilebilir.
+
+---
+
 ### 2026-05-30 — TASK-1.16: Backblaze B2 EU Off-Site Yedek + rclone Crypt Overlay + Host Crontab + Aylık Drill
 
 **Bağlam:** PHASE-1 Araştırma §Tuzak #4 "Hetzner tek-node SPOF — sunucu çökerse 30-60 dk downtime" mitigation'ı: günlük off-site DB yedeği + ayda 1 manuel restore drill. Task doc'u orijinal olarak "Coolify built-in backup B2'ye yönlendirir" diyordu; TASK-1.10'da Coolify'dan docker-compose'a geçildi (DECISIONS 2026-05-29 "TASK-1.10"), Coolify built-in yedek yok → yedek mekaniği baştan tasarlanmalı. Bu task TASK-1.15'in `staging-retention-cron.md` deseniyle hizalı, vendor-neutral bir backup pipeline kurar; B2 hesap açılışı + key + ilk drill kullanıcının manuel adımları olarak doküman + rehber halinde teslim edilir.

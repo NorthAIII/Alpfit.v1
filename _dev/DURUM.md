@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.16 ✅: Backblaze B2 off-site yedek + restore drill prosedürü dokümantasyon teslim edildi — Coolify-bağımsız mekanizma (TASK-1.10 sapması uyumlu): host VPS crontab + `docker compose exec pg_dump` + rclone (B2 native driver + crypt overlay client-side AES); `_dev/docs/backblaze-setup.md` (manuel hesap+EU bucket+lifecycle 30g+scoped key+DPA), `_dev/docs/staging-pg-backup-cron.md` (rclone install+non-interaktif config+`/usr/local/bin/alpfit-pg-backup.sh` template — pg_dump custom format/single-transaction/no-owner/compress=6, sanity guard <1KB exit 2, crontab UTC 02:00=TR 05:00 retention purge'den 2 saat sonra, local 7g buffer, logrotate haftalık×8), `_dev/docs/restore-drill.md` (7-adım: rclone indir+PGDMP magic byte sanity → restore_test ayrı DB → pg_restore --exit-on-error+elapsed → smoke query `\dt`/User count/AuditLog count+MAX/_prisma_migrations → temizlik+drill kaydı); `_dev/memory/restore-drill-disiplini.md` (her ayın 15'i süreç disiplini, drift sinyalleri, faz review-phase kontrolü); `_dev/memory/staging-infra.md` "B2 Off-Site Yedek" tablosu (TBD alanları kullanıcı follow-up) + "Restore Drill Kayıtları" boş başlangıç + TODO 3 follow-up'a bölündü; `_dev/MEMORY.md` index pointer + son güncelleme; `_dev/KVKK.md` B2 region kararı ✅ (eu-central-003 SCC+DPA savunulabilir) + ayrı DPA TODO; DECISIONS.md "TASK-1.16" karar (5 seçenek matrisi provider/mekanizma/encryption/lifecycle/drill sıklığı + 8 tamamlayıcı + 4 ILKELER gerekçesi + 6 risk-mitigation + 6 follow-up). AskUserQuestion 3 karar: script+host crontab (önerilen), B2 sonra kurulacak, ilk drill sonraya. Test paketleri regresyon: backend 52 + shared 41 + mobile 23 PASS, typecheck/lint/format temiz; bash -n script blokları syntax temiz. Sıradaki TASK-1.17 Mock SMS provider interface + dev_otp_log.
+**Son Güncelleme:** 2026-05-30 — TASK-1.17 ✅: Mock SMS provider katmanı kuruldu — `SmsProvider` interface + `MockSmsProvider` (dev_otp_log'a yazar + pino redact'lı log) + `createSmsProvider` factory (env `SMS_PROVIDER` mock/live; live → Yakın 5 throw). `DevOtpLog` modeli + migration; `GET /internal/dev-otp/:phoneE164` dev OTP lookup (production→404, ADMIN_INTERNAL_TOKEN Bearer guard paylaşımlı, `extractBearer` → `routes/bearer.ts` DRY); OTP log/HTTP'ye `otpCode` adıyla gider (PII redact), ham `code` over-redaction önleme için listeye eklenmedi (DECISIONS "TASK-1.17"). Test: backend 63 PASS (52+11), shared 41 + mobile 23 regresyon, typecheck/lint/format temiz. Sıradaki TASK-1.18 OTP send endpoint (rate limit + Redis).
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 16/34 task tamam; sıradaki TASK-1.17 Mock SMS provider interface + dev_otp_log
+**İlerleme:** 17/34 task tamam; sıradaki TASK-1.18 OTP send endpoint (rate limit + Redis)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.16 ✅ tamamlandı, sıradaki TASK-1.17 (Mock SMS provider interface + dev_otp_log) henüz başlatılmadı.
+**Task:** Yok — TASK-1.17 ✅ tamamlandı, sıradaki TASK-1.18 (OTP send endpoint — rate limit + Redis) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.17` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.18` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 16 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 17 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -57,7 +57,7 @@
 | 1.14 | KVKK consent schema + audit log | ✅ Tamamlandı |
 | 1.15 | Soft delete + 30 gün retention job | ✅ Tamamlandı |
 | 1.16 | Backblaze B2 yedek + restore drill prosedürü | ✅ Tamamlandı |
-| 1.17 | Mock SMS provider interface + dev_otp_log | ⬜ Bekliyor |
+| 1.17 | Mock SMS provider interface + dev_otp_log | ✅ Tamamlandı |
 | 1.18–1.25 | M1 Auth backend (OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (8) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
@@ -81,6 +81,14 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.17 — Mock SMS provider interface + dev_otp_log (2026-05-30) ✅
+
+- **SMS soyutlaması (`backend/src/sms/`)** — `SmsProvider` interface (`sendOtp(phoneE164, code, ttlSec)`) + `MockSmsProvider` (dev_otp_log'a yazar, pino'ya `otpCode` redact'lı log düşer, `mock-<uuid>` döner) + `createSmsProvider` factory (env `SMS_PROVIDER` mock/live; `live` → Yakın 5 throw, exhaustive `never` guard). Tüm SMS çağrıları interface'ten geçer → Live driver Yakın 5'te tek dosya + env değeriyle eklenir.
+- **`DevOtpLog` modeli + migration `20260529224347_dev_otp_log`** — `phoneE164`/`code` (plaintext, dev lookup okur)/`ttlSec`/`createdAt`/`consumedAt` + 2 index. Production'da BOŞ (Live driver row üretmez). `SMS_PROVIDER` env zod enum eklendi (.env.example + staging example).
+- **`GET /internal/dev-otp/:phoneE164` (`routes/internal-dev-otp.ts`) + server register** — son OTP'yi `otpCode` alanıyla döner (mobile dev otomatik OTP girişi, TASK-1.30). Guard: production→404, token yok→503, eksik/yanlış token→401, kayıt yok→404. TASK-1.15 `ADMIN_INTERNAL_TOKEN` paylaşımlı; `extractBearer` → `routes/bearer.ts`'e çıkarıldı (DRY, admin-internal de kullanır).
+- **PII (`shared/src/pii-fields.ts`)** — OTP log/HTTP'ye hep `otpCode` adıyla gider (zaten redact); generic `code` BİLİNÇLİ eklenmedi (pg/HTTP hata kodları log'da okunabilir kalsın — over-redaction önleme). DECISIONS "TASK-1.17" Karar 4.
+- Test ✅ — backend **63 PASS** (52 + 11 yeni: mock insert/log-redact 2 + factory mock/live 2 + endpoint dev/prod/auth/503 7). `pnpm typecheck` + `lint` + `format:check` temiz (1 import/order auto-fix). Regresyon: shared 41 + mobile 23 PASS. Karar noktası: console.log yerine pino logger (redact otomatik); PII field `otpCode` lehine açık gerekçeyle çözüldü.
+
 ### TASK-1.16 — Backblaze B2 yedek + restore drill prosedürü (2026-05-30) ✅
 
 - **`_dev/docs/backblaze-setup.md` (YENİ)** — Backblaze B2 manuel hesap+bucket+lifecycle+key kurulum rehberi: EU Central region zorunluluğu (geri alınamaz ⚠️), bucket private + SSE-B2, lifecycle 30 gün hide + 1 gün delete (KVKK veri minimizasyonu), scoped application key (master key kullanılmaz), client-side encryption password+salt üretimi, Backblaze DPA imza formu, password manager pointer disiplini. Maliyet tablosu (~$0.02/ay v1) + sorun giderme + provider seçim matrisi (B2 vs AWS Glacier vs Hetzner Storage Box).
@@ -91,17 +99,6 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 - **`_dev/MEMORY.md` + `_dev/KVKK.md` + `_dev/docs/DECISIONS.md`** — MEMORY index pointer `restore-drill-disiplini` + son güncelleme; KVKK "Üçüncü Taraf Sözleşmeler" listesinde B2 region kararı ✅ (eu-central-003 SCC + DPA savunulabilir, mekanizma özeti, ~$0.02/ay) + ayrı DPA TODO; DECISIONS.md "TASK-1.16" karar (5 seçenek matrisi: provider/mekanizma/encryption/lifecycle/drill sıklığı + 8 tamamlayıcı + 4 ILKELER gerekçe + 6 risk-mitigation + 6 follow-up kullanıcı manuel adımı).
 - Test kriterleri ✅ — `bash -n` script blokları temiz (backup script 59 satır + rclone config + drill snippet). Regresyon: backend 52 PASS + shared 41 PASS + mobile 23 PASS (snapshot dahil). `pnpm typecheck` (recursive) + `pnpm lint` + `pnpm format:check` temiz. AskUserQuestion 3 karar: (1) script + host crontab (önerilen, TASK-1.15 paterniyle), (2) B2 hesabı sonra kurulacak (manuel TODO), (3) ilk drill sonraya (kullanıcı kendisi yapar, memory'ye yazar). Follow-up: B2 hesap+bucket+key+DPA, rclone install+config+script deploy+crontab, ilk restore drill — sonuçlar `staging-infra.md`'ye yazılır.
 
-### TASK-1.15 — Soft delete + 30 gün retention job (2026-05-30) ✅
-
-- **`backend/src/kvkk/soft-delete.ts` (YENİ)** — Üç giriş noktası, hepsi atomik `$transaction` ile audit yazar: `softDeleteUser` (deletedAt + retentionDeadline + AuditLog member_removed) / `endTrainerMember` (TrainerMember.endedAt + member.retentionDeadline, deletedAt SET EDİLMEZ → hesap kalır) / `revokeHealthConsent` (ConsentRecord saglik_verisi/revoked append-only + healthConsentAt null + retentionDeadline + AuditLog consent_revoked). `RETENTION_DAYS = 30` SSOT export. `logAuditEvent` imzası `AuditLogClient = Pick<PrismaClient, 'auditLog'>` yapısal tipe genişledi (tx + full PrismaClient ikisi de geçer; eski TASK-1.14 testleri değişmeden geçer).
-- **`backend/src/kvkk/retention-job.ts` (YENİ)** — `runRetentionPurge(prisma)` deadline geçen User'ları kendi `$transaction`'ında işler; `deletedAt IS NOT NULL` → ANONİMİZE (firstName='', lastName='', profilePhotoUrl=null, gymName=null, certificateNote=null, `phoneE164='deleted_<sha256-12hex>'` — `+` ile başlamayan canlı E.164 ile çakışma matematiksel olarak imkansız), aksi halde sadece `retentionDeadline = null` reset (sağlık-purge yolu, hesap kalır). `purgeDeletableTablesForUser(_tx, _userId)` v1'de boş imza (Yakın 4'te M6 tablolar eklenir). Toplu AuditLog `retention_purge` event'i `userId='retention-job'` sentinel hash + `count` + `reason` whitelist metadata.
-- **`backend/src/routes/admin-internal.ts` (YENİ) + `server.ts` register** — `POST /admin/internal/retention-purge` Bearer auth: 503 (env yok), 401 (header eksik / yanlış token / Bearer prefix yok), 200 (`{status, report}`). Plugin factory `adminInternalRoutes({env})` env'i closure'a alır. **Endpoint internet'e açık değil** — bunker-nginx server block'unda `/admin/internal/` proxy edilmez; tek erişim yolu container içinden `docker compose exec`.
-- **`config/env.ts` + `.env.example` + `_ops/staging/.env.staging.example`** — `ADMIN_INTERNAL_TOKEN: z.string().min(32).optional()` eklendi (dev/test'te optional — endpoint 503 ile düzgün degrade; staging/prod'da set edilir, üretim komutu `openssl rand -hex 32` örnekte).
-- **`_dev/docs/staging-retention-cron.md` (YENİ)** — Host VPS crontab (deploy user) → `/usr/local/bin/alpfit-retention-purge.sh` → `docker compose exec alpfit-backend curl` deseniyle Coolify-bağımsız (TASK-1.10 mimari sapma) tetikleme rehberi: token üretim, .env.staging insert, container restart smoke, script exit code + log + logrotate, `0 0 * * *` UTC (03:00 TR), manuel test, rollback. "bunker-nginx server block'una /admin/internal/ proxy etme" disiplini yazılı (KVKK saldırı yüzeyi 0).
-- **`_dev/KVKK.md` "Veri Saklama Politikası" + DECISIONS.md karar + memory `feedback-snapshot-tarih-pin.md`** — KVKK.md 3 akış tablosu + anonimizasyon stratejisi + audit retention TODO + host crontab tetikleme; DECISIONS.md "TASK-1.15: 30 Gün Retention Purge + Anonimizasyon vs Hard Delete + Host Crontab Tetikleme" kararı (3 ana karar + 7 tamamlayıcı + 4 risk-mitigation); memory'ye süreç disiplini — UI snapshot testlerinde tarih/zaman içeren render'lar `jest.useFakeTimers().setSystemTime(...)` ile pin'lenmeli.
-- **`backend/src/kvkk/retention-job.test.ts` 14 PASS** — 3 soft-delete helper davranışı (cache + AuditLog + metadata) + 5 runRetentionPurge senaryosu (deadline-geçmemiş-skip, anonimize+AuditLog, sadece-reset, v1.5-ready-boş, idempotent) + 1 env-yok 503 + 5 endpoint senaryosu (401 üç çeşit, 200 boş, 200 gerçek anonimize). **Yan fix:** mobile `landing-screen.test.tsx` snapshot drift (pre-existing test smell — `formatTrDate(new Date())` snapshot'ta sabitti) `jest.useFakeTimers().setSystemTime(2026-05-29T12:00:00Z)` ile pin'lendi.
-- Test kriterleri ✅ — `pnpm -F @alpfit/backend test` **52 PASS** (önceki 38 + yeni 14). `pnpm typecheck` (recursive) temiz. `pnpm lint` + `pnpm format:check` temiz (1 prettier auto-fix). `pnpm -F @alpfit/shared test` 41 PASS + `pnpm -F @alpfit/mobile test` 23 PASS (snapshot drift fix sonrası). Karar noktaları AskUserQuestion ile netleşti: (1) anonimize (önerilen), (2) host crontab (önerilen), (3) sadece rehber + endpoint (önerilen) + yan fix mobile snapshot pin onaylandı.
-
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
 <!-- KURAL: "Son Tamamlanan Faz", "Son Tamamlanan Sprint" gibi ek özet bölümleri EKLEME — faz durum özeti PHASES.md'de, faz detayları PHASE-N.md'de. DURUM yalnızca aktif durum + son 2 task özeti. -->
@@ -109,8 +106,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.16 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.17 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.17` (Mock SMS provider interface + dev_otp_log)
+**Sıradaki:** `/devflow:run-task TASK-1.18` (OTP send endpoint — rate limit + Redis)

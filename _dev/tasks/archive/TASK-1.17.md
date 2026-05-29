@@ -1,6 +1,6 @@
 # TASK-1.17: Mock SMS provider interface + dev_otp_log
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -168,7 +168,23 @@ shared/src/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **`backend/src/sms/sms-provider.ts` (YENİ)** — `SmsProvider` interface (`sendOtp(phoneE164, code, ttlSec) → { providerMessageId? }`) + `SmsSendResult`. Tüm SMS çağrıları bu arayüzden geçer.
+- **`backend/src/sms/mock-sms-provider.ts` (YENİ)** — `MockSmsProvider` driver: `dev_otp_log`'a yazar + pino logger'a satır düşer. Deps DI: `{ prisma: Pick<PrismaClient,'devOtpLog'>, logger: FastifyBaseLogger }`. Log alan adı `otpCode` (PII redact). `providerMessageId: mock-<uuid>`.
+- **`backend/src/sms/index.ts` (YENİ)** — `createSmsProvider(env, deps)` factory: `mock` → MockSmsProvider; `live` → throw (Yakın 5); `never` exhaustive guard.
+- **`backend/prisma/schema.prisma` (UPDATE) + migration `20260529224347_dev_otp_log`** — `DevOtpLog` modeli (`phoneE164`/`code`/`ttlSec`/`createdAt`/`consumedAt` + 2 index). Client regenerate edildi.
+- **`backend/src/config/env.ts` (UPDATE) + `.env.example` + `_ops/staging/.env.staging.example`** — `SMS_PROVIDER` zod enum `['mock','live']` default `mock`.
+- **`backend/src/routes/internal-dev-otp.ts` (YENİ) + `server.ts` register** — `GET /internal/dev-otp/:phoneE164`; guard sırası: production→404, token yok→503, yanlış token→401, kayıt yok→404, aksi→200 (`otpCode` plaintext döner, dev cihaz için).
+- **`backend/src/routes/bearer.ts` (YENİ)** — `extractBearer` helper'ı `admin-internal.ts`'ten çıkarıldı (DRY); admin-internal import'a güncellendi.
+- **`shared/src/pii-fields.ts` (UPDATE)** — OTP kapsam notu: `code` DB kolonu log'a `otpCode` adıyla gider (zaten redact); generic `code` bilinçli eklenmedi (pg/HTTP hata kodu over-redaction önleme).
+- **`backend/src/sms/mock-sms-provider.test.ts` (YENİ, 4) + `internal-dev-otp.test.ts` (YENİ, 7)** — insert + log-redact + factory mock/live + endpoint dev/prod/auth/503.
+
+**Test:** backend **63 PASS** (52 + 11 yeni). `pnpm typecheck` (recursive) + `pnpm lint` + `pnpm format:check` temiz (1 import/order auto-fix). Regresyon: shared 41 + mobile 23 PASS.
+
+**Kararlar:** DECISIONS.md "TASK-1.17" (4 karar: interface+factory / dev_otp_log+lookup / ADMIN_INTERNAL_TOKEN paylaşımlı guard / OTP=otpCode redact). Karar noktası (console.log mock çıktısı) — console.log yerine pino logger.info kullanıldı; redact otomatik uygulanır, dev'de okunur. PII field seçimi (`code` vs `otpCode`) `otpCode` lehine çözüldü — kullanıcıya sorulmadan, açık gerekçeyle (KVKK + over-redaction dengesi).
 
 ---
 

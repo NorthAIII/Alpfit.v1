@@ -192,3 +192,28 @@ model AuditLog {
   @@index([occurredAt])
   @@index([eventType])
 }
+
+// =====================================================================
+// TASK-1.17 — Mock SMS provider (dev/staging OTP log)
+// =====================================================================
+// SMS gönderim katmanı `SmsProvider` interface'i + iki driver ile soyutlanır:
+//   - MockSmsProvider (dev/staging) → OTP'yi gerçek SMS yerine bu tabloya yazar.
+//   - LiveSmsProvider (Yakın 5) → gerçek provider; MockSmsProvider çağrılmaz,
+//     bu tablo **production'da boş kalır** (Live driver row üretmez).
+//
+// `code` plaintext OTP içerir — bilinçli açık tutulur çünkü tablo yalnızca
+// dev/staging'de dolar ve dev OTP lookup endpoint'i (sadece NODE_ENV !=
+// production) buradan okur. OTP değeri log/Sentry yoluna `otpCode` alan adıyla
+// gider (PII_FIELDS redact eder); ham `code` property'si hiçbir log/serialize
+// yüzeyine yazılmaz. Detay: DECISIONS.md "TASK-1.17".
+model DevOtpLog {
+  id         String    @id @default(cuid())
+  phoneE164  String
+  code       String
+  ttlSec     Int
+  createdAt  DateTime  @default(now())
+  consumedAt DateTime?
+
+  @@index([phoneE164])
+  @@index([createdAt])
+}

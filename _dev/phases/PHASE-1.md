@@ -259,7 +259,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.14 | TASK-1.14 | ✅ Tamamlandı | KVKK consent schema + audit log |
 | 1.15 | TASK-1.15 | ✅ Tamamlandı | Soft delete + 30 gün retention job |
 | 1.16 | TASK-1.16 | ✅ Tamamlandı | Backblaze B2 yedek + restore drill prosedürü (dokümantasyon teslim; B2 hesap + cron deploy + ilk drill kullanıcı follow-up) |
-| 1.17 | TASK-1.17 | ⬜ Bekliyor | Mock SMS provider interface + dev_otp_log |
+| 1.17 | TASK-1.17 | ✅ Tamamlandı | Mock SMS provider interface + dev_otp_log (SmsProvider + MockSmsProvider + factory + dev OTP lookup endpoint) |
 | 1.18 | TASK-1.18 | ⬜ Bekliyor | OTP send endpoint (rate limit + Redis) |
 | 1.19 | TASK-1.19 | ⬜ Bekliyor | OTP verify endpoint + brute force (5 hatalı = 15dk kilit) |
 | 1.20 | TASK-1.20 | ⬜ Bekliyor | JWT access token + auth middleware + profil create |

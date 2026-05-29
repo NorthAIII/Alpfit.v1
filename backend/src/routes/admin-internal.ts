@@ -14,19 +14,13 @@
  */
 import { runRetentionPurge } from '../kvkk/retention-job.js';
 
+import { extractBearer } from './bearer.js';
+
 import type { Env } from '../config/env.js';
 import type { FastifyPluginAsync } from 'fastify';
 
 export interface AdminInternalRoutesOptions {
   env: Pick<Env, 'ADMIN_INTERNAL_TOKEN'>;
-}
-
-const BEARER_PREFIX = 'Bearer ';
-
-function extractBearer(header: string | string[] | undefined): string | null {
-  if (typeof header !== 'string') return null;
-  if (!header.startsWith(BEARER_PREFIX)) return null;
-  return header.slice(BEARER_PREFIX.length).trim() || null;
 }
 
 export const adminInternalRoutes =

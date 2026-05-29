@@ -6,6 +6,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { getPrisma } from './db/prisma.js';
 import { adminInternalRoutes } from './routes/admin-internal.js';
 import { healthzRoutes } from './routes/healthz.js';
+import { internalDevOtpRoutes } from './routes/internal-dev-otp.js';
 
 import type { Env } from './config/env.js';
 import type { PrismaClient } from './db/prisma.js';
@@ -36,6 +37,7 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(cors, { origin: false });
   await app.register(healthzRoutes);
   await app.register(adminInternalRoutes({ env: opts.env }));
+  await app.register(internalDevOtpRoutes({ env: opts.env }));
 
   return app;
 }

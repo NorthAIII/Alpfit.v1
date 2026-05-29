@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const NODE_ENVS = ['development', 'staging', 'production'] as const;
 const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
+const SMS_PROVIDERS = ['mock', 'live'] as const;
 
 const baseSchema = z.object({
   NODE_ENV: z.enum(NODE_ENVS).default('development'),
@@ -19,6 +20,10 @@ const baseSchema = z.object({
     .string()
     .min(32, 'ADMIN_INTERNAL_TOKEN must be at least 32 characters')
     .optional(),
+  // SMS gönderim driver'ı (TASK-1.17). `mock` (varsayılan) dev/staging'de
+  // OTP'yi dev_otp_log tablosuna yazar; `live` Yakın 5'te gerçek provider'ı
+  // devreye alır (o tarihe kadar factory `live`'da fail-fast eder).
+  SMS_PROVIDER: z.enum(SMS_PROVIDERS).default('mock'),
 });
 
 const envSchema = baseSchema.transform((env) => {

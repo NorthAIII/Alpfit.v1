@@ -91,6 +91,13 @@ export const PII_FIELDS = [
   'consent',
 
   // Auth (sır)
+  // NOT (TASK-1.17): dev_otp_log tablosunun plaintext OTP kolonu DB'de `code`
+  // adıyla durur, ama log/Sentry/HTTP yüzeylerine **`otpCode`** adıyla verilir
+  // (MockSmsProvider log satırı + dev OTP lookup endpoint cevabı). Böylece OTP
+  // aşağıdaki `otpCode`/`otp_code` ile redact edilir; ham generic `code` alanı
+  // BİLİNÇLİ olarak listede yok — Prisma/pg hata kodları (P2002, 23505) ve HTTP
+  // statusCode gibi `code` alanları log'da okunabilir kalsın diye (over-redact
+  // önleme). Detay: DECISIONS.md "TASK-1.17".
   'password',
   'otp',
   'otpCode',
