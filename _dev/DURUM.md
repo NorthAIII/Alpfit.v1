@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 2: tüm DevFlow dokümanları + 7 modül dokümanı + TECH-STACK/KVKK iskeletleri oluşturuldu, sıradaki adım kickoff-verify.
+**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 3 (kickoff-verify): doküman tutarlılığı doğrulandı, CLAUDE.md repo köküne yazıldı, native memory yönlendirmesi kuruldu, ilk faz girişine hazır.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -8,10 +8,10 @@
 
 ## Aktif Faz
 
-**Faz:** Henüz girilmiş faz yok (kickoff aşaması)
-**Milestone:** —
-**Adım:** kickoff → kickoff-docs (tamamlandı) → kickoff-verify (sıradaki)
-**İlerleme:** 0/0 task — faz dokümanı yok, ilk faz `/devflow:discuss-phase 1` ile numara alıp PHASE-1.md doğacak
+**Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1) *(geçici ad; discuss-phase kesinleştirir)*
+**Milestone:** PT ve üye telefon + SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye bağlanır; KVKK rızası alınır; CI/CD yeşil; env-bazlı config çalışır; 3 rol veri modeli yerleşti. *(geçici — discuss-phase kesinleştirir)*
+**Adım:** discuss
+**İlerleme:** 0/0 task — faz dokümanı henüz yok; `/devflow:discuss-phase 1` ile PHASE-1.md doğacak
 **Faz Dokümanı:** Yok — discuss-phase 1'de oluşacak
 
 ---
@@ -31,7 +31,7 @@
 
 **Task:** Yok — henüz faz girilmedi, task yazılmadı.
 **Durum:** ⬜ Bekliyor
-**İlerleme:** kickoff-verify oturumu açılıp CLAUDE.md oluşturulduktan sonra `/devflow:discuss-phase` ile ilk faza girilecek.
+**İlerleme:** `/devflow:discuss-phase 1` ile ilk fazın kapsam tartışması başlatılacak; task'lar plan-phase'de yazılır.
 
 ---
 
@@ -75,9 +75,9 @@ Henüz tamamlanmış task yok.
 ## Hızlı Erişim
 
 **Aktif Task:** Yok
-**Aktif Faz:** Yok
+**Aktif Faz:** Faz 1 (geçici ad: Çekirdek altyapı + Auth) — discuss-phase'e girilecek
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 2: tüm DevFlow dokümanları + 7 modül dokümanı + TECH-STACK/KVKK iskeletleri oluşturuldu, sıradaki adım kickoff-verify.
+**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 3 (kickoff-verify): doküman tutarlılığı doğrulandı, CLAUDE.md repo köküne yazıldı, native memory yönlendirmesi kuruldu, ilk faz girişine hazır.

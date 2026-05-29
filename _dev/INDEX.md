@@ -83,7 +83,7 @@
 |---------|--------|
 | `/CONTEXT-BRIEF.md` | 2026-05-28 planlama oturumu — PRD öncesi tek-kaynak özet (proje köküne kayıtlı, _dev/ dışı) |
 | `/README.md` | Repo README'si (proje değil DevFlow setup için) |
-| `/CLAUDE.md` | Claude Code talimatları (kickoff-verify oturumunda oluşacak) |
+| `/CLAUDE.md` | Claude Code talimatları — oturum başlangıç protokolü, doküman disiplini, projeye özgü kurallar (repo kökünde) |
 
 ---
 
@@ -231,7 +231,7 @@ Alpfit.v1/
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 2: 7 modül + 8 PRD feature + TECH-STACK + KVKK + DECISIONS dokümanları INDEX'e kaydedildi.
+**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 3 (kickoff-verify): CLAUDE.md repo köküne eklendi; INDEX güncel.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 <!-- KURAL: Tamamlanmış fazların task arşiv listesini INDEX'e ekleme — `ls _dev/tasks/archive/` zaten görür. INDEX yalnızca aktif klasör konumlarını gösterir; statik liste dokümanı değildir. -->

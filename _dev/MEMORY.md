@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 2: MEMORY index template'ten oluşturuldu, henüz öğrenim yok.
+**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 3 (kickoff-verify): Native memory'deki 5 öğrenim _dev/memory/'ye taşındı; native MEMORY.md redirect'e dönüştürüldü.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -23,26 +23,27 @@
 
 <!-- Kullanıcının proje genelinde geçerli tercihleri (test yaklaşımı, kod stili, iletişim vb.) -->
 
-- [Henüz yok]
+- [Kullanıcı: Kivanç (kurucu)](memory/user-kivanc.md) — Teknik bilgi zayıf, varsayım istemiyor, yarım kalma deseni farkında — TR sade dil, somut örnek, onay-bekle akışı.
 
 ## Ortam & Araç Notları
 
 <!-- Environment, tooling, CI/CD, kalıcı operasyonel veri (VPS IP, repo path, folder yapısı) -->
 
-- [Henüz yok]
+- [Referans: CONTEXT-BRIEF.md](memory/reference-context-brief.md) — `/workspaces/Alpfit.v1/CONTEXT-BRIEF.md` Alpfit'in PRD-öncesi tek kaynağı; host memory container'a mount EDİLMİYOR (2026-05-28 doğrulandı).
 
 ## Çapraz Öğrenimler
 
 <!-- Faz arası taşınan, tek faza/dokümana ait olmayan dersler -->
 
-- [Henüz yok]
+- [Proje: Alpfit recall kancası](memory/project-alpfit.md) — "Bu özellik üye sürdürülebilirliğine ne katıyor?" testi her tasarım kararında uygulanır; 3 rol mimari + AI yasal çerçeve hatırlatması.
 
 ## Süreç Disiplinleri
 
 <!-- Retrospektiften çıkan, proje genelinde geçerli "şunu yaparken şu kontrolü her zaman yap" tipi iş-akışı kuralları. Uygulama anı: planlamada (task bölme) ve task icrası/closure'ında göz önünde tutulur — kanca'yı buna göre yaz ki ilgili anda hatırlansın.
      Sınır: tek seferlik task nüansı DEĞİL (o → faz retrosu); kalite ekseni DEĞİL (o → QUALITY); tekrar eden bir süreç kuralıdır. Teknik Tuzaktan farkı: tuzak pasif bir gözlemdir ("şu böyle davranır, dikkat"); disiplin aktif, adıma-bağlı bir kuraldır ("şu adımda şu kontrolü yap") — bir kayıt eylem/kontrol içeriyorsa disiplindir. Yalnızca BU projeye özgü olanlar buraya yazılır — DevFlow yönteminin geneline dair olanlar faz retrosuna "DevFlow'a Öneri" olarak yazılıp kullanıcıya bildirilir (review-phase triyajı). -->
 
-- [Henüz yok]
+- [Feedback: Odak / Disiplin](memory/feedback-focus-discipline.md) — Yeni özellik fikrinde "v1 mi v1.5 mi v2 mi?" filtresinden geçir, yarım kalma desenine karşı scope büyütmeye uyarı ver, eklenmemesi gerekeni `/devflow:prd-note` ile sakla.
+- [Feedback: Varsayım Yok](memory/feedback-no-assumptions.md) — Mimari karar / paket / dosya / dış servis değişikliğini onaysız yapma; seçenekleri TR sade dille AskUserQuestion ile sun, "yapıyorum" yerine "yapayım mı?" sor.
 
 ---
 
