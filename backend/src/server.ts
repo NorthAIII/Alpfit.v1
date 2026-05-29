@@ -4,6 +4,7 @@ import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import { getPrisma } from './db/prisma.js';
+import { adminInternalRoutes } from './routes/admin-internal.js';
 import { healthzRoutes } from './routes/healthz.js';
 
 import type { Env } from './config/env.js';
@@ -34,6 +35,7 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(sensible);
   await app.register(cors, { origin: false });
   await app.register(healthzRoutes);
+  await app.register(adminInternalRoutes({ env: opts.env }));
 
   return app;
 }

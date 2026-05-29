@@ -76,6 +76,14 @@ export interface LogAuditEventArgs {
 }
 
 /**
+ * `auditLog.create` arayüzünü taşıyan minimal yapısal tip. Hem `PrismaClient`
+ * hem `$transaction` callback'ine geçen tx client bu tipi sağlar — TASK-1.15
+ * soft-delete/retention helper'ları audit event'i içeride aynı transaction'da
+ * yazabilsin diye genişletildi.
+ */
+export type AuditLogClient = Pick<PrismaClient, 'auditLog'>;
+
+/**
  * Append-only audit event yazar.
  *
  * - `userId` sha256 prefix 12 hex'e hash'lenir (ham ID DB'ye gitmez).
@@ -86,7 +94,7 @@ export interface LogAuditEventArgs {
  * @throws {ZodError} metadata whitelist ihlali — PII reddedildi.
  */
 export async function logAuditEvent(
-  prisma: PrismaClient,
+  prisma: AuditLogClient,
   args: LogAuditEventArgs,
 ): Promise<{ id: string; userIdHash: string; occurredAt: Date }> {
   const validated: AuditMetadata | undefined =

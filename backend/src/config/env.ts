@@ -12,6 +12,13 @@ const baseSchema = z.object({
   REDIS_URL: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+  // KVKK retention purge cron auth (TASK-1.15). Boş bırakılırsa endpoint
+  // konfigürasyon hatasıyla 503 döner — cron yine de kurulmaya zorlanmaz
+  // (development ve test'te env eksik olabilir).
+  ADMIN_INTERNAL_TOKEN: z
+    .string()
+    .min(32, 'ADMIN_INTERNAL_TOKEN must be at least 32 characters')
+    .optional(),
 });
 
 const envSchema = baseSchema.transform((env) => {

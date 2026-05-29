@@ -48,6 +48,7 @@
 - [TR locale util zorunlu](memory/tr-locale-util-zorunlu.md) — TR string'lere case dönüşümünde `@alpfit/shared` → `trLower` / `trUpper` kullan; ham `.toLowerCase()` / `.toUpperCase()` ESLint `no-restricted-syntax` ile yasak (TR "İ" → "i̇" tuzağı).
 - [KVKK PII scrubbing matrisi](memory/kvkk-pii-scrubbing-matrisi.md) — DB schema/zod yeni alan eklendiğinde `shared/src/pii-fields.ts` PII_FIELDS listesine ekle (camelCase + snake_case); backend 3 katmanlı savunma (Sentry sendDefaultPii: false + beforeSend scrubber + pino redact); PR review + faz review'da toplu kontrol. **IP Audit Nüansı (TASK-1.14):** `ipAddress`/`userAgent` DB'ye bilinçli yazılır AMA log/Sentry yoluna sızarsa redaktedir.
 - [Prisma + PostgreSQL partial unique index](memory/prisma-partial-unique-index.md) — Soft-delete deseninde "aynı anda tek aktif satır" invariant'ı için Prisma DSL `@@unique([..., nullableTimestamp])` YETMEZ (PostgreSQL NULL ≠ NULL); `migrate dev --create-only` + raw SQL `CREATE UNIQUE INDEX ... WHERE "endedAt" IS NULL` şart, integration test deploy garantisini yakalar.
+- [Snapshot testleri tarih-bağımsız olmalı](memory/feedback-snapshot-tarih-pin.md) — UI component `formatTrDate(new Date())` gibi non-deterministik değer üretiyorsa snapshot test'inde `jest.useFakeTimers().setSystemTime(...)` ile pin'le; aksi halde ertesi gün CI fail. Backend'de gerek yok, mobile UI smell'i.
 
 ---
 

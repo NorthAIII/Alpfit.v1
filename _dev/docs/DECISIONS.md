@@ -9,6 +9,62 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.15: 30 Gün Retention Purge + Anonimizasyon vs Hard Delete + Host Crontab Tetikleme
+
+**Bağlam:** KVKK Madde 6 (sağlık verisi özel nitelikli) + Madde 11 (silme hakkı) → "rıza geri çekilirse 30 gün içinde sağlık verisi silinir" ve "üye hesap kapatma → 30 gün retention sonrası purge". TASK-1.13 schema'sındaki `User.deletedAt` + `retentionDeadline` + `TrainerMember.endedAt` alanları bu task'in tetikleyicisi. Discuss-phase-1 §"PT üye çıkarma — veri akıbeti": *"Soft delete + 30 gün saklama. ... KVKK rızası aktif kaldıkça veri 30 gün saklanır; rıza geri çekilirse veya 30 gün dolarsa otomatik silinir."* Yakın 4'te (M6 sağlık verisi) silinecek tablolar eklenir; bu task'ta interface + cron sözleşmesi şimdi kurulur ki Yakın 4 sadece silinecek tablo listesini genişletir.
+
+**Seçenekler — Retention süresi sonunda User satırı:**
+
+1. **Hard delete + cascade** — User row + FK'lar (TrainerMember.memberId, ConsentRecord) cascade silinir. AuditLog.userIdHash bağımsız → orada kayıt kalır ama "kim" geri çözülemez. ❌ TrainerMember FK düşer (PT geçmişinde "Bu üyeydi" bilgisi kaybolur). Veri minimizasyonuyla en uyumlu ama KVKK denetimde "verisi silinen kullanıcının PT geçmişini gösterebilir misin?" sorusuna cevap veremiyor.
+2. **Anonimize (seçilen)** — User row korunur; PII alanları temizlenir (`firstName=''`, `lastName=''`, `profilePhotoUrl=null`, `gymName=null`, `certificateNote=null`); `phoneE164 = 'deleted_<sha256-prefix-12>'` (global unique constraint için collision-safe — canlı E.164 ile `+` prefix farkından çakışmaz). FK'lar korunur. AuditLog.userIdHash sha256 hash zinciri **anonimizasyon sonrası hala aynı** → "bu kullanıcı X tarihinde Y eylemini yaptı, sonra anonimize edildi" denetim zinciri kurulabilir. `deletedAt` korunur (denetim kanıtı). ✅ KVKK "PII silindi, anonim referans kaldı" beyanı tutar.
+3. **Hibrit (PII delete + row keep)** — User row durur ama alanları null/boş. ❌ phoneE164 unique constraint NULL kabul etmez (TASK-1.13 schema'da `String` not nullable); değiştirmek migration borcu. Seçenek 2'nin "deleted_<hash>" deseni bunu çözüyor zaten.
+
+**Seçenekler — `User.retentionDeadline` paylaşımlı semantik:**
+
+3 akış (softDeleteUser, endTrainerMember, revokeHealthConsent) hepsi aynı 30 günlük geri sayımı set ediyor — fakat akıbet farklı (sadece sağlık-data purge vs full anonimize):
+
+1. **Üç ayrı field** (`accountRetentionAt`, `healthRetentionAt`, `relationRetentionAt`) — ❌ schema şişer; her field için index ayrı; concurrency açısından "hangisi önce" karmaşıklığı.
+2. **Tek `retentionDeadline` + akıbet `deletedAt`'a göre (seçilen)** — `deletedAt IS NOT NULL` ise anonimize yolu (sağlık-purge + PII temizleme), null ise sadece sağlık-purge (hesap kalır, deadline reset). Schema sade; iş mantığı `deletedAt` üzerinden okunur. ✅ Mevcut TASK-1.13 schema'sıyla migration gereksiz.
+
+**Seçenekler — Cron tetikleme altyapısı:**
+
+1. **Coolify scheduled task** — Task doc'unun öngördüğü; ama TASK-1.10'da Coolify'dan docker-compose'a geçildi (mimari sapma — DECISIONS 2026-05-29 "TASK-1.10"). ❌ Mevcut altyapıda Coolify yok.
+2. **Host VPS crontab (deploy user) → docker compose exec → curl (seçilen)** — `deploy@178.104.140.36` crontab + shell script + `docker compose exec alpfit-backend curl` → endpoint container DNS'inden çağrılır (bunker-nginx + SAN cert + dış expose ATLANIR; KVKK denetim için endpoint hiç internet'e çıkmaz). Vendor-neutral, ek paket yok. ✅
+3. **In-app `node-cron` paketi** — ❌ PHASE-1 araştırma "cron framework eklemiyoruz" diyor; ek paket; container restart'larda kaçırılma riski.
+4. **GitHub Actions scheduled workflow** — ❌ admin endpoint'i bunker-nginx önünden internet'e açılması gerekir (KVKK saldırı yüzeyi artar); GitHub Actions outage'da çalışmaz.
+5. **Ek `cron` container'ı docker-compose'da** — ❌ Ek operasyon yüzeyi orantısız.
+
+**Karar:**
+- **Akıbet:** Anonimize (Seçenek 2). FK'lar korunur; AuditLog zinciri sürer.
+- **retentionDeadline semantiği:** Tek alan + `deletedAt` üzerinden akıbet ayrımı. Migration yok.
+- **Cron tetikleme:** Host VPS crontab + `docker compose exec` + curl. Kurulum rehberi `_dev/docs/staging-retention-cron.md`. Kullanıcı kurulumu rehberi takip ederek manuel yapacak (AskUserQuestion ile kararlaştırıldı — SSH'a Claude oturumundan dokunulmuyor).
+
+**Tamamlayıcı kararlar:**
+- **`logAuditEvent` imzası genişletildi** — `AuditLogClient = Pick<PrismaClient, 'auditLog'>` yapısal tipi; hem full `PrismaClient` hem `$transaction` callback tx'i kabul eder. Soft-delete helper'ları audit event'ini state değişikliğiyle aynı transaction'da yazar → audit ↔ state drift YOK. Eski testler değişmeden geçer (PrismaClient → AuditLogClient widening).
+- **`anonymizedPhone(userId)` deterministik** — `deleted_${sha256(userId).slice(0,12)}`. İdempotent: aynı user ikinci kez anonimize edilse aynı değer üretilir; retentionDeadline null'a çekildiği için ikinci işlem zaten olmaz.
+- **`purgeDeletableTablesForUser(_tx, _userId)` interface v1'de boş** — Yakın 4'te `measurement.deleteMany({where: {userId}})` + `foodLog.deleteMany(...)` eklenir. Underscore-prefix param konvansiyonu: imza şimdiden sabit kalır (Yakın 4'te sözleşme değişimi yok), TS noUnusedParameters geçer.
+- **`runRetentionPurge` her kullanıcıyı kendi transaction'ında işler** — biri hata verirse diğerlerini etkilemez. Toplu `AuditLog.retention_purge` event'i en sonda `count` + `reason` ile yazılır.
+- **AuditLog `retention_purge` event'i `userId = "retention-job"` sentinel'i ile yazılır** — hash'lenir (`userIdHash = sha256("retention-job").slice(0,12)`), broad disclosure riski yok; sadece "retention-job aksiyonu" izi. Aynı sentinel'in tüm event'leri tek hash altında gruplanır → grafana/sentry'de cron izi takip edilebilir.
+- **ADMIN_INTERNAL_TOKEN env optional + 32+ char minimum** — dev/test'te eksik olabilir (endpoint 503 döner, smoke test bu davranışı doğrular); staging/production'da set edilir (`.env.staging.example` + `_ops/staging/.env.staging.example`'da satır eklendi).
+- **Endpoint container DNS'inden çağrılır, internet'e açılmaz** — bunker-nginx server block'unda `/admin/internal/` path'i bilinçli olarak proxy edilmedi. Tek erişim yolu container içinden `docker compose exec`. KVKK saldırı yüzeyi → 0.
+
+**Gerekçe:**
+- **ILKELER §"Kalıcılık önceliği":** KVKK retention altyapısı şimdi kurulursa Yakın 4 öncesi hukuki review'a "retention pipeline ayakta + audit log var" diye gidilir. Yakın 4'te sadece `purgeDeletableTablesForUser`'a 2-3 satır eklenir, mimari değişmez.
+- **ILKELER §"Sır ve konfigürasyon yönetimi":** Endpoint internet'e açık değil (container DNS), token env'de + chmod 600, sentinel hash'leniyor. Üç katman.
+- **ILKELER §"Kümülatif test altyapısı":** 14 yeni integration test (3 soft-delete + 5 runRetentionPurge + 6 endpoint) — `phoneE164 = deleted_<hash>` deseni test'te doğrulandı; anonimizasyon idempotent; v1.5-ready (sağlık tablosu yokken fail etmiyor).
+
+**Risk + Mitigation:**
+- **Risk:** Endpoint internet'e expose edilirse (bunker-nginx config'ine yanlışlıkla satır eklenirse), 32 char token brute force güvencesi sınırlı kalır. **Mitigation:** Rehber doküman (staging-retention-cron.md) "bunker-nginx server block'unda /admin/internal/ proxy ETMEME" satırı; future audit-docs taraması bunu görür.
+- **Risk:** `phoneE164 = 'deleted_<hash>'` deseni bir gün canlı E.164 ile çakışırsa, unique constraint patlar. **Mitigation:** Canlı phoneE164 her zaman `+` ile başlar; `deleted_` prefix `+` taşımaz → çakışma matematiksel olarak imkansız. Test bu deseni regex ile yakalar.
+- **Risk:** Cron sunucu offline ise retention 1 gün gecikir. KVKK Madde 7 "makul süre" — 30 gün sınırı yumuşak. **Mitigation:** Backblaze yedek (TASK-1.16) + Hetzner billing alert. Kritik olduğunda systemd timer `OnBootSec=` desenine geçilebilir.
+- **Risk:** Helper'lar bypass edilip kullanıcı `prisma.user.update({deletedAt: now})` ile elle silinirse audit log + retention deadline atlanır. **Mitigation:** Convention olarak yasak (helper'larda JSDoc); v1.5'te custom ESLint kuralı `noRestrictedSyntax` ile `user.update(... deletedAt ...)` yakalanır (TASK-1.14 audit.create yasağıyla aynı patern).
+
+**İlgili Task/Faz:** TASK-1.15 (bu task). TASK-1.13 (3 rol veri modeli — `deletedAt`/`retentionDeadline`/`endedAt` alanlarını bu task kullanır). TASK-1.14 (KVKK audit — event tipleri ve hash deseni). TASK-1.10 (Coolify yerine docker-compose — cron tetikleme bu sapmayla uyumlu). TASK-1.16 (Backblaze yedek). TASK-1.22 (Logout — `softDeleteUser` ile UI Ayarlar > Hesap > "Hesabımı sil" CTA Yakın 1 mobile UI fazında entegre olacak).
+
+**Yan fix (TASK-1.15 oturumunda yakalandı):** Mobile `landing-screen.test.tsx` snapshot'ı `formatTrDate(new Date())` çıktısını sabitliyordu → her gün CI fail. Fix: `jest.useFakeTimers().setSystemTime(2026-05-29 12:00 UTC)` ile tarih pin'lendi. Süreç disiplini memory'ye eklendi (`_dev/memory/feedback-snapshot-tarih-pin.md`): tarih/zaman bağımlı UI snapshot'larında fake timer şart.
+
+---
+
 ### 2026-05-29 — TASK-1.14: KVKK Consent Versiyonlu Append-Only + AuditLog Whitelist Metadata + UserIdHash
 
 **Bağlam:** KVKK Madde 6 (sağlık verisi özel nitelikli) + Madde 11 (veri sahibi hakları: erişim/silme/itiraz) denetlenebilir kayıt zorunluluğu. Discuss-phase-1 kararı: *"log'lara üye sağlık verisi YAZILMAZ (sadece event tip + üye ID hash)"*. KVKK metni hukuki danışman onayıyla zaman içinde **sürüm değiştirir** (Yakın 5 öncesi v1 metni gelir; sonra eklemeler) → rızanın hangi sürüme verildiği denetlenebilir olmalı. AuditLog v1'de 16 event tipi taşır (login/logout/otp/consent/invitation/refresh-token/member-removed/retention-purge); metadata alanına **PII sızması en büyük risk**: helper bypass edilirse veya zod atlanırsa sağlık/telefon verisi DB'ye düşer.

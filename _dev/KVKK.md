@@ -36,6 +36,44 @@ Metin hukuki danışman onayıyla doldurulmadan **önce** KVKK denetim altyapıs
 
 ---
 
+## Veri Saklama Politikası (TASK-1.15 — yerleşik)
+
+Saklama mekaniği TASK-1.15'te kuruldu; metnin hukuki danışman onaylı sürümü Yakın 4 öncesi `KVKK.md` §3'e (yukarıda) yerleşecek. Bu bölüm **mekanik altyapıyı** belgeler.
+
+**30 gün retention deadline'ı üç akışla tetiklenir** (`backend/src/kvkk/soft-delete.ts`):
+
+| Akış | Helper | Set edilen alanlar | Akıbet |
+|------|--------|---------------------|--------|
+| Üye hesabı kapatma (self / PT-removed / admin) | `softDeleteUser` | `User.deletedAt = now`, `User.retentionDeadline = now + 30g`, AuditLog `member_removed` | 30g sonra retention-job kullanıcıyı **anonimize eder** (firstName/lastName/profilePhotoUrl/gymName/certificateNote null, phoneE164 = `deleted_<hash>`); FK'lar korunur. |
+| PT üyeyi çıkarır (ilişki sonlandı) | `endTrainerMember` | `TrainerMember.endedAt = now`, member'ın `retentionDeadline = now + 30g`, AuditLog `member_removed` | Üye **hesabı kalır**; 30g sonra sağlık verisi (Yakın 4 tabloları) purge'lenir. |
+| Üye sağlık rızasını geri çeker | `revokeHealthConsent` | ConsentRecord `saglik_verisi/revoked`, `User.healthConsentAt = null`, `User.retentionDeadline = now + 30g`, AuditLog `consent_revoked` | Üye **hesabı kalır**; 30g sonra sağlık verisi purge'lenir. |
+
+**Retention purge job** (`backend/src/kvkk/retention-job.ts → runRetentionPurge`):
+- `retentionDeadline IS NOT NULL AND retentionDeadline < now` koşulundaki tüm kullanıcıları işler.
+- Her kullanıcı için `purgeDeletableTablesForUser(userId)` çağrılır — **v1'de boş**, Yakın 4'te ölçüm + yemek günlüğü tabloları eklenir.
+- `deletedAt IS NOT NULL` ise kullanıcı anonimize edilir; değilse sadece `retentionDeadline = null` reset (sağlık-purge yolu).
+- AuditLog `retention_purge` event'i her çalıştırmada yazılır (KVKK uyum şeffaflığı; `count: 0` da kanıt).
+
+**Anonimizasyon stratejisi (DECISIONS 2026-05-29 "TASK-1.15"):**
+- User row korunur (FK güvencesi). PII alanları temizlenir (`firstName=''`, `lastName=''`, `profilePhotoUrl=null`, `gymName=null`, `certificateNote=null`).
+- `phoneE164 = 'deleted_<sha256-prefix-12>'` — global unique constraint için collision-safe (canlı E.164 ile çakışmaz: `+` ile başlamaz).
+- AuditLog `userIdHash` (sha256 prefix) anonimizasyon sonrası **hala aynıdır** → denetimde "bu kullanıcı X tarihinde Y eylemini yapmıştı, sonra anonimize edildi" zinciri kurulabilir.
+- `deletedAt` korunur (denetim kanıtı).
+
+**Audit Retention Politikası (TODO — Yakın 4 öncesi hukuki danışman ile netleşecek):**
+- v1: sınırsız tutulur (storage düşük, denetim sorgusu olası)
+- v1.5+: KVKK denetim sürelerine göre purge politikası (öneri: 7 yıl audit log, sonra purge — denetim talebi yanıt süresi 30 gün; geç eskimiş audit pratikte sorgulanmıyor)
+- `retention_purge` event tipi audit log'un kendi purge'ını de **kendi içine yazar** (KVKK uyum şeffaflığı)
+
+**Tetikleme altyapısı (host crontab — TASK-1.10 mimari sapması ile uyumlu):**
+- Coolify scheduled task **yok** (docker-compose'a geçildi); yerine VPS host crontab `deploy` user altında çalışır.
+- Endpoint: `POST /admin/internal/retention-purge` — bearer auth, env: `ADMIN_INTERNAL_TOKEN` (32+ char).
+- Tetikleme: günlük UTC 00:00 (Europe/Istanbul UTC+3 → 03:00 TR).
+- Kurulum rehberi: [`_dev/docs/staging-retention-cron.md`](docs/staging-retention-cron.md).
+- Tüm istek path'i: crontab → `alpfit-retention-purge.sh` → `docker compose exec alpfit-backend curl ...` (container DNS'inden çağırır, bunker-nginx katmanı atlanır → SAN cert + dış expose yok).
+
+---
+
 ## Neden Bu Doküman Erken Açılıyor?
 
 KVKK çerçevesi M0 Çekirdek Altyapı'da kurulur (3 rol veri modeli, açık rıza akış, saklama politikası). Ama metinler ve hukuki kararlar **uzun lead time** gerektirir:
