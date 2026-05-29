@@ -9,7 +9,7 @@
     "prebuild": "pnpm db:generate",
     "build": "tsc --build",
     "start": "node dist/index.js",
-    "pretypecheck": "pnpm db:generate",
+    "pretypecheck": "pnpm db:generate && pnpm -F @alpfit/shared build",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit",
     "pretest": "pnpm db:generate",
     "test": "vitest run",

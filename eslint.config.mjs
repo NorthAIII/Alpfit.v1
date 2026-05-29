@@ -8,8 +8,11 @@ import tseslint from 'typescript-eslint';
 /**
  * Flat ESLint config — TypeScript + import order + Prettier uyumu.
  *
- * TASK-1.06 (TR locale): `no-restricted-syntax` ile raw `.toLowerCase()` /
- * `.toUpperCase()` yasağı buraya eklenecek (PHASE-1 §Araştırma Tuzaklar #5).
+ * `no-restricted-syntax` ile raw `.toLowerCase()` / `.toUpperCase()` yasaktır
+ * (PHASE-1 §Araştırma Tuzaklar #5; TASK-1.06). `@alpfit/shared` → `trLower` /
+ * `trUpper` kullanılır. Argümanlı `.toLocaleLowerCase('tr-TR')` (selector
+ * `:not([arguments.length>=1])` ile) izinlidir — locale util'leri kendi
+ * implementasyonunda bunu kullanır.
  */
 export default tseslint.config(
   {
@@ -56,6 +59,19 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.property.name='toLowerCase']:not([arguments.length>=1])",
+          message:
+            "Ham .toLowerCase() yasak (TR 'İ' → 'i̇' tuzağı). @alpfit/shared → trLower() kullan.",
+        },
+        {
+          selector: "CallExpression[callee.property.name='toUpperCase']:not([arguments.length>=1])",
+          message:
+            "Ham .toUpperCase() yasak (TR 'i' → 'I' tuzağı). @alpfit/shared → trUpper() kullan.",
+        },
       ],
     },
   },

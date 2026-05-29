@@ -1,3 +1,5 @@
+import { formatTrDateTime } from '@alpfit/shared';
+
 import { EnvValidationError, loadEnv, type Env } from './config/env.js';
 import { buildServer } from './server.js';
 
@@ -18,6 +20,7 @@ async function start(): Promise<void> {
 
   try {
     await app.listen({ host: '0.0.0.0', port: env.PORT });
+    app.log.info({ startedAt: formatTrDateTime(new Date()) }, 'alpfit backend ready');
   } catch (err) {
     app.log.error(err);
     process.exit(1);

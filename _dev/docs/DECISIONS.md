@@ -9,6 +9,68 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — TR Locale Util Paketi (`@alpfit/shared`) + ESLint `no-restricted-syntax` + Metro/pnpm Transitive Resolution
+
+**Bağlam:** TASK-1.06 — PHASE-1 §Araştırma Tuzaklar #5 mitigation'ının kendisi. JS spec'in default `'İ'.toLowerCase()` davranışı `'i̇'` (U+0069 + U+0307 combining dot) üretir — TR "İ" → "i" değil. Üye arama, telefon doğrulama, isim eşleştirmede silent bug üretir. Mitigation iki katmanlı: (a) `@alpfit/shared` paketinde `trLower` / `trUpper` util + telefon (+90 mobil) ve TR tarih util'leri; (b) ESLint kuralıyla ham `.toLowerCase()` / `.toUpperCase()` çağrıları yasaklı.
+
+**Seçenekler (Date timezone):**
+1. **date-fns + date-fns-tz `formatInTimeZone(d, 'Europe/Istanbul', ...)`** — Date instant'ı host TZ'dan bağımsız hedef TZ'a çevirip locale ile formatlar. Devcontainer UTC olsa bile TR çıktı garantili.
+2. **Sadece date-fns + `process.env.TZ = 'Europe/Istanbul'`** — Daha az dep; runtime TZ'a güvenir, test/host hatası TZ unutulursa silent bug.
+3. **Sadece date-fns + her test'te `vi.stubGlobal('Date.prototype', ...)`** — Test'e karmaşıklık ekler, production sapması.
+
+**Seçenekler (libphonenumber-js build):**
+1. **`libphonenumber-js/mobile`** — Mobil-only metadata; `isValid()` sabit hat için `false` döner. Bizim policy ile birebir uyumlu (sadece TR 5XX kabul).
+2. **`libphonenumber-js`** (default `min`) — `isValid()` mobil+sabit ayrımı yapmaz; ek `getType()` mantığı + `max` build (~150KB) gerekir.
+
+**Seçenekler (Shared paketin mobile'dan tüketimi — bundle path):**
+1. **Source-based main + Metro resolveRequest patch** — `main: ./src/index.ts`; mobile/metro.config.js'e `.js → .ts/.tsx` fallback shim'i eklenir. Shared source canlı (hot-reload). Custom resolver Expo SDK upgrade'lerinde test edilmeli.
+2. **Dist-based main** — `main: ./dist/index.js`; tüm consumer build output okur. Dev'de "build edip kullan" döngüsü; mobile metro temiz kalır.
+
+**Seçenekler (Metro pnpm transitive deps):**
+1. **`shared/node_modules` Metro `nodeModulesPaths`'ına eklenir** — pnpm default izole layout'unda shared transitive deps'i (libphonenumber-js, date-fns, date-fns-tz) sadece `shared/node_modules`'a düşer; mobile flat-hoisted olduğu için mobile/node_modules'a girmiyor. Cerrahi fix.
+2. **Mobile package.json'a libphonenumber-js + date-fns + date-fns-tz eklenir** — duplicate dep beyanı; shared yükseltirken iki yerden bakılır.
+3. **Root `.npmrc` `node-linker=hoisted`** — tüm workspace flat layout. TASK-1.05'in "sadece mobile için hoisted" kararını supersede eder.
+
+**Karar:** Dört seçenekte de **1**. Kullanıcı `AskUserQuestion` ile shared resolution stratejisini (Metro resolveRequest patch) onayladı (CLAUDE.md feedback §"Varsayım Yok"). Diğer üçü implementasyon detayı; bilinmeyen mimari değişiklik içermiyor.
+
+**Tamamlayıcı uygulama kararları:**
+- **`shared/src/locale.ts`** — `trLower(s)` ve `trUpper(s)` `s.toLocaleLowerCase('tr-TR')` / `toLocaleUpperCase('tr-TR')` wrapper'ı. Argümanlı çağrı ESLint kuralının selector'ı (`:not([arguments.length>=1])`) tarafından yasaktan istisna tutulur (locale.ts kendi util'inin içinden lint geçer).
+- **`shared/src/phone.ts`** — `parseTrPhone(input)` `ParsedPhone { e164, valid }` döner; `country !== 'TR'` veya `parsed.isValid() === false` → `valid: false`. `formatTrPhone(e164)` `formatInternational()` ile "+90 555 123 45 67" verir; geçersiz girdiyi olduğu gibi döner (UI filtre sorumluluğu). `validateTrPhone(input)` `parseTrPhone(input).valid` wrapper'ı. `libphonenumber-js/mobile` (~85KB) build, TR mobil prefix (5XX) policy ile birebir uyumlu — sabit hat (212/312/312...) ve yabancı (+1/+44) reddedilir.
+- **`shared/src/date.ts`** — `formatInTimeZone(d, 'Europe/Istanbul', fmt, { locale: tr })` ile system TZ'dan bağımsız TR çıktı. Türkiye 2016'dan beri DST kullanmıyor → UTC+3 sabit; test bunu Mart sonu + Ekim sonu sınırlarında explicit doğruluyor.
+- **`shared/vitest.config.ts`** — bağımsız config (`backend/vitest.config.ts`'ten ayrı, paket bağımsızlığı). `env.TZ = 'Europe/Istanbul'` test ortamında double-safety; `formatInTimeZone` ayrıca explicit. Coverage v8 + text+lcov reporter.
+- **`shared/package.json` deps** — `libphonenumber-js@^1.11.20` + `date-fns@^4.1.0` + `date-fns-tz@^3.2.0` (date-fns 4 ile uyumlu). devDeps: `vitest@^4.1.7` + `@vitest/coverage-v8@^4.1.7` (backend ile aynı versiyon line).
+- **ESLint kuralı** (`eslint.config.mjs`, TS files only) — `no-restricted-syntax` selector `CallExpression[callee.property.name='toLowerCase']:not([arguments.length>=1])` + `toUpperCase` aynı. TR tuzağı message'ı `@alpfit/shared → trLower()` yönlendirir. Smoke verification: shared/src/`__smoke.ts` geçici dosyaya `'X'.toLowerCase()` yazıldı, `eslint` 2 error verdi (mesaj doğru gösterildi), dosya silindi. Lint kuralı locale.ts'in kendi `toLocaleLowerCase('tr-TR')` çağrısını argument count filtresi ile geçirdi.
+- **`mobile/metro.config.js` Metro resolveRequest shim'i** — `import './x.js'` çağrılarını `.ts`/`.tsx` source'a fallback ile yönlendirir. NodeNext (backend tsx + TS strict) + bundler (mobile Metro) ikilisinin tek monorepo'da yaşamasının standart pnpm + Expo paterni.
+- **`mobile/metro.config.js` `nodeModulesPaths` += `shared/node_modules`** — Metro shared transitive deps'i (libphonenumber-js, date-fns, date-fns-tz) buradan resolve eder. `disableHierarchicalLookup: true` korunur (pnpm `.pnpm` ağacına dalmayı engelliyor); shared/node_modules explicit path olarak eklenir, future workspace deps'i için de aynı patern (her yeni workspace eklendiğinde mobile metro.config.js'e bir satır).
+- **`backend/package.json` pretypecheck** — `pnpm db:generate && pnpm -F @alpfit/shared build`. Backend tsconfig `references: [{path: '../shared'}]` + `composite: true` → `tsc --noEmit` referansları auto-build etmiyor (`tsc -b` etse de). Pretypecheck shared'i build ederek backend typecheck'i deterministik yapıyor. Shared dist .d.ts backend resolution'unu, .js çıktısı runtime'da (production) emin yapar.
+- **Smoke import'lar** — `backend/src/index.ts` `formatTrDateTime(new Date())` boot log alanı; `mobile/app/index.tsx` `formatTrDate(new Date())` landing subtitle. Hem typecheck (import path resolve) hem runtime (mobile bundle: 1185 modül 1.6MB; backend test 3 passed) doğrular.
+
+**Gerekçe (TR locale util + lint kuralı):** [[ilkeler]] §"Kalıcılık önceliği" — JS spec değişmeyecek; "İ" tuzağı 100% predictable silent bug kaynağı. Util tek nokta + lint kaçınılmaz hatırlatma: gelecekteki geliştirici (Claude oturumu dahil) yanlışlıkla ham `.toLowerCase()` yazarsa CI fail.
+
+**Gerekçe (date-fns-tz):** Devcontainer / CI runner / production hosting (Hetzner Falkenstein UTC) TZ değişkenliğine karşı immunite — Türkiye 2016'dan beri DST kullanmıyor ama "Europe/Istanbul" tüm geçmiş + gelecek TR resmi saatini tutuyor (tz data güncellenir). M3 sürdürülebilirlik motoru gece yarısı sınırı + telafi penceresi için TR-saat baseline'ı zorunlu.
+
+**Gerekçe (libphonenumber-js/mobile):** ~85KB build; `max` (~150KB) gerek yok çünkü `getType()` lazım değil — mobil-only validation paterni doğrudan `isValid()` ile çalışıyor. `min` build (~75KB) sabit-hat ayrımı yapmaz, policy boşluğu doğurur.
+
+**Gerekçe (Metro resolver patch):** TASK-1.05'in mobile-only hoisted layout kararı [[ilkeler]] §"Kalıcılık önceliği" ile alındı; supersede etmek demek mobile'da `pnpm`'in disk-verimli default'undan tamamen vazgeçmek. Shared'in dist-based main'i ise her dev iterasyonda explicit build adımı = hot-reload kaybı = DX tradeoff. Custom Metro resolver tek dosya değişikliği + standart pnpm+Expo monorepo paterni.
+
+**Tradeoff'lar:**
+- **Metro resolver shim**: pnpm + Expo monorepo'larda yaygın; Expo SDK 56 ile test edildi (smoke bundle 1185 modül). Expo SDK upgrade'larında resolveRequest API surface'ı değişirse refactor gerekebilir (her upgrade smoke ile yakalanır).
+- **`shared/node_modules` explicit path**: Yeni workspace eklendiğinde (örn. `core/` veya `mobile-shared/`) bu satıra eklenmesi gerekir. Tek satır maliyet, fakat hatırlatma görünür değil; ileride workspaceRoot'taki tüm `*/node_modules` dirleri otomatik gezilirse (helper fonksiyon) bu rezilianstı.
+- **date-fns-tz dep'i**: ~30KB bundle artışı; mobile'da yine 1.6MB total — tolere edilir, alternatif `process.env.TZ` runtime garantisi vermiyor.
+- **shared `composite: true` + backend pretypecheck shared-build**: Her backend typecheck'te ~2-3s shared rebuild. Pilot ölçeğinde tolere edilir; v1.5+'ta TS project references daha agresif kullanılırsa `tsc --build --noEmit` (TS 5.6+) alternatifi değerlendirilir.
+
+**Risk + Mitigation:**
+- **Risk:** Yeni geliştirici (veya Claude oturumu) test fixture'larında ham `.toLowerCase()` yazar → lint kırar. **Mitigation:** Memory'ye [[tr-locale-util-zorunlu]] yazıldı; test fixture string'leri direkt lowercase yazılır (örn. `expect(trLower('İSTANBUL')).toBe('istanbul')` — sağ taraf hardcoded).
+- **Risk:** TR locale tuzağı sadece "İ"/"I"/"i" değil; "İ" + dotted-I birleşimi başka edge case'lerde de çıkar (örn. sıralama, regex case-insensitive). **Mitigation:** Util sadece case-conversion için; gelecek edge case (örn. `localeCompare`) ihtiyacı çıktığında util'e eklenir (memory'de "TR string disiplini" kategorisi).
+- **Risk:** date-fns-tz Expo Hermes / RN'de Intl.DateTimeFormat'a bağımlı; RN 0.85 + Hermes Intl default on; ama eski cihazlarda eksik olabilir. **Mitigation:** Smoke export (web) geçti; iOS sim/Android emu testi TASK-1.10 EAS Build sonrası (TASK-1.34 e2e smoke). `expo-localization` veya `@js-temporal/polyfill` ekleme TASK-1.07 i18n shell ile değerlendirilir.
+- **Risk:** Metro resolver shim Expo SDK upgrade'inde değişen API yüzünden bozulur. **Mitigation:** `export:smoke` CI'ya (TASK-1.09) eklenir; her Expo upgrade'de smoke bundle reverify edilir.
+
+**Üst kararla ilişki:** Research 2026-05-29'da `libphonenumber-js` + `date-fns + tr locale` kütüphaneler tablosunda işaretliydi; bu DECISIONS girdisi onların **build ve config alt-kararını** somutlaştırır + ESLint kuralı + Metro/pnpm resolution detaylarını ekler. TASK-1.05'in hoisted-mobile + disableHierarchicalLookup kararı korunur (`shared/node_modules` explicit path olarak eklenir).
+
+**İlgili Task/Faz:** TASK-1.06 (bu task) → TASK-1.07 (i18n shell — `@alpfit/shared`'a `loadTranslations()` benzer util eklenir, aynı paket büyür) → TASK-1.18/1.19 (OTP send/verify endpoint — `validateTrPhone` zorunlu) → TASK-1.27 (Telefon girişi ekranı — `formatTrPhone` inline) → TASK-1.31 (PT üyeler tab — üye adı `trLower` ile search index'lenir) → M3 sürdürülebilirlik motoru (TR-saat gece yarısı sınırı için `formatTrDate` baseline) → tüm sonraki UI metni / telefon / tarih işleyen task'lar.
+
+---
+
 ### 2026-05-29 — Mobile Bootstrap: Expo SDK 56 + RN 0.85.3 + Expo Router + pnpm `node-linker=hoisted`
 
 **Bağlam:** TASK-1.05 mobile iskelet. Üst karar (research 2026-05-29 → Expo (React Native) + EAS Build) iki noktada implementation-time revize gerekti: (a) task doc + research notu "RN 0.81" yazıyordu ama Expo SDK 56'nın bundled native modules JSON'u (resmi pairing) `react-native: 0.85.3 + react: 19.2.3 + react-server-dom-webpack: ~19.2.4` zorluyor — RN 0.81 yüklemek peer-dep çatışması üretirdi (Expo SDK 55 ile pairlenirdi); (b) Expo + Metro + pnpm üçlüsünün klasik tuzağı (expo-modules-core gibi transitive native module Metro'nun flat resolution'undan göremiyor).

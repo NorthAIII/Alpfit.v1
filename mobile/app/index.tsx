@@ -1,10 +1,12 @@
+import { formatTrDate } from '@alpfit/shared';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function LandingScreen() {
+  const today = formatTrDate(new Date());
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Merhaba Alpfit</Text>
-      <Text style={styles.subtitle}>Rol seçimi TASK-1.26'da gelecek.</Text>
+      <Text style={styles.subtitle}>{today} · Rol seçimi TASK-1.26&apos;da gelecek.</Text>
     </View>
   );
 }

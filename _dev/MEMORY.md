@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 3 (kickoff-verify): Native memory'deki 5 öğrenim _dev/memory/'ye taşındı; native MEMORY.md redirect'e dönüştürüldü.
+**Son Güncelleme:** 2026-05-29 — TASK-1.06: TR locale util + ESLint kuralı disiplini eklendi (`tr-locale-util-zorunlu.md`).
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -44,6 +44,7 @@
 
 - [Feedback: Odak / Disiplin](memory/feedback-focus-discipline.md) — Yeni özellik fikrinde "v1 mi v1.5 mi v2 mi?" filtresinden geçir, yarım kalma desenine karşı scope büyütmeye uyarı ver, eklenmemesi gerekeni `/devflow:prd-note` ile sakla.
 - [Feedback: Varsayım Yok](memory/feedback-no-assumptions.md) — Mimari karar / paket / dosya / dış servis değişikliğini onaysız yapma; seçenekleri TR sade dille AskUserQuestion ile sun, "yapıyorum" yerine "yapayım mı?" sor.
+- [TR locale util zorunlu](memory/tr-locale-util-zorunlu.md) — TR string'lere case dönüşümünde `@alpfit/shared` → `trLower` / `trUpper` kullan; ham `.toLowerCase()` / `.toUpperCase()` ESLint `no-restricted-syntax` ile yasak (TR "İ" → "i̇" tuzağı).
 
 ---
 
