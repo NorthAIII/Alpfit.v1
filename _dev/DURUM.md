@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10 ✅ closure (oturum #3): kullanıcı kararıyla zincir görsel teyit atlandı (mekanizma workflow_dispatch + sunucuda 8d0f268 + public /healthz 200 ile ispatlanmıştı); TASK doc durum ✅ + 10 alt görev + 12 test + 9 tamamlanma kriteri kutucukları işaretlendi; PHASE-1 tablo 1.10 ✅; memory/staging-infra.md drift fix (network `bunker-network`, swap 4 GB, SSH key adı `github_actions_ssh`) + 5 yeni öğrenim (SAN cert + certbot --expand paterni, gh secret set < file UI yerine, .env.*.example gitignore istisnası, runner image pnpm yok prisma çağrısı, adım kanıtı disiplini); archive + final commit; sıradaki TASK-1.11 backend Sentry + PII scrubber; GH_TOKEN v2 manuel revoke YOK, 7 gün otomatik expire (kullanıcı kararı: uğraşmama, kapsam sadece bu repo).
+**Son Güncelleme:** 2026-05-29 — TASK-1.11 ✅: backend Sentry @sentry/node 10.55 + fast-redact 3.5 kuruldu; 3 katmanlı KVKK PII savunması (Sentry `sendDefaultPii: false` + `beforeSend` recursive scrubber + pino fast-redact 4 seviye wildcard); PII_FIELDS SSOT `shared/src/pii-fields.ts` (kimlik + Madde 6 sağlık verisi + yemek + not + rıza + auth/sır; camelCase + snake_case); `initSentry()` DSN yoksa no-op (degrade mode); 11 test PASS (Sentry beforeSend × 3 + scrubPii × 3 + hashUserId × 3 + pino redact + negatif kanıt); user ID sha256-12 hash; `docs/sentry-setup.md` (Sentry Cloud EU proje + quota webhook 80%/100% + Spike Protection + KVKK Settings + manuel smoke); süreç disiplini `memory/kvkk-pii-scrubbing-matrisi.md` 4 kontrol anı (DB schema task'i + yeni endpoint + PR review + faz review); DECISIONS "3 Katmanlı KVKK PII Scrubbing Matrisi"; sıradaki TASK-1.12 mobile Sentry — aynı PII_FIELDS paylaşılır.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 10/34 task tamam; sıradaki TASK-1.11 backend Sentry + PII scrubber + KVKK test
+**İlerleme:** 11/34 task tamam; sıradaki TASK-1.12 mobile Sentry crash reporting + PII scrubber
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.10 ✅ tamamlandı, sıradaki TASK-1.11 (backend Sentry + PII scrubber + KVKK test) henüz başlatılmadı.
+**Task:** Yok — TASK-1.11 ✅ tamamlandı, sıradaki TASK-1.12 (mobile Sentry crash reporting + PII scrubber) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.11` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.12` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 10 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 11 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -51,7 +51,8 @@
 | 1.08 | Mobile test altyapısı (Jest + RTL + MSW) | ✅ Tamamlandı |
 | 1.09 | CI PR pipeline (GitHub Actions: test + lint + typecheck) | ✅ Tamamlandı |
 | 1.10 | Staging deploy (shared VPS — docker-compose + bunker-nginx + GH Actions) | ✅ Tamamlandı |
-| 1.11–1.16 | M0 Altyapı (Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (6) |
+| 1.11 | Backend Sentry + PII scrubber + KVKK test | ✅ Tamamlandı |
+| 1.12–1.16 | M0 Altyapı (mobile Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (5) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
@@ -91,38 +92,28 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 - **Önemli sapmalar:** (a) Task doc 3 paralel job öngörüyordu — workspace-başına lint script gerektiren bu şema yerine 4. job (`quality` — root lint+format:check) eklendi, package.json drift riski yok. (b) Task doc "Testcontainers" diyordu — TASK-1.04 DECISIONS'taki per-suite Postgres patern'i baskın. (c) `postgres:17-alpine` (16 değil — devcontainer ile aynı majör). DECISIONS 2026-05-29 §"CI PR Pipeline" tam analizi içerir.
 - Test kriterleri ✅ — workflow YAML `js-yaml` ile semantik parse edildi (`jobs: quality, shared, mobile, backend`); lokalde `pnpm lint` ✓ + `pnpm format:check` ✓ (CI-SETUP.md prettier-format'a hizalandı) + `pnpm typecheck` recursive ✓ (shared + mobile + backend pretypecheck shared build + db:generate dahil) + `pnpm -F @alpfit/{shared,mobile,backend} test:coverage` 3'ü de ✓. Gerçek PR-time tetikleme ve branch protection smoke repo remote'a push edildikten sonra kullanıcı tarafından doğrulanır.
 
-### TASK-1.08 — Mobile test altyapısı (Jest + RTL) (2026-05-29) ✅
+### TASK-1.11 — Backend Sentry + PII scrubber + KVKK test (2026-05-29) ✅
 
-- **Paketler:** `bundledNativeModules.json` ile çapraz doğrulanıp `jest@^29.7.0` + `jest-expo@~56.0.4` + `@testing-library/react-native@^13.3.3` + `react-test-renderer@19.2.6` (React 19.2.6 ile pin) + `@react-native/jest-preset@^0.85.3` (jest-expo peer) + `msw@^2.14.6` + `whatwg-fetch@^3.6.20` + `@types/jest@^29.5.14` mobile devDeps'e eklendi. Modern RTL matchers seçildi (kullanıcı onayı) — deprecated `@testing-library/jest-native` paketi alınmadı; `expect.extend(require('@testing-library/react-native/matchers'))` ile aktive edildi.
-- **Jest config (`mobile/jest.config.js`):** `preset: 'jest-expo/ios'` tek-platform (universal multi-project'in 4× koşum süresini engeller); `setupFilesAfterEnv: ['<rootDir>/test/setup.ts']`; MSW v2 conditional export'ları için `testEnvironmentOptions.customExportConditions: ['node', 'node-addons']`; `.mjs` transform'u babel-jest'e açıldı (rettime ESM zinciri); `transformIgnorePatterns` daraltıldı (sadece `react-native-reanimated/plugin/` + `@react-native/babel-preset/` ignore; geri kalan node_modules transform edilir — jest-expo'nun karmaşık iç-içe `.pnpm/<pkg>/node_modules/<pkg>` whitelist'inde MSW deps ve expo-modules-core/src yakalanıyordu); `moduleNameMapper` `.js→.ts` shim + `@alpfit/shared` workspace path.
-- **Test altyapısı dosyaları:** `mobile/test/setup.ts` (matchers + MSW server lifecycle beforeAll/afterEach/afterAll + `NODE_ENV=test`); `mobile/test/render-with-providers.tsx` (custom render: `I18nextProvider` wrap); `mobile/test/msw/{server.ts,handlers.ts,README.md}` (boş default handlers; suite-level `server.use(...)` pattern + KVKK koruması olarak `onUnhandledRequest: 'error'`); `mobile/test/README.md` (i18n pattern, snapshot policy, coverage notu). Test'ler `mobile/__tests__/landing-screen.test.tsx` — jest-expo snapshot resolver `__tests__/` substring'i `__snapshots__/`'a replace eder, bu yüzden test app/ dışına taşındı (Expo Router scan etmez + snapshot path uyumlu); snapshot dosyası `__tests__/__snapshots__/landing-screen.test.tsx.snap.ios`.
-- **Scripts + tsconfig + eslint:** `mobile/package.json`'a `test/test:watch/test:coverage`; `mobile/tsconfig.json` `types: [...'jest']` + include `__tests__/**/*` + `test/**/*`; `eslint.config.mjs` CommonJS allowlist'ine `jest.config.js` eklendi (require/module/__dirname).
-- Test kriterleri ✅ — `pnpm -F @alpfit/mobile test` 2 passed (`Merhaba Alpfit` text query + snapshot match, 0.95s), `pnpm typecheck` 3 paket temiz, `pnpm lint` temiz, `pnpm format:check` temiz, `pnpm test` recursive 52 passed (41 shared + 9 backend + 2 mobile), `pnpm -F @alpfit/mobile run export:smoke` 1.7MB web bundle (regression yok).
+- **3 katmanlı KVKK PII savunması:** (a) `@sentry/node@10.55.0` init `sendDefaultPii: false` + `tracesSampleRate` prod 0.1 / dev-staging 1.0 + `environment: APP_ENV`; (b) `sentryBeforeSend<E extends Event>(e: E): E` recursive scrubber — `event.request.{data, cookies, query_string, headers}` + `event.user` (id sha256-12 hash, email/username/ip_address sil) + `event.extra` + `event.contexts` + `event.breadcrumbs[].data`; (c) pino `redact: { paths: getPinoRedactPaths(), censor: '[REDACTED]' }` her PII alanı için 4 seviye wildcard (`field`, `*.field`, `*.*.field`, `*.*.*.field`). Sentry'nin `Event` (genel) vs `ErrorEvent` (`type: undefined`) tipi gerilimi generic ile çözüldü.
+- **PII_FIELDS SSOT (`shared/src/pii-fields.ts`):** readonly tuple; kimlik (phone/phoneNumber/phone_number/mobile/tel/email/name/firstName/.../displayName) + Madde 6 sağlık verisi (weight/height/measurement(s)/bodyFat/bmi/waist/hip/chest/arm/thigh) + yemek (foodLog/meal(s)/mealLog/food/calories/kcal/macros/protein/carbs/fat) + not(s)/comment(s) + rıza (kvkkConsent/healthDataConsent/consent) + auth/sır (password/otp/otpCode/smsCode/verificationCode/token/accessToken/refreshToken/secret/apiKey/authorization). camelCase + snake_case birlikte. `getPinoRedactPaths()` 4 seviye wildcard üretir. Backend + (TASK-1.12) mobile paylaşır. `shared/src/index.ts` re-export.
+- **Degrade mode + entrypoint:** `initSentry({env, dsn?, release?})` `SENTRY_DSN` env yoksa false döner + (staging/prod'da) stderr warning; app çalışmaya devam eder. `backend/src/index.ts` `start()` akışına `buildServer()` öncesi `initSentry({env})` çağrısı eklendi — Sentry sonraki kod path'i içindeki hataları yakalasın.
+- **Test (`pii-scrubber.test.ts`):** 11 PASS — Sentry beforeSend × 3 (PII alanlı kompleks event scrub, missing fields graceful, breadcrumb data); scrubPii × 3 (immutable, array, cyclic ref); hashUserId × 3 (12 hex format, deterministic, farklı input farklı çıktı); pino redact × 1 (JSON stdout capture — `phone/weight/mealLog/password/email` `[REDACTED]`, `traceId/msg` korundu, raw değerler yok); negatif kanıt × 1 (`event.user.id` hash format, ham `phone` `[REDACTED]`, serialized event'te `+90555...` ve raw user-id yok). Sentry SDK gerçekten init edilmez (network/global state riski) — scrubber doğrudan çağrılır.
+- **Doküman + disiplin:** `_dev/docs/sentry-setup.md` — Sentry Cloud EU proje açma (`.de.sentry.io` DSN doğrulaması) + DSN env wiring (`/opt/alpfit/_ops/staging/.env.staging`) + quota webhook 80%/100% Settings → Usage & Billing → Notifications + Spike Protection per-project + KVKK Security & Privacy checklist (Data Scrubbing + Additional Sensitive Fields redundant + EU Frankfurt residency + 30 gün retention) + release tracking opsiyonel + manuel staging smoke senaryosu + haftalık quota check. `_dev/memory/kvkk-pii-scrubbing-matrisi.md` Süreç Disiplini: SSOT yeri, 3 katman matrisi, 4 kontrol anı (DB schema task, yeni endpoint task, PR review, faz review), wildcard 4 seviye sınırı uyarısı, test bağı. MEMORY.md "Süreç Disiplinleri" altına pointer. DECISIONS.md "3 Katmanlı KVKK PII Scrubbing Matrisi" kararı (4 seçenek + tradeoff'lar).
+- Test kriterleri ✅ — `pnpm -F @alpfit/backend test` 20 PASS (11 pii-scrubber + 9 healthz). `pnpm -F @alpfit/backend typecheck` temiz. `pnpm lint`/`format:check`/`typecheck` (recursive) temiz. Manuel staging Sentry dashboard smoke (`docs/sentry-setup.md §6`) gerçek Sentry projesi açıldıktan sonra yapılır — kapsam dışı, kod + rehber teslim edildi.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
 <!-- KURAL: "Son Tamamlanan Faz", "Son Tamamlanan Sprint" gibi ek özet bölümleri EKLEME — faz durum özeti PHASES.md'de, faz detayları PHASE-N.md'de. DURUM yalnızca aktif durum + son 2 task özeti. -->
 <!-- KURAL: Faz alt-fazlarının (verify-plan/plan/research/discuss) ayrı oturum özetlerini DURUM'a yazma — onlar faz dokümanına ait. -->
 
-## Duraklatma Notu
-
-> ⏸️ **TASK-1.10 Duraklatıldı (2026-05-29 oturum #2 sonu)** — Context şişti; iş %95 bitti, /devflow:resume ile kısa closure.
->
-> **Bu oturumda tamamlanan:** Adım 5-10 (clone + 2 drift fix: `.gitignore` `.env.*.example` izni + `bunker-network` adı; sırlı `.env.staging`; bunker keşfi; Squarespace DNS; `certbot --expand` 7 domain SAN; nginx server block + reload; backend image build + compose up; prisma migrate deploy; container içi + bunker-nginx + **public HTTPS /healthz 200**) + **Adım 11 GH Actions secret fix** (önceki oturumun "Deploy #3 = 8s SSH OK" yorumu yanlış teşhisti — gerçekte `ssh.ParsePrivateKey: no key found` + `STAGING_SSH_HOST` trailing newline DNS lookup hatası; gh CLI ile 3 secret temiz format yazıldı; workflow_dispatch deploy ✅ — sunucuda 8d0f268, /healthz 200).
->
-> **Kalan (~1 kısa oturum):** (a) Boş commit push → CI yeşil → workflow_run otomatik tetik → Deploy zinciri görsel teyit (~5-7 dk). (b) TASK closure: TASK-1.10 ✅ durum, PHASE-1 tablo, `memory/staging-infra.md` güncelle (network adı `bunker-network`, secret durumu, certbot --expand patern notu), archive, final commit.
->
-> **Devam eden GH_TOKEN v2:** `alpfit-deploy-debug-v2` (Actions+Secrets:RW, 7 gün). Closure sonrası **kullanıcı revoke etmeli**.
->
-> **Yeni oturumda:** `/devflow:resume` → TASK-1.10.md "Oturum 2026-05-29 #2" bölümünden devam.
-
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-1.10 — Staging deploy (shared VPS — docker-compose) ⏸️ Duraklatıldı
+**Aktif Task:** Yok — TASK-1.11 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
+**Sıradaki:** `/devflow:run-task TASK-1.12` (mobile Sentry crash reporting + PII scrubber, PII_FIELDS SSOT'u paylaşır)
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10 ✅ closure (oturum #3): kullanıcı kararıyla zincir görsel teyit atlandı (mekanizma workflow_dispatch + sunucuda 8d0f268 + public /healthz 200 ile ispatlanmıştı); TASK doc durum ✅ + 10 alt görev + 12 test + 9 tamamlanma kriteri kutucukları işaretlendi; PHASE-1 tablo 1.10 ✅; memory/staging-infra.md drift fix (network `bunker-network`, swap 4 GB, SSH key adı `github_actions_ssh`) + 5 yeni öğrenim (SAN cert + certbot --expand paterni, gh secret set < file UI yerine, .env.*.example gitignore istisnası, runner image pnpm yok prisma çağrısı, adım kanıtı disiplini); archive + final commit; sıradaki TASK-1.11 backend Sentry + PII scrubber; GH_TOKEN v2 manuel revoke YOK, 7 gün otomatik expire (kullanıcı kararı: uğraşmama, kapsam sadece bu repo).
+**Son Güncelleme:** 2026-05-29 — TASK-1.11 ✅: backend Sentry @sentry/node 10.55 + fast-redact 3.5 kuruldu; 3 katmanlı KVKK PII savunması (Sentry `sendDefaultPii: false` + `beforeSend` recursive scrubber + pino fast-redact 4 seviye wildcard); PII_FIELDS SSOT `shared/src/pii-fields.ts` (kimlik + Madde 6 sağlık verisi + yemek + not + rıza + auth/sır; camelCase + snake_case); `initSentry()` DSN yoksa no-op (degrade mode); 11 test PASS (Sentry beforeSend × 3 + scrubPii × 3 + hashUserId × 3 + pino redact + negatif kanıt); user ID sha256-12 hash; `docs/sentry-setup.md` (Sentry Cloud EU proje + quota webhook 80%/100% + Spike Protection + KVKK Settings + manuel smoke); süreç disiplini `memory/kvkk-pii-scrubbing-matrisi.md` 4 kontrol anı (DB schema task'i + yeni endpoint + PR review + faz review); DECISIONS "3 Katmanlı KVKK PII Scrubbing Matrisi"; sıradaki TASK-1.12 mobile Sentry — aynı PII_FIELDS paylaşılır.

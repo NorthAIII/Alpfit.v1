@@ -1,6 +1,7 @@
 import { formatTrDateTime } from '@alpfit/shared';
 
 import { EnvValidationError, loadEnv, type Env } from './config/env.js';
+import { initSentry } from './observability/sentry.js';
 import { buildServer } from './server.js';
 
 async function start(): Promise<void> {
@@ -15,6 +16,10 @@ async function start(): Promise<void> {
     }
     process.exit(1);
   }
+
+  // Sentry init önce — sonraki kod path'i içindeki hatalar yakalansın diye.
+  // DSN yoksa no-op döner (degrade mode); app yine çalışır.
+  initSentry({ env });
 
   const app = await buildServer({ env });
 

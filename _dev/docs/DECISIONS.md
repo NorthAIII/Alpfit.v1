@@ -9,6 +9,51 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — TASK-1.11: 3 Katmanlı KVKK PII Scrubbing Matrisi (Backend Sentry + pino redact)
+
+**Bağlam:** Backend Sentry kurulumu (EU Frankfurt) ve KVKK Madde 6 sağlık verisi (kilo, boy, ölçüm, yemek/kalori) sızıntı koruması. PHASE-1 araştırma §Tuzak #3: "Sentry varsayılan PII gönderir" — `req.body` tam payload event'e gider; KVKK ihlali. Discuss-phase-1 kararı: "log'lara üye sağlık verisi YAZILMAZ (sadece event tip + üye ID hash)". İki katman (yalnız Sentry SDK default veya yalnız pino redact) yetersiz: ilki integration'lar bypass ederse, ikincisi Sentry yolundan PII'ı yakalamaz.
+
+**Seçenekler:**
+
+1. **Yalnızca Sentry SDK `sendDefaultPii: false`** — Native koruma yeterli varsayımı. ❌ Integration (ör. `requestDataIntegration`) ile body yine event'e girer; pino log'larda da koruma yok.
+2. **Sadece pino redact + `sendDefaultPii: false`** — Log'lar güvende ama Sentry event'lere manuel `Sentry.setUser(...)` veya integration ile sızabilir.
+3. **3 katmanlı (seçilen):** (a) Sentry SDK `sendDefaultPii: false`, (b) `beforeSend` custom scrubber (recursive walk + user ID hash), (c) pino fast-redact paths (4 seviye wildcard). PII alan listesi `@alpfit/shared` SSOT.
+4. **Allow-list yaklaşımı** — sadece beyaz listelenmiş alanlar Sentry'ye. ❌ Bilinen Fastify exception/breadcrumb yapısı sürekli değişir; hata trace'i kaybolur.
+
+**Karar:** **Seçenek 3 — 3 katmanlı savunma derinliği + SSOT PII listesi.**
+
+**Tamamlayıcı kararlar:**
+
+- **PII_FIELDS Single Source of Truth:** `shared/src/pii-fields.ts` — backend ve mobile (TASK-1.12) ortak. Hem camelCase hem snake_case. Yeni schema/zod alanı eklendiğinde liste güncelleme **memory disiplini** (`_dev/memory/kvkk-pii-scrubbing-matrisi.md`).
+- **User ID hash:** sha256(rawId).slice(0, 12) — anonimizasyon yeterli (1e14 entropi), secret rotate gerekmez. HMAC + secret yerine sade sha256 — KVKK denetimi açısından "ham veri Sentry'ye gitmiyor" beyanı için yeterli.
+- **Sentry beforeSend kapsamı:** `event.request.{data, cookies, query_string, headers}`, `event.user` (id hash, email/username/ip_address silinir), `event.extra`, `event.contexts`, `event.breadcrumbs[].data`. Event tamamen drop edilmez — exception type, stack frame yolları korunur (debug edilebilirlik).
+- **pino redact paths:** `getPinoRedactPaths()` her PII alanı için 4 seviye wildcard üretir (`field`, `*.field`, `*.*.field`, `*.*.*.field`). Pratikte Fastify req/res log objelerinin tüm derinliği yakalanır.
+- **tracesSampleRate:** production'da 0.1 (free plan 5K event/ay quota koruması — Araştırma §Tuzak #7); staging/dev'de 1.0.
+- **DSN env eksikse degrade mode:** `initSentry()` no-op döner, app çalışmaya devam eder. Staging/production'da DSN eksikse stderr'e warning; hata fırlatılmaz (BSOD pattern yerine graceful). Local'de DSN gerek yok.
+- **Test izolasyonu:** `pii-scrubber.test.ts` Sentry SDK'yı gerçekten init etmez (network/global state riski). Scrubber doğrudan fonksiyon olarak çağrılır — 11 test (Sentry beforeSend, pino redact, hashUserId, scrubPii, cyclic ref, breadcrumb).
+
+**Gerekçe:**
+
+- **Savunma derinliği (defense in depth):** Bir katman bypass edilse diğeri yakalar. KVKK denetiminde "tek koruma vardı, bypass edildi" değil "üç bağımsız katman" beyanı güçlü.
+- **SSOT discipline:** Liste tek dosyada → backend + mobile + Sentry UI sensitive fields (üçü senkron tutulur). Çoklu liste = drift kaynağı.
+- **[[ilkeler]] §En Yüksek Öncelikli Eksen #1** sürdürülebilirlik motoru, ama §"Kümülatif test altyapısı" → KVKK için test-first: 11 test scrubber zincirini doğrular, regression yakalanır.
+- **Maliyet:** Free Developer plan + EU Frankfurt residency (KVKK m.9 reformu sonrası AB en savunulabilir). 5K event/ay aşılırsa quota webhook (sentry-setup.md §3) ile uyarı; sonra $26/ay Team plan değerlendirme — şimdi acele etmiyoruz.
+
+**Tradeoff'lar:**
+
+- **scrubPii recursive walk performansı:** Her event için O(field count × depth) — sıradan event boyutlarında (1-10 KB) negligible. Aşırı büyük event'lerde (binlerce nested) yavaşlar; bilinçli ödün — KVKK > microsec.
+- **PII_FIELDS liste bakımı:** Yeni alan eklenince liste güncellenmesi **manuel** — unutulursa sessizce sızar. Mitigation: memory disiplini + faz review'da toplu kontrol + Sentry UI sensitive fields redundansı.
+- **Wildcard'ın 4 seviye sınırı:** 5+ nested PII pino redact'a girmez (Sentry tarafı recursive güvenli). Pratikte Fastify log objelerinde 5+ nesting nadir; gerekirse `getPinoRedactPaths()` parametreleştirilir (şimdi gerek yok).
+- **Sentry UI "Additional Sensitive Fields"** ile redundant scrub: tek doğru kaynak prensibine biraz aykırı ama UI tarafı server-side defense — kod düşerse UI ayakta. Bilinçli redundansı.
+
+**İlgili:**
+- Kod: `backend/src/observability/{sentry.ts, pii-scrubber.ts}`, `shared/src/pii-fields.ts`, `backend/src/server.ts` (pino redact), `backend/src/index.ts` (initSentry call).
+- Test: `backend/src/observability/pii-scrubber.test.ts` (11 test).
+- Doküman: `_dev/docs/sentry-setup.md` (manuel UI adımları + quota webhook), `_dev/memory/kvkk-pii-scrubbing-matrisi.md` (disiplin).
+- PHASE-1 Araştırma §Tuzak #3 + §Tuzak #7 mitigation.
+
+---
+
 ### 2026-05-29 — TASK-1.10 Staging Deploy: Coolify Yerine Docker Compose + bunker-nginx Subdomain Proxy (Shared VPS)
 
 **Bağlam:** TASK-1.10 başlarken kullanıcı maliyet optimizasyonu için var olan Hetzner CPX32 sunucusunu (178.104.140.36, Nuremberg, `ops.kiwiailab.com`) Alpfit staging için de kullanmak istedi. Sunucuda halihazırda Bunker projesi (11 Docker container: nginx:alpine 80/443'ü tutuyor, Next.js dashboard 3000, n8n 5678, Postgres 15, Redis 7, Qdrant, Ollama, Adminer, Umami) çalışıyor. SSH ile keşif yapıldı (Senaryo A: Bunker tamamen Docker'da, bare metal nginx yok); 80/443 portları `bunker-nginx` container'ı tarafından tutuluyor. RAM 7.6 GB → 5.2 GB serbest, disk 150 GB → 34 GB serbest (%77 dolu), swap 0. Üst karar (2026-05-29 Hosting+Staging DECISIONS) "Hetzner Cloud + Coolify, Falkenstein/Nuremberg" diyordu — sunucu zaten Hetzner Nuremberg, AB konum gereği korunuyor; sapma yalnızca **orkestrasyon katmanı** (Coolify yerine docker-compose) ve **paylaşımlı VPS** boyutunda.

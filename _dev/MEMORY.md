@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10 ✅ closure: `staging-infra.md` drift fix (network `bunker-network`, swap 4 GB, SSH key adı) + 5 yeni öğrenim (SAN cert + `certbot --expand` paterni, `gh secret set < file` UI yerine, `.env.*.example` gitignore istisnası, runner image'da `pnpm` yok prisma çağrısı, adım kanıtı disiplini).
+**Son Güncelleme:** 2026-05-29 — TASK-1.11 ✅: `kvkk-pii-scrubbing-matrisi.md` eklendi (Süreç Disiplini); backend Sentry + pino redact + 3 katmanlı KVKK PII savunması; PII_FIELDS SSOT `shared/src/pii-fields.ts`.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -46,6 +46,7 @@
 - [Feedback: Odak / Disiplin](memory/feedback-focus-discipline.md) — Yeni özellik fikrinde "v1 mi v1.5 mi v2 mi?" filtresinden geçir, yarım kalma desenine karşı scope büyütmeye uyarı ver, eklenmemesi gerekeni `/devflow:prd-note` ile sakla.
 - [Feedback: Varsayım Yok](memory/feedback-no-assumptions.md) — Mimari karar / paket / dosya / dış servis değişikliğini onaysız yapma; seçenekleri TR sade dille AskUserQuestion ile sun, "yapıyorum" yerine "yapayım mı?" sor.
 - [TR locale util zorunlu](memory/tr-locale-util-zorunlu.md) — TR string'lere case dönüşümünde `@alpfit/shared` → `trLower` / `trUpper` kullan; ham `.toLowerCase()` / `.toUpperCase()` ESLint `no-restricted-syntax` ile yasak (TR "İ" → "i̇" tuzağı).
+- [KVKK PII scrubbing matrisi](memory/kvkk-pii-scrubbing-matrisi.md) — DB schema/zod yeni alan eklendiğinde `shared/src/pii-fields.ts` PII_FIELDS listesine ekle (camelCase + snake_case); backend 3 katmanlı savunma (Sentry sendDefaultPii: false + beforeSend scrubber + pino redact); PR review + faz review'da toplu kontrol.
 
 ---
 

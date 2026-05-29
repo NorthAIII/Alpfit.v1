@@ -1,3 +1,4 @@
+import { getPinoRedactPaths } from '@alpfit/shared';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -38,7 +39,10 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
 }
 
 function buildLoggerConfig(env: Env): PinoLoggerOptions {
-  const base: PinoLoggerOptions = { level: env.LOG_LEVEL };
+  const base: PinoLoggerOptions = {
+    level: env.LOG_LEVEL,
+    redact: { paths: getPinoRedactPaths(), censor: '[REDACTED]' },
+  };
   if (env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') {
     return base;
   }

@@ -2,3 +2,4 @@
 export * from './locale.js';
 export * from './phone.js';
 export * from './date.js';
+export * from './pii-fields.js';
