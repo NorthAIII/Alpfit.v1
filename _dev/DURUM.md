@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #2 sonu, context şişti): Adım 5-10 ✅ (clone+.gitignore drift fix+.env.staging sırlı doldu+bunker keşfi: bunker-network/SAN cert+webroot+deploy-hook+squarespace DNS+certbot --expand 7 domain+nginx server block+reload+ilk deploy: backend healthy, prisma migrate deploy uygulandı, public https://alpfit-staging.kiwiailab.com/healthz 200), Adım 11 auto-deploy: GH Actions secrets bozuk format hatası (ssh.ParsePrivateKey: no key found + DNS lookup trailing newline) → gh CLI ile 3 secret'ı temiz format ile yeniden yazıldı → workflow_dispatch başarılı (8d0f268 sunucuya sync, /healthz 200); kalan: boş commit ile push→CI→workflow_run zincir görsel teyit + TASK closure (doküman/archive); GH_TOKEN v2 (alpfit-deploy-debug-v2) 7 gün aktif — kullanıcı task bitiminde revoke edecek.
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ✅ closure (oturum #3): kullanıcı kararıyla zincir görsel teyit atlandı (mekanizma workflow_dispatch + sunucuda 8d0f268 + public /healthz 200 ile ispatlanmıştı); TASK doc durum ✅ + 10 alt görev + 12 test + 9 tamamlanma kriteri kutucukları işaretlendi; PHASE-1 tablo 1.10 ✅; memory/staging-infra.md drift fix (network `bunker-network`, swap 4 GB, SSH key adı `github_actions_ssh`) + 5 yeni öğrenim (SAN cert + certbot --expand paterni, gh secret set < file UI yerine, .env.*.example gitignore istisnası, runner image pnpm yok prisma çağrısı, adım kanıtı disiplini); archive + final commit; sıradaki TASK-1.11 backend Sentry + PII scrubber; GH_TOKEN v2 manuel revoke YOK, 7 gün otomatik expire (kullanıcı kararı: uğraşmama, kapsam sadece bu repo).
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 9/34 task tamam + TASK-1.10 ⏸️ Duraklatıldı (oturum #1 sonu: Adım 1-4 ✅, Adım 5-11 kaldı); yeni oturumda `/devflow:resume` → Adım 5 (clone) ile devam
+**İlerleme:** 10/34 task tamam; sıradaki TASK-1.11 backend Sentry + PII scrubber + KVKK test
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** TASK-1.10 — Staging deploy (shared Hetzner VPS — docker-compose + bunker-nginx subdomain proxy + GH Actions auto-deploy)
-**Durum:** ⏸️ Duraklatıldı (oturum #2 sonu, context şişti — neredeyse bitti)
-**İlerleme:** Adım 5-10 + GH secrets fix + workflow_dispatch deploy başarılı ✅. Public `https://alpfit-staging.kiwiailab.com/healthz` 200 dönüyor. Kalan iki ufak iş: (1) boş commit ile push→CI→workflow_run zincirini görsel teyit (~5-7 dk), (2) TASK closure ritüeli (TASK durumu ✅, PHASE-1 tablo, memory/staging-infra.md güncellemesi network adı + secret durumu, archive, final commit). Detay TASK-1.10.md "Oturum 2026-05-29 #2" bölümünde.
+**Task:** Yok — TASK-1.10 ✅ tamamlandı, sıradaki TASK-1.11 (backend Sentry + PII scrubber + KVKK test) henüz başlatılmadı.
+**Durum:** —
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.11` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 9 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 10 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -50,7 +50,7 @@
 | 1.07 | i18n shell (i18next mobile + backend, TR-only) | ✅ Tamamlandı |
 | 1.08 | Mobile test altyapısı (Jest + RTL + MSW) | ✅ Tamamlandı |
 | 1.09 | CI PR pipeline (GitHub Actions: test + lint + typecheck) | ✅ Tamamlandı |
-| 1.10 | Staging deploy (shared VPS — docker-compose + bunker-nginx + GH Actions) | ⏸️ Duraklatıldı (Adım 1-10 ✅ + manual deploy + secret fix, kalan: zincir teyit + closure) |
+| 1.10 | Staging deploy (shared VPS — docker-compose + bunker-nginx + GH Actions) | ✅ Tamamlandı |
 | 1.11–1.16 | M0 Altyapı (Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (6) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
@@ -74,6 +74,14 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 ## Son Task Özetleri
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
+
+### TASK-1.10 — Staging deploy (shared Hetzner VPS — docker-compose + bunker-nginx + GH Actions) (2026-05-29) ✅
+
+- **3 oturumda 11 commit + mimari sapma:** Orijinal Coolify kararı (PHASE-1 araştırma) Bunker'la paylaşımlı CPX32 Nuremberg sunucusunda 80/443 çakışması nedeniyle bırakıldı — **docker-compose + bunker-nginx subdomain proxy + GH Actions SSH auto-deploy** seçildi. Detay: DECISIONS.md "TASK-1.10 Staging Deploy". Repo skeleton oturum #1 (3b24234 + fd23c73 + 325cf2a): `backend/Dockerfile` multi-stage node:22-bookworm builder + bookworm-slim runner + non-root + dumb-init + pnpm deploy prune; `_ops/staging/docker-compose.yml` 3 container internal-only network; `.github/workflows/deploy-staging.yml` workflow_run after CI on main + appleboy/ssh-action; manuel playbook `_dev/docs/hetzner-staging-setup.md`; memory + DECISIONS + KVKK SCC TODO. Drift fix #1 (30b793c): `.gitignore` `!.env.*.example` istisnası — `.env.*` template'i yutuyordu. Drift fix #2 (25391c0): network adı `bunker_default` → **`bunker-network`** (gerçek sunucu keşfi).
+- **Sunucu hazırlığı + deploy (oturum #2, 4a69259 + 8d0f262):** 4 GB swap fstab persistent; `deploy` user (uid 1000, docker group, no-sudo); 2 ed25519 SSH key (repo deploy + GH Actions); GitHub Deploy Keys (read-only `alpfit-staging-server`); 3 secret (STAGING_SSH_HOST/USER/KEY); Squarespace DNS A record alpfit-staging → 178.104.140.36; bunker keşfi — `bunker-nginx` host bind mount nginx.conf, conf.d **kullanılmıyor**, **SAN cert** ana ad `n8n.kiwiailab.com`, certbot.timer + deploy-hook auto-renewal. Cert yenileme: `certbot certonly --webroot --expand --cert-name n8n.kiwiailab.com -d <6 mevcut> -d alpfit-staging.kiwiailab.com` — 7-domain SAN cert (mevcutları `-d` ile geçirmek **şart**, aksi prune). nginx.conf yedek alındı + alpfit-staging exact-match 443 server block regex catch-all'dan **ÖNCE** eklendi (nginx exact > regex precedence) + `nginx -t` + reload. **Bunker 5 mevcut subdomain regression yok** (n8n 200, ops 307, umami 200). Backend image build 1m18s + 3 container healthy 20s + Prisma init migration (`./node_modules/.bin/prisma migrate deploy` — runner image'da `pnpm` YOK, doğrudan shell script). **Public `https://alpfit-staging.kiwiailab.com/healthz` HTTP/2 200** + JSON body + HSTS+X-Frame headers.
+- **Auto-deploy secret fix (oturum #2):** İlk 6 Deploy Staging run fail (`ssh.ParsePrivateKey: no key found` + `STAGING_SSH_HOST` trailing newline DNS lookup); önceki oturumun "Deploy #3 = 8s SSH OK" yorumu **yanlış teşhis** idi. Çözüm: `gh secret set NAME < /tmp/secret_file` (stdin redirect) ile 3 secret temiz format → `workflow_dispatch` deploy ✅ ~15s, sunucuda 8d0f268 sync + /healthz 200. GH_TOKEN v2 (`alpfit-deploy-debug-v2`) 7 gün — kullanıcı revoke edecek.
+- **Closure (oturum #3, bu commit):** Kullanıcı kararıyla push-tetik zincir görsel teyit atlandı (mekanizma `workflow_dispatch` ile ispatlanmıştı, ekstra token üretim maliyeti değer üretmiyordu). TASK doc durum ✅ + 10 alt görev + 12 test + 9 tamamlanma kriteri kutucukları. PHASE-1 tablo 1.10 ✅. `staging-infra.md` drift fix (network, swap, SSH key adı) + 5 yeni öğrenim (SAN cert + `certbot --expand` paterni, `gh secret set < file` UI yerine, `.env.*.example` gitignore istisnası, runner image `pnpm` yok prisma çağrısı, **adım kanıtı disiplini** — exit code değil log + sonuç hedeflenen değişikliği kanıtlamalı). MEMORY.md index + DURUM.md güncel; archive.
+- Test kriterleri ✅ — Public HTTPS /healthz 200 + JSON, 3 container healthy, Prisma migration uygulandı, HTTP→HTTPS redirect + Let's Encrypt SAN cert geçerli, workflow_dispatch deploy + sunucuda commit sync + /healthz 200, bunker regression yok.
 
 ### TASK-1.09 — CI PR pipeline (GitHub Actions: test + lint + typecheck) (2026-05-29) ✅
 
@@ -117,4 +125,4 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #2 sonu, context şişti): Adım 5-10 ✅ (clone+.gitignore drift fix+.env.staging sırlı doldu+bunker keşfi: bunker-network/SAN cert+webroot+deploy-hook+squarespace DNS+certbot --expand 7 domain+nginx server block+reload+ilk deploy: backend healthy, prisma migrate deploy uygulandı, public https://alpfit-staging.kiwiailab.com/healthz 200), Adım 11 auto-deploy: GH Actions secrets bozuk format hatası (ssh.ParsePrivateKey: no key found + DNS lookup trailing newline) → gh CLI ile 3 secret'ı temiz format ile yeniden yazıldı → workflow_dispatch başarılı (8d0f268 sunucuya sync, /healthz 200); kalan: boş commit ile push→CI→workflow_run zincir görsel teyit + TASK closure (doküman/archive); GH_TOKEN v2 (alpfit-deploy-debug-v2) 7 gün aktif — kullanıcı task bitiminde revoke edecek.
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ✅ closure (oturum #3): kullanıcı kararıyla zincir görsel teyit atlandı (mekanizma workflow_dispatch + sunucuda 8d0f268 + public /healthz 200 ile ispatlanmıştı); TASK doc durum ✅ + 10 alt görev + 12 test + 9 tamamlanma kriteri kutucukları işaretlendi; PHASE-1 tablo 1.10 ✅; memory/staging-infra.md drift fix (network `bunker-network`, swap 4 GB, SSH key adı `github_actions_ssh`) + 5 yeni öğrenim (SAN cert + certbot --expand paterni, gh secret set < file UI yerine, .env.*.example gitignore istisnası, runner image pnpm yok prisma çağrısı, adım kanıtı disiplini); archive + final commit; sıradaki TASK-1.11 backend Sentry + PII scrubber; GH_TOKEN v2 manuel revoke YOK, 7 gün otomatik expire (kullanıcı kararı: uğraşmama, kapsam sadece bu repo).

@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10: staging altyapısı (Hetzner CPX32 paylaşımlı VPS + docker-compose + bunker-nginx subdomain proxy) `staging-infra.md`'ye eklendi.
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ✅ closure: `staging-infra.md` drift fix (network `bunker-network`, swap 4 GB, SSH key adı) + 5 yeni öğrenim (SAN cert + `certbot --expand` paterni, `gh secret set < file` UI yerine, `.env.*.example` gitignore istisnası, runner image'da `pnpm` yok prisma çağrısı, adım kanıtı disiplini).
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 

@@ -252,7 +252,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.07 | TASK-1.07 | ✅ Tamamlandı | i18n shell (i18next mobile + backend, TR-only) |
 | 1.08 | TASK-1.08 | ✅ Tamamlandı | Mobile test altyapısı (Jest + RTL) |
 | 1.09 | TASK-1.09 | ✅ Tamamlandı | CI PR pipeline (GitHub Actions: test + lint + typecheck) |
-| 1.10 | TASK-1.10 | ⬜ Bekliyor | Hetzner+Coolify staging kurulumu + auto-deploy webhook |
+| 1.10 | TASK-1.10 | ✅ Tamamlandı | Staging deploy (shared Hetzner VPS — docker-compose + bunker-nginx subdomain proxy + GH Actions SSH auto-deploy) — mimari sapma: Coolify yerine docker-compose |
 | 1.11 | TASK-1.11 | ⬜ Bekliyor | Backend Sentry + PII scrubber + KVKK test |
 | 1.12 | TASK-1.12 | ⬜ Bekliyor | Mobile Sentry crash reporting + PII scrubber |
 | 1.13 | TASK-1.13 | ⬜ Bekliyor | 3 rol veri modeli (User + role enum + ilişki tabloları) |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — TASK-1.09 ✅ (`.github/workflows/ci.yml` 4 paralel job: quality root lint+format:check / shared / mobile / backend node:22-bookworm container + postgres:17-alpine service hostname `postgres` (devcontainer paterni) + concurrency cancel-in-progress; `.github/CI-SETUP.md` manuel branch protection rehberi — kullanıcı AskUserQuestion ile gh CLI script yerine manuel UI seçti, repo henüz remote'a push edilmedi; `.github/PULL_REQUEST_TEMPLATE.md` task/modül/faz bağlantısı + commit prefix + test planı + KVKK checklist; lokalde pnpm lint + format:check + typecheck recursive + test:coverage 3 paket yeşil + YAML semantik valid; sıradaki TASK-1.10 Hetzner+Coolify staging).
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ✅ (3 oturumda 11 commit; mimari sapma: Coolify yerine docker-compose + shared VPS — Bunker'la paylaşımlı Hetzner CPX32 Nuremberg, bunker-nginx SAN cert + alpfit-staging exact-match server block + alpfit-backend `bunker-network` external attach; backend Dockerfile multi-stage + non-root + dumb-init; `_ops/staging/docker-compose.yml` 3 healthy container — alpfit-backend + alpfit-postgres:17-alpine + alpfit-redis:7-alpine; GH Actions `deploy-staging.yml` workflow_run after CI on main + appleboy/ssh-action; deploy user docker group no-sudo; 4 GB swap; certbot --expand n8n.kiwiailab.com → 7 domain SAN cert ACME webroot; nginx.conf yedek alındı reload sonrası 5 mevcut subdomain regression yok; public https://alpfit-staging.kiwiailab.com/healthz 200 + `{status:'ok',db:'up'}` + Prisma init migration uygulandı; workflow_dispatch deploy ✅; sıradaki TASK-1.11 backend Sentry + PII scrubber).
