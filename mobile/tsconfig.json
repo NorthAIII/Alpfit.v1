@@ -10,7 +10,7 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["expo/types", "react/canary"],
+    "types": ["expo/types", "react/canary", "jest"],
     "paths": {
       "@shared/*": ["../shared/src/*"]
     }
@@ -18,6 +18,8 @@
   "include": [
     "app/**/*",
     "src/**/*",
+    "test/**/*",
+    "__tests__/**/*",
     "app.config.ts",
     "i18next.d.ts",
     ".expo/types/**/*.ts",

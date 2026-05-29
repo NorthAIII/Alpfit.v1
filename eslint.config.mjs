@@ -85,7 +85,7 @@ export default tseslint.config(
   // CommonJS configs (Expo's metro.config.js + babel.config.js, vb.) —
   // require()/module/__dirname kullanır; tseslint recommended bunları yasaklar.
   {
-    files: ['**/metro.config.js', '**/babel.config.js', '**/*.config.cjs'],
+    files: ['**/metro.config.js', '**/babel.config.js', '**/jest.config.js', '**/*.config.cjs'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'commonjs',

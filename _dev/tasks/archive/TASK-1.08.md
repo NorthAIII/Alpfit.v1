@@ -1,6 +1,6 @@
 # TASK-1.08: Mobile test altyapısı (Jest + RTL)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M0 — Çekirdek Altyapı (`modules/M0-cekirdek-altyapi.md`)
 **Feature:** M0 cross-cutting altyapı
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -124,8 +124,30 @@ mobile/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-29
+
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Paketler:** `jest@^29.7.0`, `jest-expo@~56.0.4` (bundledNativeModules ile çapraz doğrulanmış), `@testing-library/react-native@^13.3.3`, `react-test-renderer@19.2.6` (React 19.2.6 ile pin), `@react-native/jest-preset@^0.85.3` (jest-expo peer), `msw@^2.14.6`, `whatwg-fetch@^3.6.20`, `@types/jest@^29.5.14` mobile devDeps'e eklendi. Kullanıcı onayıyla deprecated `@testing-library/jest-native` paketi atlandı; modern RTL v13 matchers (`@testing-library/react-native/matchers` + `expect.extend`) seçildi.
+- **Jest config (`mobile/jest.config.js`):** `preset: 'jest-expo/ios'` — universal multi-project preset'in 4 platform × test koşumu yerine tek platform (component'lerimiz platform-agnostic; UI task'larında ihtiyaç olursa universal'a geçilir). `setupFilesAfterEnv: ['<rootDir>/test/setup.ts']` (Jest doğru option adı `setupFilesAfterEnv`, `setupFilesAfterEach` değil). MSW v2 conditional exports için `testEnvironmentOptions.customExportConditions: ['node', 'node-addons']`. Rettime ESM zinciri için `.mjs` transform babel-jest'e açıldı. `transformIgnorePatterns` daraltıldı — yalnız `react-native-reanimated/plugin/` + `@react-native/babel-preset/` ignore; kalan node_modules transform edilir (jest-expo'nun karmaşık iç-içe `.pnpm/<pkg>/node_modules/<pkg>` whitelist'inde MSW deps ve expo-modules-core/src yakalanıyordu). `moduleNameMapper`: `.js→.ts` shim + `@alpfit/shared` workspace path.
+- **Test altyapısı dosyaları:** `mobile/test/setup.ts` — matchers + MSW server lifecycle (beforeAll/afterEach/afterAll) + `NODE_ENV=test` (i18n missing-key warn'a düşer, throw değil). `mobile/test/render-with-providers.tsx` — `I18nextProvider` wrap'leyen custom render. `mobile/test/msw/{server.ts,handlers.ts,README.md}` — boş default handlers + suite-level `server.use(...)` pattern + KVKK koruması olarak `onUnhandledRequest: 'error'`. `mobile/test/README.md` — i18n pattern, snapshot policy, coverage notu.
+- **Test dosyası konumu (önemli karar):** `mobile/__tests__/landing-screen.test.tsx` — jest-expo snapshot resolver path'te `__tests__/` substring'i `__tests__/__snapshots__/`'a replace eder. Test app/ klasöründe olursa (a) snapshot dosyası path'i bozulur (b) Expo Router scan'i `.test.tsx`'i route + import'larını bundle'a alır (`pnpm export:smoke` fail). Mobile root altında `__tests__/` her iki problemi çözer.
+- **Scripts + tsconfig + eslint:** `mobile/package.json`'a `test/test:watch/test:coverage`; `mobile/tsconfig.json` `types: [...'jest']` + include `__tests__/**/*` + `test/**/*`; `eslint.config.mjs` CommonJS allowlist'ine `jest.config.js` eklendi.
+
+**Snapshot Policy (karar dokümante):** Kritik component'ler (banner stack, motor karar UI, ölçüm formu) için snapshot — refactor güvencesi. Sade/dinamik UI için query-based assertion (`getByText`, `getByRole`). Snapshot'lar git'e commit edilir. Detay: `mobile/test/README.md`.
+
+**Test Kriterleri:**
+- ✅ `pnpm -F @alpfit/mobile test` 2 passed (TR text query + snapshot match, 0.95s)
+- ✅ `mobile/__tests__/__snapshots__/landing-screen.test.tsx.snap.ios` üretildi + git'e eklendi
+- ✅ `renderWithProviders` i18n provider ile çalışıyor — `getByText('Merhaba Alpfit')` ve `formatTrDate(new Date())` interpolation TR çıktısı bulundu
+- ✅ Coverage path konfigüre (collectCoverageFrom + coverage/ gitignored — root `.gitignore`'da)
+- ✅ i18n missing-key warn moduna alındı (`NODE_ENV=test`)
+- ✅ `pnpm typecheck` 3 paket temiz, `pnpm lint` temiz, `pnpm format:check` temiz
+- ✅ `pnpm test` recursive 52 passed (41 shared + 9 backend + 2 mobile)
+- ✅ `pnpm -F @alpfit/mobile run export:smoke` 1.7MB web bundle (regression yok)
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-29
