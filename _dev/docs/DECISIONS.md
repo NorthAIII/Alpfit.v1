@@ -9,6 +9,60 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — TASK-1.14: KVKK Consent Versiyonlu Append-Only + AuditLog Whitelist Metadata + UserIdHash
+
+**Bağlam:** KVKK Madde 6 (sağlık verisi özel nitelikli) + Madde 11 (veri sahibi hakları: erişim/silme/itiraz) denetlenebilir kayıt zorunluluğu. Discuss-phase-1 kararı: *"log'lara üye sağlık verisi YAZILMAZ (sadece event tip + üye ID hash)"*. KVKK metni hukuki danışman onayıyla zaman içinde **sürüm değiştirir** (Yakın 5 öncesi v1 metni gelir; sonra eklemeler) → rızanın hangi sürüme verildiği denetlenebilir olmalı. AuditLog v1'de 16 event tipi taşır (login/logout/otp/consent/invitation/refresh-token/member-removed/retention-purge); metadata alanına **PII sızması en büyük risk**: helper bypass edilirse veya zod atlanırsa sağlık/telefon verisi DB'ye düşer.
+
+**Seçenekler — Consent kaydı:**
+
+1. **Yalnızca `User.kvkkConsentAt`/`healthConsentAt` (anlık-durum)** — ❌ KVKK denetiminde "hangi metin sürümüne onay verildi?" sorulamıyor; geri çekme tarihi kaybediliyor; audit zinciri yok.
+2. **`ConsentRecord` append-only + `User` denormalized cache (seçilen)** — Versiyonlu (`textVersion`), append-only (granted/revoked/auto_revoked yeni satır); User cache hot-path için (mevcut UI/auth check'leri kırmaz); truth source query. ✅ KVKK denetim + UX hızı dengesi.
+3. **Tek tablo, durum UPDATE** — ❌ Geri çekme tarihi kaybediliyor; audit zinciri yok; KVKK Madde 11 yanıt veremiyor.
+
+**Seçenekler — textVersion formatı:**
+
+1. **Tarih-bazlı `v2026-05-29` (seçilen)** — Hukuki metin tarihsel referans → KVKK.md'deki metin "29 Mayıs 2026" tarihiyle imzalandı; tarih insan-okur, kronolojik sıralanır. ✅
+2. **Semver `v1.0` / `v1.1`** — ❌ Hukuki metin "minor/patch" mantığı taşımaz; v2.0 mı v1.1 mi sorusu öznel; tarih daha doğal.
+
+**Seçenekler — AuditLog metadata PII koruma:**
+
+1. **Blacklist (`refuse if contains 'phone'`)** — ❌ Yeni PII alanı eklendiğinde listeyi güncellemeyi unutmak default-açık kapı (KVKK ihlali silently sızar).
+2. **Whitelist (`allow only ['ip', 'deviceType', ...]`) zod `.strict()` (seçilen)** — Default-kapalı; yeni alan eklemek için bilinçli karar gerekir; bilinmeyen anahtar runtime'da ZodError fırlatır (compile zamanı `@ts-expect-error` ile test'te yakalanır). ✅
+3. **Hiç metadata yok (sadece eventType + userIdHash)** — ❌ Çok kaba; debug ve KVKK denetim için "neden başarısız?" cevaplanamaz (örn. otp_verify_failed → attemptCount kayıp).
+
+**Seçenekler — AuditLog userId saklama:**
+
+1. **Ham `userId` FK (relation)** — ❌ DB sızıntısında "kim audit edildi?" sorusu **hesap**+audit zinciriyle birleşir → broad disclosure (KVKK ihlali genişler).
+2. **`userIdHash` sha256 prefix 12 hex (seçilen)** — Anonimizasyon yeterli (1e14 entropi); audit zinciri kullanıcı içinde sıralanabilir (correlation), broad disclosure önler. **Aynı algoritma** Sentry user.id hash'i ile (pii-scrubber.ts) → audit ↔ Sentry hash hizalı (incident response için). ✅
+3. **HMAC + secret rotate** — ❌ Aşırı (Sentry'de bile sha256 yetiyor); secret rotate audit zincirini kırar (geçmiş hash'ler yeniden hesaplanamaz).
+
+**Karar:**
+- **Consent:** `ConsentRecord` append-only + `User.kvkkConsentAt`/`healthConsentAt` denormalized cache; `recordConsent()` Prisma `$transaction` ile ikisini tek atomik adımda günceller (drift olmaz).
+- **textVersion:** Tarih-bazlı `v2026-05-29` (KVKK.md metni güncellendiğinde yeni tag).
+- **AuditLog metadata:** zod `.strict()` whitelist 10 alan (`ip`/`deviceType`/`userAgent`/`invitationId`/`refreshTokenId`/`consentType`/`textVersion`/`attemptCount`/`count`/`reason`); helper `logAuditEvent()` tek giriş noktası; doğrudan `prisma.auditLog.create(...)` convention olarak yasak.
+- **userIdHash:** sha256 prefix 12 hex; `hashUserId` helper'ı `observability/pii-scrubber.ts`'ten re-use (Sentry event correlation hizalı).
+
+**Tamamlayıcı kararlar:**
+
+- **`pazarlama_iletisim` consent v1'de cache YOK** — User üzerinde alan yok; ConsentRecord truth source. v1.5'te eklenirse (campaign opt-in için) `User.marketingConsentAt` field + recordConsent'e ekleme.
+- **`auto_revoked` event** — TASK-1.15 retention job'u 30 gün retention sonrası bu event tipini yazar; recordConsent helper bunu da granted/revoked gibi cache'i null'a çeker.
+- **`ipAddress`/`userAgent` ConsentRecord'da bilinçli toplanır** — KVKK denetim "kim ne zaman nereden onay verdi" sorusu için. Aynı alanlar pino redact + Sentry beforeSend listesinde (PII_FIELDS'e eklendi) → DB'ye yazılır AMA log/Sentry yoluna sızarsa redaktedir. Memory `kvkk-pii-scrubbing-matrisi.md`'ye "IP audit nüansı" eklendi.
+- **AuditLog metadata `Json?` null yazma — `Prisma.DbNull` vs field-omit:** Prisma 7 strict tip `null` literal'i reddeder. `validated === undefined` durumda field-omit (DB default NULL) seçildi — `Prisma.DbNull` import'u eklemekten daha sade.
+
+**Gerekçe:**
+- **ILKELER §"Kalıcılık önceliği":** KVKK denetim zincirini şimdi kurarsak Yakın 4 (sağlık verisi) öncesi hukuki review'a "audit log + versiyonlu consent ayakta" diye gidilir; sonradan retro-audit imkansız.
+- **ILKELER §"Sır ve konfigürasyon yönetimi":** AuditLog whitelist default-kapalı (yeni PII alanı eklemeyi unutmak ihlal değil — zod reddeder); Sentry event correlation hash hizalı (incident response tek araç).
+- **Memory `kvkk-pii-scrubbing-matrisi.md` disiplini:** Yeni schema alanı (`ipAddress`/`userAgent`) eklendiğinde PII_FIELDS güncellendi — disiplin somut bir görev olarak yaşadığını kanıtlıyor.
+
+**Risk + Mitigation:**
+- **Risk:** Helper bypass — geliştirici `prisma.auditLog.create({ data: { metadata: { phone: ... } } })` yazarsa zod devre dışı. **Mitigation:** Convention olarak yasak (DECISIONS.md + audit.ts JSDoc); v1.5'te custom ESLint kuralı eklenir (`no-restricted-syntax`: `auditLog.create` çağrısı kod-tabanında yalnızca `audit.ts`'te).
+- **Risk:** `pazarlama_iletisim` v1'de cache yok → ileride alan eklenince recordConsent helper'ı genişletmeyi unutmak. **Mitigation:** recordConsent içinde `consentType` switch defaults yok (sessiz drop yok); v1.5 eklendiğinde explicit case eklenir.
+- **Risk:** `ipAddress` log'a accidentally sızabilir (örn. Fastify request hook). **Mitigation:** PII_FIELDS'e eklendi → pino redact + Sentry beforeSend bunu `[REDACTED]`'lar. Test bu kanıtı henüz tutmuyor (TASK-1.14 kapsamı: schema + helper); pii-scrubber.test.ts'e ip senaryosu Yakın 1 son task'inde toplu KVKK smoke ile eklenir.
+
+**İlgili Task/Faz:** TASK-1.14 (bu task — schema + helper + integration test). TASK-1.13 (3 rol veri modeli — User.kvkkConsentAt/healthConsentAt alanları bu task'in cache'i). TASK-1.15 (retention job — `auto_revoked` event tipi ve `User.deletedAt`/`retentionDeadline` alanlarını kullanacak; 30 gün sayacı KVKK Madde 11). TASK-1.18+ (OTP/login akışı — `logAuditEvent(prisma, { userId, eventType: 'otp_sent', metadata: { ip, deviceType }})` çağrıları). TASK-1.28 (KVKK rıza ekranı — `recordConsent` çağrısı).
+
+---
+
 ### 2026-05-29 — TASK-1.13: 3 Rol Veri Modeli + Telefon Tekliği + Aktif İlişki Partial Unique Index
 
 **Bağlam:** ILKELER §"Pazarlık Konusu Olmayanlar §1" + 00-VISION §5: veri modeli ilk günden Member + Trainer + **Gym Owner** üç rolü taşır (v1 UI'da Gym Owner görünmez, model destekler). Diyetisyen 4. rolü ASLA eklenmez. PRD F1.1 davranışı: "Aynı telefon iki kez kayıt → bu telefon zaten kayıtlı, giriş yap." Discuss-phase-1: bir üye herhangi bir anda yalnızca BİR aktif PT'ye bağlı olabilir (v1; PT değiştirme = v1.5 adayı). Soft-delete (`endedAt` nullable) PT üye çıkarma akışı için baştan tasarlandı (TASK-1.15'te retention job kullanır).

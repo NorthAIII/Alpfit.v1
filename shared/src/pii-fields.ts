@@ -37,6 +37,17 @@ export const PII_FIELDS = [
   'phoneE164',
   'phone_e164',
 
+  // Ağ izleri (TASK-1.14 — KVKK denetim için ConsentRecord.ipAddress/userAgent
+  // alanlarında **bilinçli toplanır**; ama log/Sentry yoluna sızarsa redaktedir.
+  // İstisna: AuditLog.metadata zod whitelist `ip`/`deviceType`/`userAgent` izin
+  // verir — orası DB'ye yazılır, log değil. Detay: memory/kvkk-pii-scrubbing-matrisi.md
+  // "IP audit nüansı").
+  'ip',
+  'ipAddress',
+  'ip_address',
+  'userAgent',
+  'user_agent',
+
   // Sağlık verisi (KVKK Madde 6 özel nitelikli)
   'weight',
   'height',

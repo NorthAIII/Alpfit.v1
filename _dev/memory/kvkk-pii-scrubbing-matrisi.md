@@ -20,7 +20,9 @@ PHASE-1 Araştırma §Tuzak #3 (Sentry default PII gönderir) ve §Tuzak #7 (5K 
 Bu liste backend (pino redact + Sentry beforeSend) ve mobile (Sentry RN beforeSend, TASK-1.12) tarafından **paylaşılır** — `@alpfit/shared` re-export'u ile.
 
 Kategoriler:
-- **Kimlik:** phone, phoneNumber, mobile, email, name, firstName, lastName, fullName, displayName
+- **Kimlik:** phone, phoneNumber, mobile, email, name, firstName, lastName, fullName, displayName, phoneE164 (TASK-1.13)
+- **PT profili (serbest metin riski, TASK-1.13):** gymName, certificateNote
+- **Ağ izleri (TASK-1.14):** ip, ipAddress, userAgent — KVKK denetim için ConsentRecord/AuditLog DB'sine **bilinçli yazılır**; log/Sentry yoluna sızarsa redaktedir (aşağıda "IP Audit Nüansı")
 - **Sağlık verisi (Madde 6):** weight, height, measurement(s), bodyFat, bmi, waist, hip, chest, arm, thigh
 - **Yemek/beslenme:** foodLog, meal(s), mealLog, food, calories, kcal, macros, protein, carbs, fat
 - **Notlar:** note(s), comment(s)
@@ -28,6 +30,20 @@ Kategoriler:
 - **Auth/sır:** password, otp, otpCode, smsCode, verificationCode, token, accessToken, refreshToken, secret, apiKey, authorization
 
 Liste **hem camelCase hem snake_case** içerir — DB column adı ne olursa olsun yakalanır.
+
+---
+
+## IP Audit Nüansı (TASK-1.14)
+
+`ipAddress` / `userAgent` **iki yerde** karşımıza çıkar — biri KVKK denetim için **bilinçli toplanan veri**, diğeri log sızıntısı riski:
+
+1. **`ConsentRecord.ipAddress`/`userAgent`** (DB kolonu) — KVKK Madde 11 denetim için bilinçli toplanır: "kim ne zaman nereden onay verdi?". Bu DB row'una yazılır, **scrub edilmez**. recordConsent helper'ı bu alanları ham kabul eder.
+2. **`AuditLog.metadata.ip`/`userAgent`** (zod whitelist içi) — Login/OTP event'lerinde "hangi IP'den geldi?" KVKK denetim için yazılır. logAuditEvent helper'ı whitelist'te bunlara izin verir.
+3. **Log/Sentry yolu** (pino, Sentry event payload) — Yukarıdaki iki bilinçli yazma DIŞINDA herhangi bir log line / Sentry event'inde `ip` / `ipAddress` / `userAgent` görünmemeli. PII_FIELDS bu alanları içerdiği için pino redact + Sentry beforeSend bunları `[REDACTED]`'ler.
+
+Yani bu alanlar PII_FIELDS'te **olmak zorunda** (log savunması), ama application kodu DB'ye yazarken **doğrudan** kolona koyduğu için scrubber zaten devreye girmez (scrubber log payload'ı işler, Prisma create input'unu değil).
+
+**Test stratejisi:** ConsentRecord/AuditLog integration test'leri ham `ipAddress` değerinin DB'ye girdiğini doğrular ([backend/src/kvkk/consent.test.ts], [backend/src/kvkk/audit.test.ts]). pii-scrubber.test.ts'e ileride "log line'a `ip` alanı geçirildiğinde `[REDACTED]` olur" senaryosu eklenir (Yakın 1 son task KVKK smoke).
 
 ---
 
@@ -49,7 +65,7 @@ Bonus katman: Sentry UI **Settings → Security & Privacy → Additional Sensiti
 
 Şu adımlarda **PII_FIELDS güncel mi?** kontrolü yap:
 
-1. **DB schema değişikliği task'lerinde** (TASK-1.13 3 rol model, TASK-1.14 KVKK consent, ileride Yakın 3 ölçüm + yemek günlüğü schema'sı): Migration `.prisma` dosyasına eklenen her yeni kolon adını PII_FIELDS'e gir. Özellikle health/measurement/meal/note alanları.
+1. **DB schema değişikliği task'lerinde** (TASK-1.13 3 rol model ✅, TASK-1.14 KVKK consent ✅ — `ip`/`ipAddress`/`userAgent` eklendi, ileride Yakın 3 ölçüm + yemek günlüğü schema'sı): Migration `.prisma` dosyasına eklenen her yeni kolon adını PII_FIELDS'e gir. Özellikle health/measurement/meal/note alanları. **TASK-1.14 nüansı:** `ipAddress` DB'ye bilinçli yazılır AMA log/Sentry'ye sızarsa redaktedir — yukarıda "IP Audit Nüansı".
 2. **Yeni API endpoint task'lerinde** (Yakın 2-4): request body schema (zod) içinde PII alanı var mı? Listede yoksa **task BAŞLAMADAN** ekle, sonra endpoint yaz.
 3. **PR review'da:** Diff'te yeni schema/zod field varsa, `shared/src/pii-fields.ts`'in de güncellenip güncellenmediğini kontrol et. Yoksa istem: "Bu alan PII mi? Listeye eklenmeli mi?"
 4. **Faz review'da (review-phase):** O fazda DB'ye giren her yeni alan PII_FIELDS'te mi diye toplu kontrol et.

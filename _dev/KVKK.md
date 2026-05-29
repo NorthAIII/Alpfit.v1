@@ -8,6 +8,34 @@
 
 ---
 
+## KVKK Şema Altyapısı (TASK-1.14 — yerleşik)
+
+Metin hukuki danışman onayıyla doldurulmadan **önce** KVKK denetim altyapısı kuruldu (TASK-1.14, 2026-05-29). Hukuki metin sürümü değiştiğinde sadece string güncellenir; şema/akış aynı kalır.
+
+**ConsentRecord** — `backend/prisma/schema.prisma` model `ConsentRecord` (versiyonlu, append-only event log):
+- `userId` FK + `consentType` (`kvkk_aydinlatma`/`saglik_verisi`/`pazarlama_iletisim`) + `eventType` (`granted`/`revoked`/`auto_revoked`)
+- `textVersion` tarih-bazlı string (örn. `v2026-05-29` → bu doküman güncellendiğinde tag bump)
+- `occurredAt` + opsiyonel `ipAddress`/`userAgent` — KVKK denetim için **bilinçli toplanır** (Sentry'ye gönderilmez; pino redact + Sentry beforeSend `[REDACTED]`'ler)
+- **Append-only:** UPDATE/DELETE convention olarak yasak; geri çekme = yeni `revoked` event satırı; tarih zinciri kayıtlı kalır
+- `User.kvkkConsentAt`/`healthConsentAt` denormalized cache olarak kalır (hot-path UI/auth check); truth source ConsentRecord'un `orderBy occurredAt desc limit 1` event'i
+- Application helper'ları: `backend/src/kvkk/consent.ts` — `recordConsent()` Prisma `$transaction` ile insert + cache senkron; `getActiveConsent()` truth-source query
+
+**AuditLog** — `backend/prisma/schema.prisma` model `AuditLog` (KVKK Madde 11 denetim event log):
+- `userIdHash` — ham userId DB'ye **YAZILMAZ**, sha256 prefix 12 hex (broad disclosure önler, correlation yeterli)
+- `eventType` enum v1'de 16 değer (user_*, otp_*, consent_*, invitation_*, refresh_*, member_removed, retention_purge)
+- `metadata Json?` — **PII YASAK**; helper `logAuditEvent()` zod `.strict()` whitelist 10 alan (`ip`/`deviceType`/`userAgent`/`invitationId`/`refreshTokenId`/`consentType`/`textVersion`/`attemptCount`/`count`/`reason`) — bilinmeyen anahtar ZodError fırlatır (PII alan adı verilirse runtime'da reddedilir)
+- **Append-only:** UPDATE/DELETE convention olarak yasak; doğrudan `prisma.auditLog.create(...)` yasak — `logAuditEvent()` tek giriş noktası
+- Application helper: `backend/src/kvkk/audit.ts`
+
+**Audit Retention Politikası (TODO — Yakın 4 öncesi hukuki danışman ile netleşecek):**
+- v1: sınırsız tutulur (storage düşük, denetim sorgusu olası)
+- v1.5+: KVKK denetim sürelerine göre purge politikası (öneri: 7 yıl audit log, sonra purge — denetim talebi yanıt süresi 30 gün; geç eskimiş audit pratikte sorgulanmıyor)
+- `retention_purge` event tipi audit log'un kendi purge'ını de **kendi içine yazar** (KVKK uyum şeffaflığı)
+
+**İlgili kararlar:** `_dev/docs/DECISIONS.md` "2026-05-29 — TASK-1.14: KVKK Consent Versiyonlu Append-Only + AuditLog Whitelist Metadata + UserIdHash".
+
+---
+
 ## Neden Bu Doküman Erken Açılıyor?
 
 KVKK çerçevesi M0 Çekirdek Altyapı'da kurulur (3 rol veri modeli, açık rıza akış, saklama politikası). Ama metinler ve hukuki kararlar **uzun lead time** gerektirir:
@@ -142,4 +170,4 @@ KVKK m.9 reformu (7499 sayılı Kanun, 01.06.2024) sonrası yurt dışı veri ak
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10: Üçüncü taraf SCC TODO bölümü eklendi (Hetzner + Squarespace + GitHub + SMS + Push + Backblaze + Sentry).
+**Son Güncelleme:** 2026-05-29 — TASK-1.14: KVKK şema altyapısı bölümü eklendi — `ConsentRecord` (versiyonlu append-only, `textVersion` + opsiyonel `ipAddress`/`userAgent`, denormalized cache) + `AuditLog` (`userIdHash` sha256 prefix 12 hex, metadata zod `.strict()` whitelist 10 alan); helper'lar `backend/src/kvkk/consent.ts` + `audit.ts`; v1 retention sınırsız + v1.5 7-yıl önerisi TODO; karar DECISIONS.md "TASK-1.14".

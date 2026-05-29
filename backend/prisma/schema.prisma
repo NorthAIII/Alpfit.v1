@@ -59,6 +59,8 @@ model User {
   trainerOfMembers  TrainerMember[]   @relation("trainer_relation")
   ownedTrainers     GymOwnerTrainer[] @relation("owner_relation")
   gymOwnerLinks     GymOwnerTrainer[] @relation("trainer_link")
+  // TASK-1.14 — versiyonlu KVKK rıza zinciri (append-only).
+  consentRecords    ConsentRecord[]   @relation("user_consent_records")
 
   @@index([role])
 }
@@ -107,4 +109,86 @@ model GymOwnerTrainer {
   @@index([gymOwnerId])
   @@index([trainerId])
   @@index([trainerId, endedAt])
+}
+
+// =====================================================================
+// TASK-1.14 — KVKK consent + audit log
+// =====================================================================
+// KVKK Madde 6 (özel nitelikli sağlık verisi) + Madde 11 (veri sahibi
+// hakları) denetlenebilir kayıt gereksinimi:
+//   - ConsentRecord: kullanıcı hangi metin sürümünü, ne zaman, nasıl
+//     onayladı/geri çekti — versiyonlu, append-only event log.
+//     User.kvkkConsentAt / healthConsentAt (TASK-1.13) anlık-durum
+//     **denormalized cache**; truth source bu tablodur.
+//   - AuditLog: KVKK denetiminde "kim, ne zaman, neyi" gereksinimi için
+//     append-only event log. **Ham user ID yazılmaz** — sha256 prefix
+//     (12 hex char) ile hash'lenir (broad disclosure önler, correlation
+//     için yeterli). metadata Json? alanına **PII YASAK**; helper
+//     `logAuditEvent()` zod whitelist ile alanları kısıtlar.
+
+enum ConsentType {
+  kvkk_aydinlatma     // zorunlu — hesap açma için
+  saglik_verisi       // opsiyonel — ölçüm/yemek için (KVKK Madde 6)
+  pazarlama_iletisim  // v1.5 adayı; şimdi tanımlı, kullanım sonra
+}
+
+enum ConsentEventType {
+  granted
+  revoked
+  auto_revoked        // 30 gün retention sonrası otomatik (TASK-1.15)
+}
+
+enum AuditEventType {
+  user_created
+  user_login
+  user_logout
+  user_logout_all
+  otp_sent
+  otp_verified
+  otp_verify_failed
+  consent_granted
+  consent_revoked
+  invitation_created
+  invitation_accepted
+  member_removed
+  refresh_rotated
+  refresh_replay_detected
+  refresh_expired
+  retention_purge
+}
+
+// Append-only consent event log. Row UPDATE / DELETE convention olarak
+// yasak (code review); geri çekme = yeni `revoked` event'i.
+model ConsentRecord {
+  id          String           @id @default(cuid())
+  userId      String
+  consentType ConsentType
+  eventType   ConsentEventType
+  // Hukuki metin sürümü (tarih-bazlı, örn. "v2026-05-29"). DECISIONS.md
+  // — tarih-bazlı tercih edildi: metin tarihsel referans daha doğal.
+  textVersion String
+  occurredAt  DateTime         @default(now())
+  // KVKK denetim bağlamı — bilinçli toplanır; Sentry'ye GÖNDERİLMEZ
+  // (memory/kvkk-pii-scrubbing-matrisi.md "IP audit nüansı").
+  ipAddress   String?
+  userAgent   String?
+
+  user        User             @relation("user_consent_records", fields: [userId], references: [id])
+
+  @@index([userId, consentType])
+  @@index([occurredAt])
+}
+
+// Append-only audit event log. Ham `userId` YAZILMAZ — sha256 prefix
+// hash. metadata Json? PII içermez (helper zod whitelist enforce eder).
+model AuditLog {
+  id         String         @id @default(cuid())
+  userIdHash String
+  eventType  AuditEventType
+  occurredAt DateTime       @default(now())
+  metadata   Json?
+
+  @@index([userIdHash])
+  @@index([occurredAt])
+  @@index([eventType])
 }

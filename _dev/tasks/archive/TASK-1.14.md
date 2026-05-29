@@ -1,6 +1,6 @@
 # TASK-1.14: KVKK consent schema + audit log
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M0 — Çekirdek Altyapı (`modules/M0-cekirdek-altyapi.md`)
 **Feature:** M0 cross-cutting altyapı
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -210,8 +210,28 @@ _dev/memory/kvkk-pii-scrubbing-matrisi.md                    # GÜNCELLE (IP aud
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-29 (run-task)
+
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Prisma schema** — `ConsentType` (kvkk_aydinlatma / saglik_verisi / pazarlama_iletisim), `ConsentEventType` (granted / revoked / auto_revoked), `AuditEventType` (16 v1 event tipi) enum'ları eklendi; `ConsentRecord` (versiyonlu, append-only, kullanıcıya FK, `ipAddress`/`userAgent` opsiyonel, index `userId+consentType`/`occurredAt`) + `AuditLog` (hash'lenmiş `userIdHash`, `eventType`, `metadata Json?`, index 3'lü) modelleri yerleşti. `User.consentRecords ConsentRecord[]` relation eklendi.
+- **Migration** — `20260529205040_kvkk_consent_audit` — `prisma migrate dev --create-only` ile saf Prisma DDL; iki enum + iki tablo + altı index + bir FK. Mevcut DB'ye `prisma migrate deploy` ile uygulandı; test/db.ts her suite için `migrate deploy` çalıştırdığından integration test deploy garantisini de yakalar.
+- **`shared/src/pii-fields.ts` (UPDATE)** — `ip` / `ipAddress` / `ip_address` / `userAgent` / `user_agent` eklendi (camelCase + snake_case SSOT disiplini). Inline yorum **IP audit nüansı**: ConsentRecord'da bilinçli toplanır + AuditLog metadata zod whitelist'inde `ip`/`userAgent` izinli (DB'ye yazılır, log değil); ama log/Sentry yoluna sızarsa redaktedir.
+- **`backend/src/kvkk/consent.ts` (YENİ)** — `recordConsent(prisma, args)` Prisma `$transaction` ile (a) `ConsentRecord` append-only insert + (b) `User.kvkkConsentAt` / `healthConsentAt` **denormalized cache** güncelle (`granted` → `occurredAt`; `revoked`/`auto_revoked` → null; `pazarlama_iletisim` v1'de cache yok). `getActiveConsent(prisma, userId, type)` → en son event `granted` mı kontrolü (truth source query).
+- **`backend/src/kvkk/audit.ts` (YENİ)** — `AuditMetadataSchema` zod `.strict()` **whitelist**: `ip`/`deviceType`/`userAgent`/`invitationId`/`refreshTokenId`/`consentType`/`textVersion`/`attemptCount`/`count`/`reason` (10 izinli alan; bilinmeyen anahtar ZodError). `logAuditEvent(prisma, args)` — metadata varsa parse, `hashUserId` (pii-scrubber'dan re-use — sha256 prefix 12 hex, Sentry event correlation ile **aynı algoritma**), append-only insert. `null` literal'i Prisma 7 strict `Json?` tipinde reddedildiği için `validated === undefined` durumda `metadata` field omit edilir (DB default NULL).
+- **`backend/src/kvkk/audit.test.ts` (YENİ) 8 PASS** — zod whitelist red (3: `phone`/`weight`/`firstName`+`email`; DB'ye row yazılmadığı `count() === 0` ile kanıt); whitelist içi kabul (3: ip+deviceType, metadata yok = null, consent event consentType+textVersion); userId hash (2: `userIdHash` ham `userId`den farklı + 12-hex regex + `JSON.stringify(row).not.toContain(rawUserId)` negatif kanıt; correlation = aynı ID aynı hash).
+- **`backend/src/kvkk/consent.test.ts` (YENİ) 4 PASS** — granted → getActiveConsent true; granted+revoked → false, eski granted event hala DB'de (append-only kanıtı); denormalized cache senkron: kvkkConsentAt + healthConsentAt set/null geçişleri + auto_revoked da null; pazarlama_iletisim User cache'e dokunmaz (v1) ama getActiveConsent doğru cevap verir.
+
+**Kalan İşler:** Yok — task tamamlandı.
+
+**Son Yaklaşım:** Tamamlandı; bir sonraki adım yeni oturumda `/devflow:run-task` ile TASK-1.15 (Soft delete + 30 gün retention job).
+
+**Belirsizlikler:** Yok. Karar noktaları (textVersion formatı = tarih-bazlı, AuditLog metadata = whitelist) task dokümanındaki öneri doğrultusunda alındı.
+
+**Sonraki Adım Detayı:** TASK-1.15 (soft delete + 30 gün retention job). User.deletedAt + retentionDeadline alanları (TASK-1.13'te eklendi) + ConsentRecord.auto_revoked event (TASK-1.14'te eklendi) artık hazır — retention job bu altyapıyı kullanır.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-29 (run-task — backend 38 PASS / shared 41 / mobile 23 regresyon yok)

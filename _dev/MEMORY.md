@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.13 ✅: `prisma-partial-unique-index.md` eklendi (Süreç Disiplini); soft-delete pattern'inde aktif-satır tekliği için Prisma DSL `@@unique` yetersiz → raw SQL partial unique index şart.
+**Son Güncelleme:** 2026-05-29 — TASK-1.14 ✅: `kvkk-pii-scrubbing-matrisi.md`'ye "IP Audit Nüansı" eklendi — `ipAddress`/`userAgent` ConsentRecord/AuditLog DB'sine bilinçli yazılır, log/Sentry yoluna sızarsa pino redact + Sentry beforeSend redaktedir; PII_FIELDS güncellendi (`ip`/`ipAddress`/`userAgent`).
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -46,7 +46,7 @@
 - [Feedback: Odak / Disiplin](memory/feedback-focus-discipline.md) — Yeni özellik fikrinde "v1 mi v1.5 mi v2 mi?" filtresinden geçir, yarım kalma desenine karşı scope büyütmeye uyarı ver, eklenmemesi gerekeni `/devflow:prd-note` ile sakla.
 - [Feedback: Varsayım Yok](memory/feedback-no-assumptions.md) — Mimari karar / paket / dosya / dış servis değişikliğini onaysız yapma; seçenekleri TR sade dille AskUserQuestion ile sun, "yapıyorum" yerine "yapayım mı?" sor.
 - [TR locale util zorunlu](memory/tr-locale-util-zorunlu.md) — TR string'lere case dönüşümünde `@alpfit/shared` → `trLower` / `trUpper` kullan; ham `.toLowerCase()` / `.toUpperCase()` ESLint `no-restricted-syntax` ile yasak (TR "İ" → "i̇" tuzağı).
-- [KVKK PII scrubbing matrisi](memory/kvkk-pii-scrubbing-matrisi.md) — DB schema/zod yeni alan eklendiğinde `shared/src/pii-fields.ts` PII_FIELDS listesine ekle (camelCase + snake_case); backend 3 katmanlı savunma (Sentry sendDefaultPii: false + beforeSend scrubber + pino redact); PR review + faz review'da toplu kontrol.
+- [KVKK PII scrubbing matrisi](memory/kvkk-pii-scrubbing-matrisi.md) — DB schema/zod yeni alan eklendiğinde `shared/src/pii-fields.ts` PII_FIELDS listesine ekle (camelCase + snake_case); backend 3 katmanlı savunma (Sentry sendDefaultPii: false + beforeSend scrubber + pino redact); PR review + faz review'da toplu kontrol. **IP Audit Nüansı (TASK-1.14):** `ipAddress`/`userAgent` DB'ye bilinçli yazılır AMA log/Sentry yoluna sızarsa redaktedir.
 - [Prisma + PostgreSQL partial unique index](memory/prisma-partial-unique-index.md) — Soft-delete deseninde "aynı anda tek aktif satır" invariant'ı için Prisma DSL `@@unique([..., nullableTimestamp])` YETMEZ (PostgreSQL NULL ≠ NULL); `migrate dev --create-only` + raw SQL `CREATE UNIQUE INDEX ... WHERE "endedAt" IS NULL` şart, integration test deploy garantisini yakalar.
 
 ---
