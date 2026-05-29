@@ -9,6 +9,43 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — TASK-1.13: 3 Rol Veri Modeli + Telefon Tekliği + Aktif İlişki Partial Unique Index
+
+**Bağlam:** ILKELER §"Pazarlık Konusu Olmayanlar §1" + 00-VISION §5: veri modeli ilk günden Member + Trainer + **Gym Owner** üç rolü taşır (v1 UI'da Gym Owner görünmez, model destekler). Diyetisyen 4. rolü ASLA eklenmez. PRD F1.1 davranışı: "Aynı telefon iki kez kayıt → bu telefon zaten kayıtlı, giriş yap." Discuss-phase-1: bir üye herhangi bir anda yalnızca BİR aktif PT'ye bağlı olabilir (v1; PT değiştirme = v1.5 adayı). Soft-delete (`endedAt` nullable) PT üye çıkarma akışı için baştan tasarlandı (TASK-1.15'te retention job kullanır).
+
+**Seçenekler — phone uniqueness:**
+
+1. **Global `phoneE164` UNIQUE (seçilen)** — Bir hesap = bir telefon. Aynı kişi iki rol istiyorsa ikinci numara kullanır. PRD F1.1 mesajıyla doğrudan uyum: "telefon zaten kayıtlı, giriş yap." ✅ Schema sade, application logic'i basit.
+2. **`@@unique([phoneE164, role])` composite** — Aynı telefon iki rolde ayrı hesap. ❌ Kimlik kafa karışıklığı (hangi rolle giriş yapacak?), PRD F1.1 mesajını anlamsız kılar, KVKK self-silmede ambiguity (hangi hesap silinir?).
+
+**Seçenekler — aktif PT-üye tekliği DB enforcement:**
+
+1. **`@@unique([trainerId, memberId, endedAt])` Prisma DSL** — ❌ PostgreSQL NULL semantiği: iki satırda `(t1, m1, NULL)` ve `(t2, m1, NULL)` "farklı" sayılır (NULL ≠ NULL). Aktif çoklu PT engellenmez.
+2. **Yalnızca application-level kontrol** — ❌ Race condition (iki paralel davet kabul) DB seviyesinde patlamaz; KVKK + müşteri güvenliği için son güvence şart.
+3. **Raw SQL partial unique index (seçilen):** `CREATE UNIQUE INDEX ... ON "TrainerMember" ("memberId") WHERE "endedAt" IS NULL` — Yalnızca aktif (endedAt IS NULL) satırlar üzerinde unique. Race-safe, çoklu PT engellenir. Aynı pattern `GymOwnerTrainer` için trainer-bazlı (v1.5+ için baştan kuruldu). Prisma DSL bunu üretmez → `migrate dev --create-only` + manuel SQL.
+4. **Trigger-based check** — ❌ Aşırı; partial unique index daha basit, atomic, dökümante.
+
+**Karar:**
+- **Phone uniqueness:** Global `phoneE164` UNIQUE.
+- **Aktif ilişki tekliği:** Raw SQL **partial unique index** (`WHERE "endedAt" IS NULL`) — TrainerMember için memberId, GymOwnerTrainer için trainerId.
+- **ID stratejisi:** `cuid()` (k-sorted, kompakt; UUID'ye göre DB index performansı + chronological ordering).
+- **Gym Owner v1 boş slot:** Model + ilişki tablosu + partial unique index baştan kuruldu (v1.5+ migration yükü yok). UI engelleme application katmanında (TASK-1.20+ auth middleware role kontrolü).
+- **`endedAt` nullable + soft-delete deseni:** PT-üye ilişkisi sonlandığında hard-delete değil `endedAt = now()`; arşiv erişimi + 30 gün retention (TASK-1.15) için zorunlu.
+
+**Tamamlayıcı kararlar:**
+- **PII_FIELDS SSOT güncelleme disiplini:** Schema'ya yeni "kişisel veri" alanı eklendiğinde `shared/src/pii-fields.ts` listesine **aynı PR'da** eklenir (memory disiplini `kvkk-pii-scrubbing-matrisi.md`). Bu task'ta `gymName`, `certificateNote`, `phoneE164` (camelCase + snake_case) eklendi.
+- **Application helper (`assertSingleActivePtForMember`):** DB partial index son güvence; helper okunaklı hata mesajı (`ActiveTrainerRelationExistsError`) için TASK-1.24'te kullanılacak placeholder. DB-only enforcement kullanıcıya `Unique constraint violated...` ham hatası verir — UX için yetersiz.
+
+**Gerekçe:** ILKELER §"Kalıcılık önceliği": 3 rol slot şimdi kurulur, v1.5+'da migration yükü yok. Partial unique index PostgreSQL'in dokümante özelliği — ORM-agnostik, raw SQL'i okumak hala mümkün. Phone uniqueness PRD F1.1 mesajıyla birebir hizalı; composite unique işlevsel borç yaratır.
+
+**Risk + Mitigation:**
+- **Risk:** Raw SQL migration index'i CI/staging deploy'da unutulursa application doğru çalışır ama race condition kapısı açık kalır. **Mitigation:** Bu task'ta migration dosyasında raw SQL **migration.sql'in son satırı**; `migrate deploy` her ortamda otomatik uygular. `relations.test.ts` partial index'in deploy'unu test eder (`relations.test.ts` her suite kendi izole DB'sini `prisma migrate deploy` ile kurar → raw SQL atlandıysa test FAIL).
+- **Risk:** `phoneE164` global unique sonradan "aynı kişi PT+Member için ayrı hesap istiyor" deseniyle çelişirse migration ağır. **Mitigation:** PRD F1.1 net; kullanıcı senaryosunda ayrı telefon = ayrı hesap netleşti.
+
+**İlgili Task/Faz:** TASK-1.13 (bu task — schema + migration + integration test). TASK-1.14 (KVKK consent audit log — User'daki `kvkkConsentAt`/`healthConsentAt`'ı ayrı audit tabloyla zenginleştirir). TASK-1.15 (soft-delete + retention job — `deletedAt`/`retentionDeadline` alanlarını kullanır). TASK-1.20+ (auth middleware role guard — `gym_owner` v1'de hesap açamaz, request reddedilir).
+
+---
+
 ### 2026-05-29 — TASK-1.11: 3 Katmanlı KVKK PII Scrubbing Matrisi (Backend Sentry + pino redact)
 
 **Bağlam:** Backend Sentry kurulumu (EU Frankfurt) ve KVKK Madde 6 sağlık verisi (kilo, boy, ölçüm, yemek/kalori) sızıntı koruması. PHASE-1 araştırma §Tuzak #3: "Sentry varsayılan PII gönderir" — `req.body` tam payload event'e gider; KVKK ihlali. Discuss-phase-1 kararı: "log'lara üye sağlık verisi YAZILMAZ (sadece event tip + üye ID hash)". İki katman (yalnız Sentry SDK default veya yalnız pino redact) yetersiz: ilki integration'lar bypass ederse, ikincisi Sentry yolundan PII'ı yakalamaz.

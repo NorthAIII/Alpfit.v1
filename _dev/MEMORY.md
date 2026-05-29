@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.11 ✅: `kvkk-pii-scrubbing-matrisi.md` eklendi (Süreç Disiplini); backend Sentry + pino redact + 3 katmanlı KVKK PII savunması; PII_FIELDS SSOT `shared/src/pii-fields.ts`.
+**Son Güncelleme:** 2026-05-29 — TASK-1.13 ✅: `prisma-partial-unique-index.md` eklendi (Süreç Disiplini); soft-delete pattern'inde aktif-satır tekliği için Prisma DSL `@@unique` yetersiz → raw SQL partial unique index şart.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -47,6 +47,7 @@
 - [Feedback: Varsayım Yok](memory/feedback-no-assumptions.md) — Mimari karar / paket / dosya / dış servis değişikliğini onaysız yapma; seçenekleri TR sade dille AskUserQuestion ile sun, "yapıyorum" yerine "yapayım mı?" sor.
 - [TR locale util zorunlu](memory/tr-locale-util-zorunlu.md) — TR string'lere case dönüşümünde `@alpfit/shared` → `trLower` / `trUpper` kullan; ham `.toLowerCase()` / `.toUpperCase()` ESLint `no-restricted-syntax` ile yasak (TR "İ" → "i̇" tuzağı).
 - [KVKK PII scrubbing matrisi](memory/kvkk-pii-scrubbing-matrisi.md) — DB schema/zod yeni alan eklendiğinde `shared/src/pii-fields.ts` PII_FIELDS listesine ekle (camelCase + snake_case); backend 3 katmanlı savunma (Sentry sendDefaultPii: false + beforeSend scrubber + pino redact); PR review + faz review'da toplu kontrol.
+- [Prisma + PostgreSQL partial unique index](memory/prisma-partial-unique-index.md) — Soft-delete deseninde "aynı anda tek aktif satır" invariant'ı için Prisma DSL `@@unique([..., nullableTimestamp])` YETMEZ (PostgreSQL NULL ≠ NULL); `migrate dev --create-only` + raw SQL `CREATE UNIQUE INDEX ... WHERE "endedAt" IS NULL` şart, integration test deploy garantisini yakalar.
 
 ---
 

@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.12 ✅: mobile Sentry RN 8.13 + crypto-js 4.2 kuruldu; backend kontratıyla birebir paralel 3 katmanlı KVKK savunma — Sentry `sendDefaultPii: false` + `beforeSend` recursive scrubber (request/user/extra/contexts/breadcrumbs) + `beforeBreadcrumb` URL sanitize + HTTP body drop; `sanitizeUrl()` `SENSITIVE_PATH_PATTERNS` (8 prefix) + defansif UUID/numeric/16+ char alphanum lookahead-anchored regex (`(?=[/?#]|$)` aksi halde `\d+` UUID'nin hex chunk'ını yiyor); `hashUserId()` `crypto-js/sha256` sync 12-hex — Node parity testi `73475cb40a56` backend ile aynı; `initSentry()` DSN yoksa no-op + production/staging `console.warn` degrade mode; `initSentryFromEnv()` `EXPO_PUBLIC_*` okur; `app.config.ts` `@sentry/react-native/expo` plugin (Yakın 5 EAS Build source map upload için yapı kurulu, auth token yok → no-op); `app/_layout.tsx` module-level init + `Sentry.wrap(RootLayout)` error boundary; PII_FIELDS SSOT `@alpfit/shared` paylaşımı (drift yok); 23 test PASS (scrubber × 3 + scrubPii × 2 + hashUserId × 4 + sanitizeUrl × 4 + beforeBreadcrumb × 3 + initSentry × 4 + negatif kanıt) + backend 20 PASS regression yok; sıradaki TASK-1.13 3 rol veri modeli (Member + Trainer + Gym Owner enum).
+**Son Güncelleme:** 2026-05-29 — TASK-1.13 ✅: 3 rol veri modeli Prisma 7 schema'ya yerleşti — `Role` enum (`member`/`trainer`/`gym_owner`, diyetisyen ASLA YOK) + `User` (cuid id, globally unique `phoneE164`, opsiyonel PT alanları `gymName`/`certificateNote`, KVKK `kvkkConsentAt`/`healthConsentAt`, soft-delete `deletedAt`/`retentionDeadline`) + `TrainerMember` + `GymOwnerTrainer` (v1 boş slot, model + index hazır); migration `20260529190917_three_role_data_model` Prisma DDL + **raw partial unique index'ler** — `WHERE "endedAt" IS NULL` (TrainerMember.memberId + GymOwnerTrainer.trainerId) Prisma DSL NULL semantiği aktif çoklu satırı engelleyemediği için zorunlu, `migrate deploy` her ortamda otomatik; `relations.ts` `assertSingleActivePtForMember` placeholder + `ActiveTrainerRelationExistsError` (TASK-1.24 davet kabul için); `shared/src/pii-fields.ts` `gymName`/`certificateNote`/`phoneE164` (camelCase + snake_case) eklendi; 6 integration test PASS (phoneE164 global unique + gym_owner DB-izinli + TrainerMember partial unique + sonlanma sonrası yeni PT + helper null/throw + GymOwnerTrainer partial unique); backend 26 / shared 41 / mobile 23 PASS regression yok; typecheck + lint + format temiz; psql ile partial index manuel doğrulandı; karar noktaları "best practice" altında çözüldü: phone global unique (F1.1 mesajıyla hizalı) + cuid (k-sorted); sıradaki TASK-1.14 KVKK consent audit log.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 12/34 task tamam; sıradaki TASK-1.13 3 rol veri modeli (Member + Trainer + Gym Owner Prisma enum)
+**İlerleme:** 13/34 task tamam; sıradaki TASK-1.14 KVKK consent schema + audit log
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.12 ✅ tamamlandı, sıradaki TASK-1.13 (3 rol veri modeli — Member + Trainer + Gym Owner enum) henüz başlatılmadı.
+**Task:** Yok — TASK-1.13 ✅ tamamlandı, sıradaki TASK-1.14 (KVKK consent schema + audit log) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.13` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.14` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 12 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 13 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -53,7 +53,8 @@
 | 1.10 | Staging deploy (shared VPS — docker-compose + bunker-nginx + GH Actions) | ✅ Tamamlandı |
 | 1.11 | Backend Sentry + PII scrubber + KVKK test | ✅ Tamamlandı |
 | 1.12 | Mobile Sentry crash reporting + PII scrubber | ✅ Tamamlandı |
-| 1.13–1.16 | M0 Altyapı (3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (4) |
+| 1.13 | 3 rol veri modeli (User + role enum + ilişki tabloları) | ✅ Tamamlandı |
+| 1.14–1.16 | M0 Altyapı (KVKK consent, retention, yedek) | ⬜ Bekliyor (3) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
@@ -77,15 +78,6 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-### TASK-1.11 — Backend Sentry + PII scrubber + KVKK test (2026-05-29) ✅
-
-- **3 katmanlı KVKK PII savunması:** (a) `@sentry/node@10.55.0` init `sendDefaultPii: false` + `tracesSampleRate` prod 0.1 / dev-staging 1.0 + `environment: APP_ENV`; (b) `sentryBeforeSend<E extends Event>(e: E): E` recursive scrubber — `event.request.{data, cookies, query_string, headers}` + `event.user` (id sha256-12 hash, email/username/ip_address sil) + `event.extra` + `event.contexts` + `event.breadcrumbs[].data`; (c) pino `redact: { paths: getPinoRedactPaths(), censor: '[REDACTED]' }` her PII alanı için 4 seviye wildcard (`field`, `*.field`, `*.*.field`, `*.*.*.field`). Sentry'nin `Event` (genel) vs `ErrorEvent` (`type: undefined`) tipi gerilimi generic ile çözüldü.
-- **PII_FIELDS SSOT (`shared/src/pii-fields.ts`):** readonly tuple; kimlik (phone/phoneNumber/phone_number/mobile/tel/email/name/firstName/.../displayName) + Madde 6 sağlık verisi (weight/height/measurement(s)/bodyFat/bmi/waist/hip/chest/arm/thigh) + yemek (foodLog/meal(s)/mealLog/food/calories/kcal/macros/protein/carbs/fat) + not(s)/comment(s) + rıza (kvkkConsent/healthDataConsent/consent) + auth/sır (password/otp/otpCode/smsCode/verificationCode/token/accessToken/refreshToken/secret/apiKey/authorization). camelCase + snake_case birlikte. `getPinoRedactPaths()` 4 seviye wildcard üretir. Backend + (TASK-1.12) mobile paylaşır. `shared/src/index.ts` re-export.
-- **Degrade mode + entrypoint:** `initSentry({env, dsn?, release?})` `SENTRY_DSN` env yoksa false döner + (staging/prod'da) stderr warning; app çalışmaya devam eder. `backend/src/index.ts` `start()` akışına `buildServer()` öncesi `initSentry({env})` çağrısı eklendi — Sentry sonraki kod path'i içindeki hataları yakalasın.
-- **Test (`pii-scrubber.test.ts`):** 11 PASS — Sentry beforeSend × 3 (PII alanlı kompleks event scrub, missing fields graceful, breadcrumb data); scrubPii × 3 (immutable, array, cyclic ref); hashUserId × 3 (12 hex format, deterministic, farklı input farklı çıktı); pino redact × 1 (JSON stdout capture — `phone/weight/mealLog/password/email` `[REDACTED]`, `traceId/msg` korundu, raw değerler yok); negatif kanıt × 1 (`event.user.id` hash format, ham `phone` `[REDACTED]`, serialized event'te `+90555...` ve raw user-id yok). Sentry SDK gerçekten init edilmez (network/global state riski) — scrubber doğrudan çağrılır.
-- **Doküman + disiplin:** `_dev/docs/sentry-setup.md` — Sentry Cloud EU proje açma (`.de.sentry.io` DSN doğrulaması) + DSN env wiring (`/opt/alpfit/_ops/staging/.env.staging`) + quota webhook 80%/100% Settings → Usage & Billing → Notifications + Spike Protection per-project + KVKK Security & Privacy checklist (Data Scrubbing + Additional Sensitive Fields redundant + EU Frankfurt residency + 30 gün retention) + release tracking opsiyonel + manuel staging smoke senaryosu + haftalık quota check. `_dev/memory/kvkk-pii-scrubbing-matrisi.md` Süreç Disiplini: SSOT yeri, 3 katman matrisi, 4 kontrol anı (DB schema task, yeni endpoint task, PR review, faz review), wildcard 4 seviye sınırı uyarısı, test bağı. MEMORY.md "Süreç Disiplinleri" altına pointer. DECISIONS.md "3 Katmanlı KVKK PII Scrubbing Matrisi" kararı (4 seçenek + tradeoff'lar).
-- Test kriterleri ✅ — `pnpm -F @alpfit/backend test` 20 PASS (11 pii-scrubber + 9 healthz). `pnpm -F @alpfit/backend typecheck` temiz. `pnpm lint`/`format:check`/`typecheck` (recursive) temiz. Manuel staging Sentry dashboard smoke (`docs/sentry-setup.md §6`) gerçek Sentry projesi açıldıktan sonra yapılır — kapsam dışı, kod + rehber teslim edildi.
-
 ### TASK-1.12 — Mobile Sentry crash reporting + PII scrubber (2026-05-29) ✅
 
 - **Paket + plugin kurulumu:** `pnpm -F @alpfit/mobile add @sentry/react-native@^8.13.0 crypto-js@^4.2.0` + dev `@types/crypto-js@^4.2.2`. Sentry RN peer deps `expo: >=49.0.0` / RN `>=0.65.0` — Expo SDK 56 + RN 0.85 uyumlu. `mobile/app.config.ts` `plugins` array'ine `@sentry/react-native/expo` eklendi (Yakın 5'te EAS Build source map upload için yapı kurulu; auth token yokken plugin no-op — dev/runtime side-effect yok). Karar: `sentry-expo` deprecated → `@sentry/react-native` doğrudan kullanıldı (task plan'ı bunu öneriyordu).
@@ -96,6 +88,14 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 - **`sentry.test.ts` 23 PASS:** `jest.mock('@sentry/react-native')` (network/global state riski olmadan). `sentryBeforeSend` × 3 (kompleks event scrub, missing fields, breadcrumb data) + `scrubPii` × 2 (immutable, cyclic) + `hashUserId` × 4 (12-hex format, deterministic, distinct inputs, **Node sha256 cross-platform parity** sabit `73475cb40a56`) + `sanitizeUrl` × 4 (sensitive prefix, UUID anywhere — bug fix kanıtı, numeric anywhere, untouched paths) + `sentryBeforeBreadcrumb` × 3 (fetch URL+body drop, navigation to/from, ui.click PII scrub) + `initSentry` × 4 (degrade no-DSN, production warn, init args PII-safe, traces rate 0.1 prod) + negatif kanıt × 1 (serialized event'te ham telefon/üye ID YOK).
 - Test kriterleri ✅ — `pnpm -F @alpfit/mobile test` 23 PASS (Sentry SDK mock + scrubber + transformer + init + negatif kanıt). `pnpm -F @alpfit/mobile typecheck` temiz. `pnpm typecheck` (recursive: shared + mobile + backend) temiz. `pnpm lint` + `pnpm format:check` temiz (prettier auto-fix 2 dosya). `pnpm -F @alpfit/backend test` 20 PASS regression yok (PII_FIELDS SSOT paylaşımı backend kırmadı). `pnpm -F @alpfit/shared test` 41 PASS. Manuel staging Sentry dashboard smoke (test event Sentry'de PII'siz görünür) gerçek Sentry projesi açıldıktan sonra Yakın 1 son task'inde uçtan uca smoke ile — bu task kapsamı dışı, kod + rehber teslim edildi.
 
+### TASK-1.13 — 3 rol veri modeli (User + role enum + ilişki tabloları) (2026-05-29) ✅
+
+- **Prisma 7 schema (`backend/prisma/schema.prisma`)** — `Role` enum (`member`/`trainer`/`gym_owner`, diyetisyen ASLA YOK — VISION §5) + `User` (cuid id, globally unique `phoneE164`, `role`, `firstName`/`lastName`, opsiyonel `profilePhotoUrl`/`gymName`/`certificateNote`, KVKK `kvkkConsentAt`/`healthConsentAt`, soft-delete `deletedAt`/`retentionDeadline`, audit `createdAt`/`updatedAt`, index `role`) + `TrainerMember` (cuid, trainerId+memberId, startedAt+`endedAt nullable`, index `trainerId`/`memberId`/`(memberId, endedAt)`) + `GymOwnerTrainer` (v1 boş slot, trainer-bazlı aynı yapı). ILKELER §Pazarlık Konusu Olmayanlar §1: 3 rol şimdiden taşır, v1.5+'da migration yükü yok.
+- **Migration `20260529190917_three_role_data_model/migration.sql`** — `prisma migrate dev --create-only` ile Prisma'nın ürettiği DDL (enum + 3 tablo + index + FK) + **raw partial unique index'ler:** `CREATE UNIQUE INDEX "TrainerMember_memberId_active_unique" ON "TrainerMember" ("memberId") WHERE "endedAt" IS NULL` + GymOwnerTrainer için trainer-bazlı eşi. **Kritik karar (DECISIONS.md detayı):** Prisma DSL `@@unique([..., endedAt])` PostgreSQL NULL semantiği (NULL ≠ NULL) yüzünden iki aktif satırı engelleyemediği için raw SQL şart; partial index race-safe + atomic. `migrate deploy` her ortamda otomatik uygular (test/db.ts `prisma migrate deploy` ile per-suite isolated DB de partial index'i alır → testler partial index'in deploy garantisini de doğrular).
+- **`backend/src/auth/relations.ts` (YENİ) + `shared/src/pii-fields.ts` (UPDATE)** — `assertSingleActivePtForMember(prisma, memberId)` placeholder helper + named `ActiveTrainerRelationExistsError` (TASK-1.24 davet kabul akışında kullanılacak; DB partial index son güvence, helper UX-friendly mesaj). PII_FIELDS SSOT'a `gymName`/`gym_name`, `certificateNote`/`certificate_note`, `phoneE164`/`phone_e164` eklendi (camelCase + snake_case, `kvkk-pii-scrubbing-matrisi.md` disiplini); `firstName`/`lastName` zaten vardı.
+- **`relations.test.ts` 6 PASS** — vitest + per-suite isolated Postgres: (1) phoneE164 global unique — aynı telefon iki rolde 2. create rejekte (PRD F1.1 mesajı için "global unique vs composite" karar noktası: F1.1 ile birebir hizalı global seçildi); (2) `gym_owner` DB-izinli — UI engellemesi sonraki katmanda; (3) TrainerMember partial unique — iki aktif PT rejekte; (4) Sonlandırılan ilişki sonrası yeni PT atanabiliyor + aktif sayım = 1; (5) `assertSingleActivePtForMember` null→resolves, aktif→rejects.toBeInstanceOf; (6) GymOwnerTrainer partial unique. Manuel `psql \d` çıktısında partial index'ler `WHERE "endedAt" IS NULL` ile görünüyor.
+- Test kriterleri ✅ — `pnpm -F @alpfit/backend test` **26 PASS** (önceki 20 + yeni 6). `pnpm typecheck` (recursive) temiz. `pnpm lint` + `pnpm format:check` temiz (1 import/order + 1 prettier auto-fix). `pnpm -F @alpfit/shared test` 41 PASS + `pnpm -F @alpfit/mobile test` 23 PASS regression yok. DECISIONS.md "3 Rol Veri Modeli + Telefon Tekliği + Aktif İlişki Partial Unique Index" kararı (phone uniqueness 2 seçenek + DB enforcement 4 seçenek + cuid + Gym Owner slot + soft-delete deseni + risk/mitigation). Karar noktaları "best practice" altında kullanıcıya sormadan çözüldü (oturum başında verilen yetki).
+
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
 <!-- KURAL: "Son Tamamlanan Faz", "Son Tamamlanan Sprint" gibi ek özet bölümleri EKLEME — faz durum özeti PHASES.md'de, faz detayları PHASE-N.md'de. DURUM yalnızca aktif durum + son 2 task özeti. -->
@@ -103,12 +103,12 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.12 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.13 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.13` (3 rol veri modeli — Member + Trainer + Gym Owner Prisma enum + ilişki tabloları)
+**Sıradaki:** `/devflow:run-task TASK-1.14` (KVKK consent schema + audit log)
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.12 ✅: mobile Sentry RN 8.13 + crypto-js 4.2 kuruldu; backend kontratıyla birebir paralel 3 katmanlı KVKK savunma — Sentry `sendDefaultPii: false` + `beforeSend` recursive scrubber + `beforeBreadcrumb` URL sanitize + HTTP body drop; `sanitizeUrl()` 8 sensitive prefix + lookahead-anchored UUID/numeric defansif regex; `hashUserId()` crypto-js sha256 sync 12-hex Node parity sabit `73475cb40a56`; `initSentry()` degrade mode + `initSentryFromEnv()` `EXPO_PUBLIC_*`; `app.config.ts` `@sentry/react-native/expo` plugin (Yakın 5 source map upload için yapı kurulu); `_layout.tsx` module-level init + `Sentry.wrap`; PII_FIELDS SSOT `@alpfit/shared` paylaşımı (drift yok); 23 test PASS + backend 20 PASS regression yok; sıradaki TASK-1.13 3 rol veri modeli.
+**Son Güncelleme:** 2026-05-29 — TASK-1.13 ✅: 3 rol veri modeli Prisma 7 schema'ya yerleşti — `Role` enum (`member`/`trainer`/`gym_owner`) + `User` (cuid id, globally unique `phoneE164`, opsiyonel `gymName`/`certificateNote`, KVKK `kvkkConsentAt`/`healthConsentAt`, soft-delete `deletedAt`/`retentionDeadline`) + `TrainerMember` + `GymOwnerTrainer` (v1 boş slot); migration `20260529190917_three_role_data_model` Prisma DDL + **raw partial unique index'ler** (`WHERE "endedAt" IS NULL`) — Prisma DSL NULL semantiği aktif çoklu satırı engelleyemediğinden zorunlu; `relations.ts` `assertSingleActivePtForMember` placeholder + `ActiveTrainerRelationExistsError`; PII_FIELDS SSOT'a `gymName`/`certificateNote`/`phoneE164` eklendi; 6 integration test PASS (global unique + gym_owner izinli + iki partial index + helper + sonlanma sonrası yeni PT); backend 26 / shared 41 / mobile 23 PASS regression yok; typecheck + lint + format temiz; karar noktaları best practice altında çözüldü (phone global unique + cuid); sıradaki TASK-1.14 KVKK consent audit log.

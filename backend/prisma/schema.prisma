@@ -13,6 +13,98 @@ datasource db {
   provider = "postgresql"
 }
 
-// Models are intentionally empty in this first migration.
-// 3-rol veri modeli (Member + Trainer + Gym Owner) — TASK-1.13
-// KVKK consent + audit log — TASK-1.14
+// =====================================================================
+// TASK-1.13 — 3 rol veri modeli (Member + Trainer + Gym Owner)
+// =====================================================================
+// Pazarlık konusu olmayan karar (ILKELER §Pazarlık Konusu Olmayanlar §1):
+// v1'de UI yalnızca Member + Trainer'ı gösterir; Gym Owner için model
+// **şimdiden** kurulur, v1.5+'da UI eklenir. Diyetisyen 4. rolü ASLA
+// eklenmez (00-VISION §5).
+
+enum Role {
+  member
+  trainer
+  gym_owner
+}
+
+model User {
+  id                String    @id @default(cuid())
+  // E.164 normalize edilmiş telefon; "+905551234567".
+  // Globally unique — bir hesap = bir telefon. Aynı kişi iki rol istiyorsa
+  // ikinci numara kullanır (F1.1 PRD akışı: "Bu telefon zaten kayıtlı, giriş yap").
+  phoneE164         String    @unique
+  role              Role
+  firstName         String
+  lastName          String
+  profilePhotoUrl   String?
+
+  // PT-spesifik opsiyonel alanlar (member/gym_owner için NULL).
+  gymName           String?
+  certificateNote   String?
+
+  // KVKK rıza zamanları (audit detayı TASK-1.14'te ayrı tabloda).
+  kvkkConsentAt     DateTime?
+  healthConsentAt   DateTime?
+
+  // Soft delete + retention (TASK-1.15 job'ı set eder).
+  deletedAt         DateTime?
+  retentionDeadline DateTime?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // İlişkiler — bir kullanıcı birden fazla rolde "bağ" tutabilir,
+  // ama application logic role'e göre yalnızca ilgili olanı kullanır.
+  memberOfTrainer   TrainerMember[]   @relation("member_relation")
+  trainerOfMembers  TrainerMember[]   @relation("trainer_relation")
+  ownedTrainers     GymOwnerTrainer[] @relation("owner_relation")
+  gymOwnerLinks     GymOwnerTrainer[] @relation("trainer_link")
+
+  @@index([role])
+}
+
+// Aktif PT-üye ilişkisi. Üye herhangi bir anda yalnızca BİR aktif PT'ye
+// bağlı olabilir (v1). PT değiştirme = mevcut ilişkinin endedAt'ı set
+// edilir, yeni satır açılır.
+//
+// DB-level invariant (aktif ilişki tekliği): migration SQL'inde raw
+// partial unique index ile zorlanır —
+//   CREATE UNIQUE INDEX ... ON "TrainerMember" ("memberId")
+//     WHERE "endedAt" IS NULL;
+// Prisma DSL partial unique index üretmediği için raw SQL eklenir.
+model TrainerMember {
+  id          String    @id @default(cuid())
+  trainerId   String
+  memberId    String
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+
+  trainer     User      @relation("trainer_relation", fields: [trainerId], references: [id])
+  member      User      @relation("member_relation", fields: [memberId], references: [id])
+
+  @@index([trainerId])
+  @@index([memberId])
+  @@index([memberId, endedAt])
+}
+
+// Gym Owner ↔ Trainer ilişkisi. v1'de UI yok ve hiç satır oluşmaz; model
+// v1.5+'da kullanılacağı için şimdiden tanımlıdır (3 rol mimarisi).
+//
+// DB-level invariant (aktif ilişki tekliği): migration SQL'inde raw
+// partial unique index ile zorlanır —
+//   CREATE UNIQUE INDEX ... ON "GymOwnerTrainer" ("trainerId")
+//     WHERE "endedAt" IS NULL;
+model GymOwnerTrainer {
+  id          String    @id @default(cuid())
+  gymOwnerId  String
+  trainerId   String
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+
+  gymOwner    User      @relation("owner_relation", fields: [gymOwnerId], references: [id])
+  trainer     User      @relation("trainer_link", fields: [trainerId], references: [id])
+
+  @@index([gymOwnerId])
+  @@index([trainerId])
+  @@index([trainerId, endedAt])
+}

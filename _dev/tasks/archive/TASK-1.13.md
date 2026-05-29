@@ -1,6 +1,6 @@
 # TASK-1.13: 3 rol veri modeli + migration
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M0 — Çekirdek Altyapı (`modules/M0-cekirdek-altyapi.md`)
 **Feature:** M0 cross-cutting altyapı
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -206,8 +206,36 @@ shared/src/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-29 — TASK-1.13 ✅
+
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+
+- **Prisma schema (`backend/prisma/schema.prisma`)** — `Role` enum (`member`, `trainer`, `gym_owner`) + `User` modeli (cuid id, `phoneE164` global UNIQUE, `role`, `firstName`/`lastName`, opsiyonel `profilePhotoUrl`/`gymName`/`certificateNote`, `kvkkConsentAt`/`healthConsentAt`, soft-delete `deletedAt`/`retentionDeadline`, audit `createdAt`/`updatedAt`, index `role`) + `TrainerMember` (cuid, `trainerId`/`memberId`/`startedAt`/`endedAt nullable`, index `trainerId`/`memberId`/`(memberId, endedAt)`) + `GymOwnerTrainer` (aynı yapı, trainer-bazlı). 3 rol mimari kararı (ILKELER §Pazarlık Konusu Olmayanlar §1) schema'ya yerleşti — Gym Owner ilişki tablosu v1'de boş duracak ama tanımlı.
+- **Migration `20260529190917_three_role_data_model/migration.sql`** — `prisma migrate dev --create-only` ile Prisma'nın ürettiği DDL (enum + 3 tablo + index + FK) + **raw SQL eklemeleri:** `CREATE UNIQUE INDEX "TrainerMember_memberId_active_unique" ON "TrainerMember" ("memberId") WHERE "endedAt" IS NULL` + `CREATE UNIQUE INDEX "GymOwnerTrainer_trainerId_active_unique" ON "GymOwnerTrainer" ("trainerId") WHERE "endedAt" IS NULL`. **Karar gerekçesi (DECISIONS.md detayı):** Prisma DSL `@@unique([..., endedAt])` PostgreSQL NULL semantiği (NULL ≠ NULL) yüzünden iki aktif satırı engelleyemez; partial unique index yalnızca `WHERE endedAt IS NULL` koşullu satırları kapsadığı için aktif çoklu PT'yi atomic + race-safe reddeder. `migrate deploy` her ortamda otomatik uygular.
+- **`backend/src/auth/relations.ts` (YENİ)** — `assertSingleActivePtForMember(prisma, memberId)` placeholder helper + `ActiveTrainerRelationExistsError` named class. DB partial index son güvence; helper okunaklı hata mesajı (TASK-1.24 davet kabul akışında kullanılacak). 2 katmanlı garanti: application kontrolü ham `Unique constraint violated...` hatasını UX-friendly mesaja çevirir.
+- **`shared/src/pii-fields.ts` (UPDATE)** — PII_FIELDS listesine `gymName`/`gym_name`, `certificateNote`/`certificate_note`, `phoneE164`/`phone_e164` eklendi (camelCase + snake_case SSOT disiplini, `kvkk-pii-scrubbing-matrisi.md` gereği). `firstName`/`lastName` zaten listede vardı. Backend (pino redact + Sentry beforeSend) + mobile (Sentry RN beforeSend) bu SSOT'u paylaşır.
+- **`backend/src/auth/relations.test.ts` (YENİ) — 6 test PASS** — vitest + `createTestDatabase()` per-suite isolated Postgres (raw partial index migration ile birlikte deploy edilir → test partial index'in deploy garantisini de yakalar): (1) phoneE164 global unique — aynı telefon iki rolde 2. create rejekte; (2) `gym_owner` rolü DB-izinli — UI engellemesi sonraki katmanda; (3) TrainerMember partial unique — iki aktif PT rejekte; (4) İlişki sonlandırıldıktan sonra (`endedAt = now`) yeni PT atanabiliyor + aktif sayım = 1; (5) `assertSingleActivePtForMember` null durumda `resolves.toBeUndefined()`, aktif ilişki varsa `rejects.toBeInstanceOf(ActiveTrainerRelationExistsError)`; (6) GymOwnerTrainer partial unique — bir PT için iki aktif gym owner ilişkisi rejekte.
+- **Manuel doğrulama** — `psql -c '\d "User"' '\d "TrainerMember"' '\d "GymOwnerTrainer"'` çıktısı: enum + 3 tablo + FK + index'ler + **partial unique index'ler** (`"TrainerMember_memberId_active_unique" UNIQUE, btree ("memberId") WHERE "endedAt" IS NULL` + GymOwnerTrainer eşi) doğru görünüyor.
+
+**Karar Noktası Çözümleri (kullanıcı "session sonuna kadar best practice" dediği için sormadan, gerekçeyle):**
+
+- **`phoneE164` global unique vs `(phone, role)` composite** → **Global unique** seçildi. F1.1 PRD davranışı "Bu telefon zaten kayıtlı, giriş yap" mesajıyla birebir hizalı; composite kimlik kafa karışıklığı yaratır (hangi rolle giriş?) + KVKK self-silmede ambiguity (hangi hesap silinir?). Aynı kişi iki rol istiyorsa ikinci telefon kullanır.
+- **`cuid` vs `uuid`** → **cuid** seçildi (task dokümanı önerisiyle uyumlu). K-sorted → DB index performansı + chronological ordering avantajı; UUID'ye göre daha kompakt.
+
+**Test Sonuçları:**
+
+- `pnpm -F @alpfit/backend test`: **26 PASS** (önceki 20: pii-scrubber × 11 + healthz × 9 + i18n × 4(?) + yeni 6: relations × 6).
+- `pnpm typecheck` (recursive: shared + mobile + backend): **temiz**.
+- `pnpm lint`: **temiz** (1 import/order hatası düzeltildi).
+- `pnpm format:check`: **temiz** (prettier auto-fix 1 dosya).
+- `pnpm -F @alpfit/shared test`: **41 PASS** regression yok.
+- `pnpm -F @alpfit/mobile test`: **23 PASS** regression yok (PII_FIELDS genişlemesi mobile testlerini kırmadı).
+
+**Sonraki Adım:** TASK-1.14 (KVKK consent schema + audit log) — User'daki `kvkkConsentAt`/`healthConsentAt` alanlarını ayrı audit tabloyla zenginleştir (revoke history), F6.1 + F6.2 gizlilik toggle paterni için.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-29 (run-task)

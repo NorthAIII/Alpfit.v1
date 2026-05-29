@@ -28,6 +28,15 @@ export const PII_FIELDS = [
   'displayName',
   'display_name',
 
+  // PT profili — User şemasında opsiyonel; serbest metin PII riski (TASK-1.13)
+  'gymName',
+  'gym_name',
+  'certificateNote',
+  'certificate_note',
+  // Normalize edilmiş E.164 telefon kolonu (TASK-1.13 — phoneE164)
+  'phoneE164',
+  'phone_e164',
+
   // Sağlık verisi (KVKK Madde 6 özel nitelikli)
   'weight',
   'height',
