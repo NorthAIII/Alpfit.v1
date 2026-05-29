@@ -83,8 +83,8 @@ networks:
     name: alpfit-net
     driver: bridge
   bunker-net:
-    # Bunker'ın docker network'ü. Adı SSH keşfinde doğrulanır:
-    #   docker network ls --filter name=bunker
-    # Bulunan ada göre name: alanı güncellenir.
+    # Bunker'ın docker network'ü (SSH keşfi 2026-05-29: `docker network ls`).
+    # bunker-nginx bu network'te `bunker-nginx` ve `nginx` alias'larıyla yaşar
+    # ve `alpfit-backend`'e `http://alpfit-backend:3000` ile erişir.
     external: true
-    name: bunker_default
+    name: bunker-network
