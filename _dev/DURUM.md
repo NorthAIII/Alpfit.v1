@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.09 ✅: `.github/workflows/ci.yml` 4 paralel job (quality root lint+format:check / shared / mobile / backend node:22-bookworm container + postgres:17-alpine service hostname `postgres`) + concurrency cancel-in-progress; `.github/CI-SETUP.md` manuel branch protection rehberi (kullanıcı `AskUserQuestion` ile manuel UI seçti); `.github/PULL_REQUEST_TEMPLATE.md`; lokalde `pnpm lint`+`format:check`+`typecheck`+test:coverage 3 paket yeşil + YAML semantik valid; sıradaki TASK-1.10.
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #1): mimari sapma (Coolify→docker-compose+bunker-nginx subdomain proxy, shared VPS, DECISIONS güncel) + repo skeleton (Dockerfile multi-stage, _ops/staging/docker-compose.yml, deploy-staging.yml workflow_run, shared/package.json exports field Node prod fix) + GitHub push (NorthAIII/Alpfit.v1) + sunucu Adım 1-4 (4GB swap, deploy user uid 1000 docker group, /opt/alpfit chown, 2 ed25519 key, GH deploy key + 3 secret); Deploy Staging #3=8s SSH auth OK; kalan Adım 5-11 (clone+env+keşif+DNS+nginx/SSL+deploy+auto smoke) yeni oturumda /devflow:resume.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 9/34 task — TASK-1.09 tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.10 (Hetzner+Coolify staging kurulumu + auto-deploy webhook)
+**İlerleme:** 9/34 task tamam + TASK-1.10 ⏸️ Duraklatıldı (oturum #1 sonu: Adım 1-4 ✅, Adım 5-11 kaldı); yeni oturumda `/devflow:resume` → Adım 5 (clone) ile devam
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-1.10 — Hetzner+Coolify staging kurulumu + auto-deploy webhook
-**Durum:** ⬜ Bekliyor
-**İlerleme:** Bir sonraki oturumda `/devflow:run-task` ile çalıştırılacak.
+**Task:** TASK-1.10 — Staging deploy (shared Hetzner VPS — docker-compose + bunker-nginx subdomain proxy + GH Actions auto-deploy)
+**Durum:** ⏸️ Duraklatıldı (oturum #1 sonu, context şişti)
+**İlerleme:** Repo skeleton + sunucu Adım 1-4 ✅; Adım 5-11 (clone, env, bunker keşfi, DNS, nginx+SSL, ilk deploy + healthz, auto-deploy smoke, final dokümanlar) yeni oturumda `/devflow:resume` ile devam edilecek. Sıradaki ilk komut TASK-1.10.md "Sonraki Adım Detayı" bölümünde.
 
 ---
 
@@ -50,7 +50,8 @@
 | 1.07 | i18n shell (i18next mobile + backend, TR-only) | ✅ Tamamlandı |
 | 1.08 | Mobile test altyapısı (Jest + RTL + MSW) | ✅ Tamamlandı |
 | 1.09 | CI PR pipeline (GitHub Actions: test + lint + typecheck) | ✅ Tamamlandı |
-| 1.10–1.16 | M0 Altyapı (hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (7) |
+| 1.10 | Staging deploy (shared VPS — docker-compose + bunker-nginx + GH Actions) | ⏸️ Duraklatıldı (Adım 1-4 ✅, Adım 5-11 kaldı) |
+| 1.11–1.16 | M0 Altyapı (Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (6) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
@@ -97,17 +98,21 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Duraklatma Notu
 
-<!-- Bu bölüm sadece /devflow:pause kullanıldığında doldurulur. Devam edildiğinde silinir. -->
-
-> ⏸️ **Duraklatma yok** — Aktif çalışma devam ediyor.
+> ⏸️ **TASK-1.10 Duraklatıldı (2026-05-29 oturum #1 sonu)** — Context şişti, /devflow:resume ile devam.
+>
+> **Tamamlanan:** Mimari sapma kararı (Coolify→docker-compose+bunker-nginx subdomain proxy, DECISIONS.md güncel) + tüm repo skeleton (Dockerfile, _ops/staging/, deploy-staging.yml, shared exports field) + GitHub repo (NorthAIII/Alpfit.v1) + sunucu Adım 1-4 (swap 4GB, deploy user, /opt/alpfit, 2 ed25519 key, GH deploy key + 3 secret). Deploy Staging #3 = 8s (SSH auth OK doğrulandı).
+>
+> **Kalan (Adım 5-11):** Clone → .env.staging → bunker keşfi (network+nginx+certbot) → Squarespace DNS → bunker-nginx config + SSL → ilk manuel deploy + healthz → GH Actions auto-deploy smoke → final dokümanlar.
+>
+> **Yeni oturumda:** `/devflow:resume` → TASK-1.10.md "Oturum Kaydı #1 → Son Yaklaşım" bölümünden devam (ilk komut: `sudo -u deploy git clone git@github.com:NorthAIII/Alpfit.v1.git /opt/alpfit`).
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-1.10 — Hetzner+Coolify staging kurulumu + auto-deploy webhook
+**Aktif Task:** TASK-1.10 — Staging deploy (shared VPS — docker-compose) ⏸️ Duraklatıldı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.09 ✅: `.github/workflows/ci.yml` 4 paralel job (quality root lint+format:check / shared / mobile / backend node:22-bookworm container + postgres:17-alpine service hostname `postgres`) + concurrency cancel-in-progress; `.github/CI-SETUP.md` manuel branch protection rehberi (kullanıcı `AskUserQuestion` ile manuel UI seçti); `.github/PULL_REQUEST_TEMPLATE.md`; lokalde `pnpm lint`+`format:check`+`typecheck`+test:coverage 3 paket yeşil + YAML semantik valid; sıradaki TASK-1.10.
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #1): mimari sapma (Coolify→docker-compose+bunker-nginx subdomain proxy, shared VPS, DECISIONS güncel) + repo skeleton (Dockerfile multi-stage, _ops/staging/docker-compose.yml, deploy-staging.yml workflow_run, shared/package.json exports field Node prod fix) + GitHub push (NorthAIII/Alpfit.v1) + sunucu Adım 1-4 (4GB swap, deploy user uid 1000 docker group, /opt/alpfit chown, 2 ed25519 key, GH deploy key + 3 secret); Deploy Staging #3=8s SSH auth OK; kalan Adım 5-11 (clone+env+keşif+DNS+nginx/SSL+deploy+auto smoke) yeni oturumda /devflow:resume.

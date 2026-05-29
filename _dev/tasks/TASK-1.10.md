@@ -233,21 +233,73 @@ _dev/KVKK.md                                    # GÜNCELLE (SCC TODO)
 
 ## Oturum Kayıtları
 
-### Oturum 2026-05-29 — Mimari Sapma Kararı + Repo Hazırlığı
+### Oturum 2026-05-29 #1 — Mimari Sapma + Repo Skeleton + Sunucu Hazırlığı (⏸️ Duraklatıldı)
 
-**Durum:** 🔄 Devam ediyor
+**Durum:** ⏸️ Duraklatıldı (context şişti, /devflow:resume ile devam — 5-6 adım kaldı)
 
-**Yapılanlar:**
-- SSH keşfi: Bunker sunucusu (Hetzner CPX32, Nuremberg, 178.104.140.36) tamamen Docker'da — 11 container (bunker-nginx 80/443, dashboard 3000, n8n, postgres:15, redis, qdrant, ollama, adminer, umami)
-- RAM 7.6 GB → 5.2 GB serbest; disk 150 GB → %77 dolu; swap yok
-- Mimari sapma kararı: Coolify yerine docker-compose + bunker-nginx subdomain proxy + GH Actions SSH deploy
-- Kullanıcı subdomain (`alpfit-staging.kiwiailab.com`) + DNS provider (Squarespace) + swap dahil etme onaylar
-- `_dev/docs/DECISIONS.md`'ye yeni mimari kararı yazıldı
-- `_dev/tasks/TASK-1.10.md` yeniden yazıldı (bu doküman)
+**Yapılanlar (commit'ler: 3b24234 + fd23c73 + 325cf2a):**
 
-**Sonraki Adım Detayı:** Repo dosyalarını oluştur (Dockerfile, docker-compose, GH workflow, manuel rehber doc), lokal docker build smoke, sonra kullanıcıyla SSH üzerinden sunucu kurulumu (swap, deploy user, /opt/alpfit, bunker-nginx config, DNS, ilk deploy).
+- **Mimari sapma kararı:** Coolify yerine docker-compose + bunker-nginx subdomain proxy + GH Actions SSH deploy. Gerekçe: Bunker sunucusu (CPX32, Nuremberg) zaten 11 Docker container'la dolu, bunker-nginx 80/443'ü tutuyor; ek sunucu maliyet (€10/ay) demo aşamasında değer üretmiyor. Detay: DECISIONS.md 2026-05-29 "TASK-1.10 Staging Deploy".
+- **Repo skeleton (3b24234):**
+  - `backend/Dockerfile` — multi-stage node:22 builder + bookworm-slim runner, pnpm deploy ile prune, dumb-init PID 1, non-root user (uid 1001 alpfit)
+  - `_ops/staging/docker-compose.yml` — backend + postgres:17-alpine + redis:7-alpine; postgres/redis port expose YOK (internal); `bunker_default` external network (gerçek isim sunucuda doğrulanacak)
+  - `_ops/staging/.env.staging.example` template
+  - `.github/workflows/deploy-staging.yml` — workflow_run after CI on main; appleboy/ssh-action@v1.2.0; `set -euo pipefail` + git fetch + docker compose build/up + prisma migrate deploy + healthz retry x5
+  - `.dockerignore` repo-wide
+  - **shared/package.json `exports` field** — Node prod bug fix: `import` → `./dist/index.js`, `default` → `./src/index.ts` (mobile metro `unstable_enablePackageExports` default false, hala `main` field src kullanır; mobile export:smoke geçti)
+  - `_dev/docs/hetzner-staging-setup.md` — 10 adımlı manuel playbook
+  - DECISIONS.md + memory/staging-infra.md + MEMORY.md + KVKK.md SCC TODO
+- **Prettier fix (325cf2a):** `_ops/staging/docker-compose.yml` YAML format — lokal `pnpm format:check` push'tan önce çalıştırılmamıştı, CI fail oldu, auto-fix + push ile CI #3 yeşil.
+- **Sunucu hazırlığı (manuel SSH, Cursor agent yardımıyla):**
+  - **Adım 1 (Swap):** 4 GB `/swapfile`, `swappiness=10`, fstab persistent. (Önceden 0 swap; ollama + n8n RAM spike için 4 GB seçildi.)
+  - **Adım 2 (deploy user):** `adduser --disabled-password`, docker group üyesi, sudo YOK, `.ssh/authorized_keys` boş hazırlandı. `id deploy` uid=1000 gid=1000 groups=...,988(docker); `sudo -u deploy docker ps` Bunker container'larını listeledi.
+  - **Adım 3+4 (mkdir + SSH keys):** `/opt/alpfit` chown deploy:deploy; iki ed25519 key üretildi:
+    - `/home/deploy/.ssh/github_repo_deploy` (sunucu → GitHub repo clone/fetch için; public GitHub Deploy Keys'e read-only eklendi)
+    - `/home/deploy/.ssh/github_actions_ssh` (GitHub Actions → sunucu için; public deploy user authorized_keys'e eklendi, private GitHub Secret STAGING_SSH_KEY'e yapıştırıldı)
+    - SSH config: `github.com` için repo_deploy key + known_hosts populated
+- **GitHub:**
+  - Repo: https://github.com/NorthAIII/Alpfit.v1 (private, NorthAIII)
+  - Deploy key: `alpfit-staging-server` read-only ✅
+  - Secrets: `STAGING_SSH_HOST=178.104.140.36`, `STAGING_SSH_USER=deploy`, `STAGING_SSH_KEY=<private key>` ✅
+  - **Smoke run sonucu:** Deploy Staging #3 = 8 saniye (önceki #1/#2 = 2-3s skip). 8s = SSH bağlantısı **kuruldu**, sonra `git fetch` fail oldu (BEKLENEN — `/opt/alpfit` henüz boş repo değil). Yani **3 secret + deploy key + authorized_keys hepsi çalışıyor**.
+
+**Kalan İşler (Adım 5-11):**
+
+- **Adım 5 — Clone:** `sudo -u deploy git clone git@github.com:NorthAIII/Alpfit.v1.git /opt/alpfit` (deploy key kullanılır; SSH config zaten ayarlı). `/opt/alpfit` zaten root tarafından `chown deploy:deploy` yapılmış boş klasör — git clone boş klasöre direkt yapacak. Doğrulama: `ls /opt/alpfit/_ops/staging/` → docker-compose.yml görünmeli.
+- **Adım 6 — `.env.staging` doldur (sunucuda):** `cd /opt/alpfit/_ops/staging && cp .env.staging.example .env.staging && chmod 600 .env.staging`. Sırlar: `POSTGRES_PASSWORD` (openssl rand -hex 32), `DATABASE_URL=postgresql://alpfit:<password>@alpfit-postgres:5432/alpfit`, `JWT_ACCESS_SECRET` + `JWT_REFRESH_SECRET` (her biri openssl rand -hex 32, farklı).
+- **Adım 7 — Bunker keşfi:** `docker network ls --filter name=bunker` → gerçek network adını al; docker-compose.yml'deki `bunker-net.name: bunker_default` satırını gerekirse güncelle. Ayrıca: `docker exec bunker-nginx ls /etc/nginx/conf.d/` config dosyalarının yerini öğren; `which certbot` veya `docker exec bunker-nginx which certbot` SSL stratejisini netleştir.
+- **Adım 8 — DNS (Squarespace, kullanıcı yapar):** kiwiailab.com → DNS Settings → A record: Host `alpfit-staging`, Data `178.104.140.36`. Yayılma kontrolü: `dig +short alpfit-staging.kiwiailab.com`.
+- **Adım 9 — bunker-nginx config + SSL:** Mevcut nginx config'in **yedeğini al**; yeni server block ekle (HTTP first ACME challenge + 301 redirect; HTTPS 443 + Let's Encrypt cert + proxy_pass http://alpfit-backend:3000). `nginx -t` syntax check + `nginx -s reload`. Certbot ile cert al (`--staging` flag ile rate limit'sten kaçınarak önce).
+- **Adım 10 — İlk manuel deploy + smoke:** `cd /opt/alpfit/_ops/staging && docker compose --env-file .env.staging up -d --build && docker compose exec -T alpfit-backend node_modules/.bin/prisma migrate deploy`. `curl -k https://alpfit-staging.kiwiailab.com/healthz` → 200 + `{status:'ok',db:'up'}`.
+- **Adım 11 — Auto-deploy smoke:** `git commit --allow-empty -m "chore: trigger staging auto-deploy verification" && git push` → GH Actions Deploy Staging yeşil olmalı.
+- **Final:** DURUM.md güncelle (TASK-1.10 ✅), PHASE-1.md tablo, archive, son commit.
+
+**Son Yaklaşım / Sonraki Adım Detayı:**
+
+Yeni oturumda `/devflow:resume` çağır → bu task'a devam et. **Adım 5'ten başlanır** (clone). Sıradaki ilk komut (Cursor agent için):
+
+```bash
+ssh root@178.104.140.36 '
+  sudo -u deploy git clone git@github.com:NorthAIII/Alpfit.v1.git /opt/alpfit
+  echo "=== /opt/alpfit içeriği ==="
+  sudo -u deploy ls -la /opt/alpfit/_ops/staging/
+'
+```
+
+**Önemli durum notları:**
+
+- Bunker'a hiç dokunulmadı (mevcut 11 container'ı etkileyen değişiklik YOK)
+- Repo değişiklikleri main'de (NorthAIII/Alpfit.v1)
+- GH Actions Deploy Staging şu an her push'ta tetikleniyor ama Adım 5-9 bitmeden hep fail edecek (BEKLENEN — `/opt/alpfit` boş, `.env.staging` yok, DNS yok, nginx config yok). Bunu rahatsız edici görmeyin; Adım 10 sonrası yeşil olacak.
+- Önemli iş bilgileri: sunucu IP `178.104.140.36`, deploy user `deploy` (uid 1000), `/opt/alpfit` boş klasör (sahip deploy:deploy), `/home/deploy/.ssh/github_repo_deploy*` + `github_actions_ssh*` key çiftleri sunucuda hazır.
+
+**Belirsizlikler:**
+
+- bunker-nginx config dosyasının tam yolu ve nasıl mount edildiği (host'tan mı container içinden mi yönetiliyor) — Adım 7 keşfinde netleşecek.
+- Bunker certbot kullanıyor mu yoksa SSL başka şekilde mi yönetiliyor — Adım 7 keşfinde.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1, Coolify mimarisi)
 **Yeniden Yazıldı:** 2026-05-29 (mimari sapma — Coolify yerine docker-compose + shared VPS)
+**Duraklatma:** 2026-05-29 oturum #1 sonu — repo skeleton + sunucu hazırlık (Adım 1-4) tamam; Adım 5-11 yeni oturumda /devflow:resume ile devam.
