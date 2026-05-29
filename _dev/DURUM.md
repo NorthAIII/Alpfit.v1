@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.02 ✅: Fastify 5 + zod env loader (fail-fast) + buildServer factory + /healthz; pino-pretty dev + JSON prod; typecheck/build/lint/format temiz; dev+build /healthz 200; 3 fail-fast senaryosu doğrulandı; sıradaki TASK-1.03.
+**Son Güncelleme:** 2026-05-29 — TASK-1.03 ✅: Prisma 7.8 + adapter-pg + yeni `prisma-client` generator + `prisma.config.ts`; singleton+factory wrapper; `_init` boş migration apply; /healthz DB ping (200/503); db:generate/migrate scripts + predev/prebuild/pretypecheck hooks; sıradaki TASK-1.04.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 2/34 task — TASK-1.02 tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.03 (Prisma 7 + adapter-pg + ilk migration + generate smoke)
+**İlerleme:** 3/34 task — TASK-1.03 tamamlandı; sıradaki adım `/devflow:run-task` ile TASK-1.04 (Backend test altyapısı — Vitest + Testcontainers)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,7 +29,7 @@
 
 ## Aktif Task
 
-**Task:** TASK-1.03 — Prisma 7 + adapter-pg + ilk migration + generate smoke
+**Task:** TASK-1.04 — Backend test altyapısı (Vitest + Testcontainers)
 **Durum:** ⬜ Bekliyor
 **İlerleme:** Bir sonraki oturumda `/devflow:run-task` ile çalıştırılacak.
 
@@ -37,13 +37,14 @@
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 2 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 3 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
 | 1.01 | Monorepo iskeleti | ✅ Tamamlandı |
 | 1.02 | Backend Fastify iskeleti + zod env + healthz | ✅ Tamamlandı |
-| 1.03–1.16 | M0 Altyapı (Prisma, test, mobile, CI, hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (14) |
+| 1.03 | Prisma 7 + adapter-pg + ilk migration + generate smoke | ✅ Tamamlandı |
+| 1.04–1.16 | M0 Altyapı (test, mobile, CI, hosting, Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (13) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
 
@@ -67,17 +68,17 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.03 — Prisma 7 + adapter-pg + ilk migration + generate smoke (2026-05-29) ✅
+
+- Prisma 7.8 + `@prisma/adapter-pg` + `pg` kuruldu; **yeni `prisma-client` generator** (v7 default, ESM-first, output `backend/src/generated/prisma`) + `prisma.config.ts` (v7 standardı); placeholder `backend/.env` silindi (devcontainer env-var bazlı)
+- `backend/src/db/prisma.ts` factory+singleton (`createPrismaClient(databaseUrl)` + `getPrisma()` globalThis cache) + `PrismaPg(databaseUrl)` explicit adapter; `backend/src/db/ping.ts` `$queryRaw\`SELECT 1\``; `buildServer` `app.decorate('prisma', ...)` + Fastify module augmentation; `/healthz` DB ping → 200/up, 503/down; `prebuild`/`predev`/`pretypecheck` zincirleri `db:generate` çağırıyor (research §1.c mitigation)
+- Test kriterleri ✅ — `_init` boş migration apply ✓, `/healthz` 200+up ve 503+down doğrulandı (port 3711 + 3712, bozuk DB host), idempotent re-migrate ("Already in sync"), `rm -rf src/generated && pnpm build` → prebuild auto-trigger ✓, typecheck/lint/format temiz; karar DECISIONS.md'ye yazıldı (Prisma 7 setup detayı: yeni generator + prisma.config.ts + singleton+factory + generate hooks)
+
 ### TASK-1.02 — Backend Fastify iskeleti + zod env + healthz (2026-05-29) ✅
 
 - Fastify 5 + `@fastify/sensible` + `@fastify/cors` (origin:false) + zod + pino kuruldu; `buildServer({ env, logger? })` factory + zod-validated `loadEnv()` (fail-fast, anlamlı issue listesi); dev pino-pretty + prod JSON
 - `/healthz` → `{ status, timestamp, version }` 200; `.env.example` repo'da, `.env` gitignore (kural `.gitignore:13`); script'ler: dev (tsx watch) + build + start + typecheck
 - Test kriterleri ✅ — typecheck/build/lint/format temiz; dev (3718) + build (3717) `/healthz` 200; 3 fail-fast senaryosu (missing/short/invalid enum) anlamlı mesaj + exit 1; karar DECISIONS.md'ye yazıldı (server factory + zod loader)
-
-### TASK-1.01 — Monorepo iskeleti (2026-05-29) ✅
-
-- pnpm workspaces (mobile/backend/shared) + Node 22 + packageManager lock; root `tsconfig.base.json` strict NodeNext + paths; ESLint flat + Prettier kuruldu
-- Devcontainer'a dokunulmadı (corepack zaten pnpm@latest aktif); ESLint config `.mjs` olarak isimlendirildi
-- Test kriterleri ✅ — typecheck/lint/format temiz; tsconfig extend zinciri ve `@alpfit/shared` workspace bağı doğrulandı (227 dep, 9.6s install)
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -92,11 +93,11 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-1.03 — Prisma 7 + adapter-pg + ilk migration + generate smoke
+**Aktif Task:** TASK-1.04 — Backend test altyapısı (Vitest + Testcontainers)
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.02 ✅: Fastify 5 + zod env loader (fail-fast) + buildServer factory + /healthz; pino-pretty dev + JSON prod; typecheck/build/lint/format temiz; dev+build /healthz 200; 3 fail-fast senaryosu doğrulandı; sıradaki TASK-1.03.
+**Son Güncelleme:** 2026-05-29 — TASK-1.03 ✅: Prisma 7.8 + adapter-pg + yeni `prisma-client` generator + `prisma.config.ts`; singleton+factory wrapper; `_init` boş migration apply; /healthz DB ping (200/503); db:generate/migrate scripts + predev/prebuild/pretypecheck hooks; sıradaki TASK-1.04.

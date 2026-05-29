@@ -9,6 +9,43 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-29 — Prisma 7 Setup Detayı: Yeni `prisma-client` Generator + `prisma.config.ts` + Singleton+Factory + Generate Hooks
+
+**Bağlam:** TASK-1.03 Prisma 7 setup. Üst karar (Prisma 7 + Postgres 16 + `@prisma/adapter-pg`) zaten 2026-05-29 (research) DECISIONS'ta yazılı; bu kayıt **implementation-time** alt-kararlarını tutar çünkü Prisma 7 Kasım 2025 release'i task doc'un öngörüsünden meaningfully farklı bir API ile geldi.
+
+**Seçenekler (Generator):**
+1. **Yeni `prisma-client` generator** — Prisma 7 init default'u, ESM-first, output proje ağacı içine (`src/generated/prisma`), driverAdapters built-in (preview flag yok), forward-looking.
+2. **Eski `prisma-client-js` generator** — Task doc'un tarif ettiği yol, `previewFeatures = ["driverAdapters"]` + `node_modules/.prisma/client` output, v7'de hâlâ destekli ama "legacy".
+
+**Seçenekler (Config dosyaları):**
+1. **`prisma.config.ts` korunur + placeholder `.env` silinir** — Prisma 7 standardı; config schema'dan ayrışır (`schema`, `migrations.path`, `datasource.url`); URL `process.env.DATABASE_URL`'den geliyor; devcontainer zaten export ediyor → `.env` gereksiz.
+2. **`prisma.config.ts` + `.env` silinir, schema'ya inline döner** — Klasik `datasource db { url = env("DATABASE_URL") }`; daha az dosya ama v7 standardından sapar.
+
+**Karar:** **Yeni `prisma-client` generator** + **`prisma.config.ts` korunur, placeholder `.env` silinir**. Kullanıcı her ikisini de `AskUserQuestion` ile onayladı (CLAUDE.md feedback §"Varsayım Yok" — mimari/paket kararı onaysız değişmez).
+
+**Tamamlayıcı uygulama kararları:**
+- **`dotenv/config` import'u `prisma.config.ts`'ten kaldırıldı** — devcontainer env-var bazlı, `.env` dosyası yok; dotenv ek dep gerektiriyordu.
+- **Singleton + Factory pattern** (`backend/src/db/prisma.ts`): `createPrismaClient(databaseUrl)` factory (test/DI için) + `getPrisma(databaseUrl)` `globalThis.__alpfitPrisma` cache. Standart Prisma docs paterni; dev hot-reload + tsx watch yeniden mount güvencesi.
+- **Adapter explicit** (research §1.b mitigation): `new PrismaPg(databaseUrl)` (constructor connection string kabul ediyor) → `new PrismaClient({ adapter })`. URL `schema.prisma`'da datasource'a yazılmıyor; tek nokta (`prisma.ts`).
+- **Fastify decoration**: `app.decorate('prisma', prisma)` + module augmentation. `buildServer({ env, logger?, prisma? })` — `prisma` opsiyonel, gelmezse `getPrisma(env.DATABASE_URL)` kullanılıyor (TASK-1.04 test altyapısı için inject yolu hazır).
+- **Generate hooks** (research §1.c mitigation — `migrate dev` artık `generate` çalıştırmıyor): `predev`/`prebuild`/`pretypecheck` → `pnpm db:generate`. CI'da (TASK-1.09) `pnpm install && pnpm -F backend db:generate` zinciri eklenecek; her dev start + build + typecheck önce regenerate (≈7ms maliyet).
+- **Generated path policy**: `src/generated/prisma` → `backend/.gitignore` (Prisma init eklemişti), ESLint `**/generated/**` ignore, Prettier `**/generated/**` ignore; tsc include altında (typecheck için), generated `@ts-nocheck` ile tsc tip kontrolünü atlıyor.
+
+**Gerekçe (yeni generator):** [[ilkeler]] §"Kalıcılık önceliği" — Prisma'nın forward-looking yolu (v8'de `prisma-client-js`'in deprecate olma ihtimali yüksek); `driverAdapters` v7'de GA, preview flag yönetmek gereksiz; output proje ağacında olması monorepo/pnpm hoisting edge case'lerinden bağışık.
+
+**Gerekçe (config tut):** Prisma 7'nin "config-as-code" yönü resmi (CLI, IDE, dahili tooling buradan okuyor); schema'da yalnızca `provider` kalması temiz; URL runtime adapter + CLI prisma.config.ts arasında **tek mantıksal yerden** (process.env.DATABASE_URL) akıyor → drift sıfır.
+
+**Tradeoff'lar:** Legacy `prisma-client-js` daha geniş battle-tested ama "kalıcılık önceliği" yeni yola eğilimli; `prisma.config.ts` ek dosya ama v7'nin standardı.
+
+**Risk + Mitigation:**
+- **Risk:** Yeni `prisma-client` generator hâlâ olgunlaşma sürecinde (v7.8 Kasım 2025); ekosistem (Sentry instrumentation, edge runtimes) henüz tam test edilmemiş olabilir. **Mitigation:** Tek nokta (`backend/src/db/prisma.ts`); değişirse tek dosyada yamanır; her Prisma minor upgrade'inde changelog kontrol.
+- **Risk:** Devcontainer Postgres 17 (task doc "16" diyordu — drift); v17 ile Prisma 7 + adapter-pg uyumlu doğrulandı (`SELECT 1` ping başarılı). **Mitigation:** OVERVIEW/INDEX'te Postgres versiyonu ayrıca tutulmuyor — TECH-STACK.md research-phase'inde "Postgres 17" olarak güncellenecek; bu task ek aksiyon gerektirmez.
+- **Risk:** `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` zod-required ama devcontainer set etmiyor → dev/test başlatırken inline geçmek gerek (smoke test'te yapıldı). **Mitigation:** TASK-1.20 öncesi DX iyileştirme adayı (devcontainer env defaults veya `.env.development.example`); bu task'ın işi değil.
+
+**İlgili Task/Faz:** TASK-1.03 (bu task) → TASK-1.04 (Vitest + Testcontainers — `buildServer({ prisma: testClient })` injection ile test edilir) → TASK-1.09 (CI generate zinciri) → TASK-1.13 (3 rol veri modeli — ilk gerçek model migration'ı) → tüm sonraki backend DB iş task'ları.
+
+---
+
 ### 2026-05-29 — Backend Bootstrap: Server Factory + zod-Validated Env Loader
 
 **Bağlam:** TASK-1.02 backend iskeleti — production entrypoint + test edilebilirlik + env doğrulama. Sonraki task'lar (Prisma, JWT, OTP, davet endpoint'leri) bu temelin üstüne kurulacak; TASK-1.04 test altyapısı bu kararın doğrudan tüketicisi.

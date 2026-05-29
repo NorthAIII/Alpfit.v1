@@ -1,0 +1,18 @@
+// Alpfit backend — Prisma 7 schema
+// New `prisma-client` generator (ESM-first, Rust-free WASM compiler).
+// Runtime adapter (`@prisma/adapter-pg`) is wired in src/db/prisma.ts.
+// Datasource URL is supplied by prisma.config.ts at CLI time and by the
+// adapter at runtime — no `url` line here on purpose.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Models are intentionally empty in this first migration.
+// 3-rol veri modeli (Member + Trainer + Gym Owner) — TASK-1.13
+// KVKK consent + audit log — TASK-1.14

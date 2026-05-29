@@ -18,6 +18,7 @@ export default tseslint.config(
       '**/build/**',
       '**/.expo/**',
       '**/coverage/**',
+      '**/generated/**',
       '**/*.tsbuildinfo',
     ],
   },
