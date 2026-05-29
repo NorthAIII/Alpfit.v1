@@ -1,12 +1,14 @@
 import { formatTrDate } from '@alpfit/shared';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function LandingScreen() {
+  const { t } = useTranslation('common');
   const today = formatTrDate(new Date());
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Merhaba Alpfit</Text>
-      <Text style={styles.subtitle}>{today} · Rol seçimi TASK-1.26&apos;da gelecek.</Text>
+      <Text style={styles.title}>{t('landing.greeting')}</Text>
+      <Text style={styles.subtitle}>{t('landing.todayPrefix', { date: today })}</Text>
     </View>
   );
 }

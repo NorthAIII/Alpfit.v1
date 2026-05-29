@@ -1,0 +1,24 @@
+{
+  "generic": {
+    "unknown": "Beklenmedik bir hata oluştu. Lütfen tekrar dene.",
+    "network": "İnternet bağlantını kontrol et.",
+    "timeout": "İstek zaman aşımına uğradı."
+  },
+  "phone": {
+    "invalid": "Geçerli bir +90 5XX numarası gir.",
+    "notMobile": "Sadece mobil hat (5XX) destekleniyor."
+  },
+  "otp": {
+    "invalid": "Kod hatalı veya süresi doldu.",
+    "tooManyAttempts": "Çok fazla deneme. Lütfen biraz sonra tekrar dene.",
+    "expired": "Kodun süresi doldu. Tekrar gönder."
+  },
+  "auth": {
+    "sessionExpired": "Oturumun sona erdi. Tekrar giriş yap."
+  },
+  "invite": {
+    "invalid": "Davet linki geçersiz.",
+    "expired": "Davet linkinin süresi dolmuş.",
+    "alreadyUsed": "Bu davet linki kullanılmış."
+  }
+}

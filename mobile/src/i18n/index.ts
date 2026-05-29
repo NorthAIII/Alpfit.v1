@@ -1,0 +1,52 @@
+import { getLocales } from 'expo-localization';
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+import authTr from './locales/tr/auth.json';
+import commonTr from './locales/tr/common.json';
+import errorsTr from './locales/tr/errors.json';
+import kvkkTr from './locales/tr/kvkk.json';
+import profileTr from './locales/tr/profile.json';
+
+const isDev = process.env['NODE_ENV'] !== 'production';
+
+export const defaultNS = 'common' as const;
+export const namespaces = ['common', 'auth', 'errors', 'kvkk', 'profile'] as const;
+export type Namespace = (typeof namespaces)[number];
+
+const resources = {
+  tr: {
+    common: commonTr,
+    auth: authTr,
+    errors: errorsTr,
+    kvkk: kvkkTr,
+    profile: profileTr,
+  },
+} as const;
+
+function detectInitialLocale(): 'tr' {
+  void getLocales();
+  return 'tr';
+}
+
+void i18n.use(initReactI18next).init({
+  resources,
+  lng: detectInitialLocale(),
+  fallbackLng: 'tr',
+  supportedLngs: ['tr'],
+  defaultNS,
+  ns: [...namespaces],
+  interpolation: { escapeValue: false },
+  returnNull: false,
+  saveMissing: isDev,
+  missingKeyHandler: (lngs, ns, key) => {
+    const msg = `[i18n] missing key "${ns}:${String(key)}" for ${lngs.join(',')}`;
+    if (isDev) {
+      throw new Error(msg);
+    }
+    console.warn(msg);
+  },
+  react: { useSuspense: false },
+});
+
+export default i18n;

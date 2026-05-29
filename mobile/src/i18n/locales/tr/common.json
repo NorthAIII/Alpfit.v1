@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "Alpfit",
+    "tagline": "Sürdürülebilir spor için PT-üye coachluk"
+  },
+  "actions": {
+    "continue": "Devam",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "back": "Geri",
+    "close": "Kapat",
+    "retry": "Tekrar Dene"
+  },
+  "states": {
+    "loading": "Yükleniyor...",
+    "saving": "Kaydediliyor...",
+    "empty": "Henüz içerik yok"
+  },
+  "landing": {
+    "greeting": "Merhaba Alpfit",
+    "todayPrefix": "{{date}} · Rol seçimi TASK-1.26'da gelecek."
+  }
+}

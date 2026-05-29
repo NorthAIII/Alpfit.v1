@@ -1,0 +1,18 @@
+{
+  "streak": {
+    "milestoneTitle": "Tebrikler!",
+    "milestoneBody": "{{days}} günlük streak'ini koruyorsun."
+  },
+  "comeback": {
+    "t2Title": "Seni özledik",
+    "t2Body": "İki gün ara verdin. Bugün kısa bir antrenmanla geri dönelim mi?",
+    "t7Title": "Bir hafta oldu",
+    "t7Body": "Antrenörün {{trainerName}} programını güncelledi. Bir göz at.",
+    "t14Title": "Geri gelmek için son şans değil",
+    "t14Body": "Programını yeniden başlatmak için tek dokunuş yeterli."
+  },
+  "program": {
+    "newAssigned": "Yeni programın hazır",
+    "updatedByTrainer": "Antrenörün {{trainerName}} programını güncelledi."
+  }
+}

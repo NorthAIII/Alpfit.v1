@@ -1,0 +1,5 @@
+{
+  "otp": "Alpfit doğrulama kodun: {{code}}. 5 dakika geçerli.",
+  "inviteWelcome": "Alpfit'e hoş geldin! Antrenörün {{trainerName}} seni davet etti: {{link}}",
+  "loginAlert": "Alpfit hesabına yeni bir cihazdan giriş yapıldı. Sen değilsen lütfen şifreni güncelle."
+}

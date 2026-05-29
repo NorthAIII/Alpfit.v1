@@ -1,0 +1,24 @@
+{
+  "validation": {
+    "phoneInvalid": "Geçerli bir +90 5XX numarası gir.",
+    "fieldRequired": "{{field}} zorunlu.",
+    "fieldTooShort": "{{field}} en az {{min}} karakter olmalı.",
+    "fieldTooLong": "{{field}} en fazla {{max}} karakter olmalı."
+  },
+  "auth": {
+    "otpInvalid": "Kod hatalı veya süresi doldu.",
+    "otpTooManyAttempts": "Çok fazla deneme. Lütfen daha sonra tekrar dene.",
+    "tokenInvalid": "Yetkilendirme geçersiz.",
+    "tokenExpired": "Oturumun sona erdi.",
+    "userNotFound": "Kullanıcı bulunamadı.",
+    "roleForbidden": "Bu işlem için yetkin yok."
+  },
+  "invite": {
+    "notFound": "Davet linki bulunamadı.",
+    "expired": "Davet linkinin süresi dolmuş.",
+    "alreadyUsed": "Bu davet linki kullanılmış."
+  },
+  "generic": {
+    "internal": "Sunucu hatası. Lütfen daha sonra tekrar dene."
+  }
+}

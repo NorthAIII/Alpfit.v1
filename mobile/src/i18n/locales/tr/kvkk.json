@@ -1,0 +1,13 @@
+{
+  "headline": "Veri kullanımı ve onay",
+  "aydinlatmaMetni": "[Hukuki review bekliyor — Yakın 5 öncesi yerleşecek]",
+  "saglikVerisiAcikRiza": "[Hukuki review bekliyor — Yakın 5 öncesi yerleşecek]",
+  "checkboxes": {
+    "aydinlatma": "KVKK aydınlatma metnini okudum, anladım.",
+    "saglikVerisi": "Boy, kilo, ölçüm ve yemek günlüğü gibi sağlık verilerimin işlenmesine açık rıza veriyorum."
+  },
+  "actions": {
+    "accept": "Kabul ediyorum ve devam et",
+    "viewFullText": "Tam metni görüntüle"
+  }
+}

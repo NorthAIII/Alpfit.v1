@@ -15,5 +15,12 @@
       "@shared/*": ["../shared/src/*"]
     }
   },
-  "include": ["app/**/*", "app.config.ts", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "app/**/*",
+    "src/**/*",
+    "app.config.ts",
+    "i18next.d.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }

@@ -1,0 +1,17 @@
+{
+  "title": "Profilim",
+  "fields": {
+    "name": "Ad Soyad",
+    "phone": "Telefon",
+    "role": "Rol",
+    "joinedAt": "Katılma tarihi"
+  },
+  "actions": {
+    "logout": "Çıkış yap",
+    "deleteAccount": "Hesabımı sil"
+  },
+  "deleteAccount": {
+    "warning": "Hesabını silmek geri alınamaz. Sağlık verilerin 30 gün içinde tamamen silinecek.",
+    "confirm": "Evet, sil"
+  }
+}

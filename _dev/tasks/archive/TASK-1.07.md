@@ -1,6 +1,6 @@
 # TASK-1.07: i18n shell (i18next mobile + backend, TR-only v1)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M0 — Çekirdek Altyapı (`modules/M0-cekirdek-altyapi.md`)
 **Feature:** M0 cross-cutting altyapı
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -145,8 +145,37 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-29 (run-task)
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Versiyon araştırması:** `pnpm view` ile latest dist-tags taranıp Expo SDK 56 `bundledNativeModules.json` ile çapraz doğrulandı — i18next 26.3.0 + react-i18next 17.0.8 (peer `i18next >= 26.2.0` ✓) + expo-localization ~56.0.6 (SDK 56 pin).
+- **Paket kurulumu:** `pnpm -F @alpfit/mobile add i18next@^26.3.0 react-i18next@^17.0.8 expo-localization@~56.0.6` + `pnpm -F @alpfit/backend add i18next@^26.3.0`.
+- **Mobile resource (5 namespace):** `mobile/src/i18n/locales/tr/common.json` (app/actions/states/landing), `auth.json` (welcome/phone/otp/role/invite), `errors.json` (generic/phone/otp/auth/invite), `kvkk.json` (placeholder `[Hukuki review bekliyor — Yakın 5 öncesi yerleşecek]`), `profile.json` (fields/actions/deleteAccount).
+- **Backend resource (3 namespace):** `backend/src/i18n/locales/tr/sms.json` (otp/inviteWelcome/loginAlert), `errors.json` (validation/auth/invite/generic), `notifications.json` (streak/comeback {t2/t7/t14}/program — M4 fazında zenginleşir).
+- **Mobile init (`mobile/src/i18n/index.ts`):** i18next + `initReactI18next` plugin; `lng: 'tr'`, `fallbackLng: 'tr'`, `supportedLngs: ['tr']`, `defaultNS: 'common'`, `react.useSuspense: false`, `interpolation.escapeValue: false`. `expo-localization`'dan `getLocales()` çağrılıyor ama v1'de daima `'tr'` döndürülüyor (v1.5 EN/global açılım için genişler — [[ilkeler]] §Proje Ufku).
+- **Backend init (`backend/src/i18n/index.ts`):** `i18next.createInstance()` ile izole instance; `defaultNS: 'errors'`. JSON'lar `fs.readFileSync` + `fileURLToPath(import.meta.url)` ile yüklendi (NodeNext ESM, JSON import attribute uyumluluğundan bağımsız). `t` export'u `i18n.t.bind(i18n) as I18nInstance['t']` cast ile yapıldı — `.bind()` aksi halde overload signature'larını düşürüp typesafe key kontrolünü kaybediyordu.
+- **Dev throw / prod warn:** Her iki taraf da `process.env['NODE_ENV'] !== 'production'` ⇒ `saveMissing: true` + `missingKeyHandler` throw. Mobile prod'da `console.warn` (Sentry hook TASK-1.12'de). Backend prod'da sessiz (log şu an için event seviyesinde değil — Sentry TASK-1.11'de).
+- **Type-safe CustomTypeOptions:** `mobile/i18next.d.ts` (5 namespace) + `backend/src/i18n/i18next.d.ts` (3 namespace) `declare module 'i18next' { interface CustomTypeOptions { defaultNS; resources: typeof import(...) } }`. Smoke: geçici `__i18n_typesafe_smoke.ts` ile `@ts-expect-error` + `t('sms:nonexistent.key')` → boş çıktı (= ham hata yakalandı, directive geçerli); `t('sms:otp', { code: '123' })` ✓.
+- **Layout wire:** `mobile/app/_layout.tsx` `<I18nextProvider i18n={i18n}>` ile sarıldı; `app/index.tsx` `useTranslation('common')` ile `t('landing.greeting')` + `t('landing.todayPrefix', { date: today })` çağırıyor — string'ler artık `common.json`'dan çekiliyor.
+- **tsconfig:** `mobile/tsconfig.json` `include` array'ine `src/**/*` + `i18next.d.ts` eklendi (önceki yalnızca `app/**/*` içeriyordu).
+
+**Test Kriterleri:**
+- ✅ `pnpm typecheck` 3 paket temiz (mobile + shared + backend)
+- ✅ `pnpm test` 50 passed (41 shared + 9 backend — 6 yeni i18n test: init flag + sms.otp interpolation + sms.inviteWelcome multi-variable + errors.auth.otpInvalid + TR karakter `doğrulama` / `Oturumun` + dev throw)
+- ✅ `pnpm lint` temiz, `pnpm format:check` temiz
+- ✅ `pnpm -F @alpfit/mobile run export:smoke` — 1221 modül, 1.7MB web bundle (i18n init + provider + useTranslation chain Metro tarafından çözüldü)
+- ✅ Type-safe smoke (geçici dosya): `t('sms:nonexistent.key')` → `@ts-expect-error` directive geçerli (= ham hata var); `t('sms:otp', {code})` çağrısı tip-uyumlu
+- ✅ TR karakter doğrulaması test seviyesinde (`doğrulama`, `Oturumun`)
+
+**Karar Notu:**
+- **Backend JSON yükleme:** Native ESM `import './x.json' with { type: 'json' }` yerine `fs.readFileSync + JSON.parse` tercih edildi. Sebep: NodeNext + TS 5.7'de import attribute davranışı paket-yöneticisi/runtime arası tutarsız (dev vs prod ESM loader); `fs` yolu deterministik ve testte sorunsuz. Cost: `dist/` paketlenirken locale dosyaları otomatik kopyalanmıyor — TASK-1.10/staging deploy task'ında build script (`tsc --build` post-step) eklenecek (`cp -r src/i18n/locales dist/i18n/`). v1'de runtime yalnızca dev/staging'de çalışacak; bu bir migration borç değil sadece deploy script TODO. Karar günü test/typecheck/lint hepsi temiz olduğu için Phase-1 sonuna bırakıldı.
+- **i18next 26 `initImmediate` kaldırıldı:** İlk yazımda `initImmediate: false` set edildi → TS error TS2769 (option v26'da yok). Inline resources zaten sync — silindi.
+- **`t` overload preservation:** `instance.t.bind(instance)` standart `Function.prototype.bind` tipi tek overload bırakıyor; explicit `as I18nInstance['t']` cast ile typesafe namespace:key kontrolü korundu. Test bunu doğruluyor.
+
+**Sonraki Adım:** TASK-1.08 — Mobile test altyapısı (Jest + React Native Testing Library). Bu task'ın runtime smoke testi ("`<App>` mount → `useTranslation` çalışır → eksik anahtar dev'de throw eder") TASK-1.08'in i18n smoke ünite testi olarak kurulacak.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Son Güncelleme:** 2026-05-29 (run-task) — i18n shell mobile + backend kuruldu, 50 test passed.

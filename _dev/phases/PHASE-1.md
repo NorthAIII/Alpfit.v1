@@ -249,7 +249,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.04 | TASK-1.04 | ✅ Tamamlandı | Backend test altyapısı (Vitest + per-suite Postgres) |
 | 1.05 | TASK-1.05 | ✅ Tamamlandı | Mobile Expo SDK 56 + Expo Router iskelet |
 | 1.06 | TASK-1.06 | ✅ Tamamlandı | TR locale util + lint kuralı (toLowerCase yasağı) |
-| 1.07 | TASK-1.07 | ⬜ Bekliyor | i18n shell (i18next mobile + backend, TR-only) |
+| 1.07 | TASK-1.07 | ✅ Tamamlandı | i18n shell (i18next mobile + backend, TR-only) |
 | 1.08 | TASK-1.08 | ⬜ Bekliyor | Mobile test altyapısı (Jest + RTL) |
 | 1.09 | TASK-1.09 | ⬜ Bekliyor | CI PR pipeline (GitHub Actions: test + lint + typecheck) |
 | 1.10 | TASK-1.10 | ⬜ Bekliyor | Hetzner+Coolify staging kurulumu + auto-deploy webhook |
@@ -309,4 +309,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-29 — TASK-1.06 ✅ (`@alpfit/shared` TR locale util + ESLint `no-restricted-syntax` raw toLowerCase/toUpperCase yasağı; mobile Metro `.js→.ts` resolveRequest shim + `shared/node_modules` path; 44 test passed; sıradaki TASK-1.07).
+**Son Güncelleme:** 2026-05-29 — TASK-1.07 ✅ (i18next 26 + react-i18next 17 + expo-localization 56 kuruldu; mobile 5 namespace common/auth/errors/kvkk/profile + backend 3 namespace sms/errors/notifications; typesafe CustomTypeOptions ile `t('unknown')` typecheck fail; dev'de missingKeyHandler throw, prod'da console.warn; 50 test passed; sıradaki TASK-1.08).
