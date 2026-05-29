@@ -290,7 +290,7 @@ v0.1 (v1)
 - **[Onboarding](03-onboarding.md)** — "+ Davet et", "Bekleyen davetler" ve üye çıkarma akışı §03 ile birlikte yaşar.
 - **[Bildirim Sistemi](04-notifications.md)** — Banner stack §04'teki push olaylarının in-app yansımasıdır. PT'nin app içinde gördüğü tüm "şimdi yap" sinyalleri §04 ile aynı kaynaktan.
 - **[Üye Program Görüntüleme + Tamamlama](05-member-program-view.md)** — Üyenin "Antrenmanı bitir" eylemi PT dashboard'ta o üyenin satırını real-time günceller (son aktivite, streak).
-- **Üye Ölçüm Takibi** (henüz yazılmadı) — Üye detayında "Ölçüm ekle" CTA buraya gider.
+- **[Üye Ölçüm Takibi](07-member-measurements.md)** — Üye detayında "Ölçüm ekle" CTA buraya gider. "Son ölçümler" özet bölümü detay sayfasında §07 davranış kurallarına göre yaşar. "Son ölçüm: X gün önce" hint motorun değil §07'nin çıktısıdır.
 - **Üye Yemek Günlüğü** (henüz yazılmadı) — Üye detayında "Yemek günlüğü" CTA PT'nin okuma erişimini açar.
 
 ---

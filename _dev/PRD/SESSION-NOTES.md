@@ -9,7 +9,6 @@
 ### Yazılması Bekleyen v1 Feature'ları
 Aşağıdaki feature'lar v1 kapsamında olduğu kabul edildi ama dedicated feature dosyası henüz yok. PRD-refine oturumunda yazılmalı:
 
-- **Üye Ölçüm Takibi** — Kilo/boy/vücut ölçümleri PT tarafından girilir. Hangi sıklıkla, hangi metrikler, grafik gösterimi var mı? Brief Soru 6. PT Dashboard'tan "Ölçüm ekle" CTA'sı buraya bağlanacak (§06).
 - **Üye Yemek Günlüğü** — Üyenin yediklerini girdiği form. Kalori/makro yapısı, manuel mi, hazır yemek seçimi mi (v1'de muhtemelen sadece serbest metin + manuel kalori). v1.5 AI önerisinin temelini hazırlamalı. PT Dashboard'tan "Yemek günlüğü" CTA okuma erişimi açacak (§06).
 
 ### Teknik Mimari (kickoff'a bırakılan)
@@ -22,7 +21,7 @@ Bu kararlar PRD seviyesi değil, `/devflow:kickoff`'ta verilecek — ama PRD'yi 
 - **App store hesapları:** Apple Developer ($99/yıl), Google Play ($25 tek seferlik). Açılma zamanı v1 launch'tan önce.
 
 ### Yasal / Operasyonel
-- **KVKK aydınlatma metni:** Üye sağlık verisi (ileride kilo/boy/sakatlık) için açık rıza metni. Hazırlanması + UI yerleşimi.
+- **KVKK aydınlatma metni:** Üye sağlık verisi (kilo/boy/ölçümler) için açık rıza metni. Hazırlanması + UI yerleşimi. **Üye Ölçüm Takibi (07) ve Onboarding (03) bu metne bağımlı** — KVKK çerçevesi olmadan ikisi yarım kalır. Hukuki danışman incelemesi gerekebilir.
 - **PT ücretlendirme modeli:** v1'de tamamen ücretsiz mi, freemium mu, ileride abonelik mi? Brief Soru 10. v1 pilot için ücretsiz mantıklı ama v1.5 öncesi karar verilmeli.
 - **Sağlık verisi saklama süresi:** KVKK kapsamında ne kadar tutulur, üye hesabı silindiğinde ne olur?
 
@@ -56,3 +55,5 @@ Her feature dosyasının "Açık Sorular" bölümünde detay kalmıştır — PR
 
 - **PT'nin "manuel WhatsApp atması" expected davranış.** T+7 comeback uyarısı PT'ye "manuel iletişim öner" diyor. Sistem otomatik WhatsApp atmıyor (v1.5'e bırakıldı). Bu açıklık PT'ye yük bindirir ama brief'in "kardeş zaten WhatsApp'ta üyeleriyle konuşuyor" gerçeğine uyar. Pilot'ta doğrulanmalı.
 - **"Tek PT-tek üye" kuralı yumuşatılabilir mi?** v1'de katı kural ama bazı üye gerçek hayatta birden fazla PT ile çalışıyor (kuvvet + beslenme + esneklik). Bu sınır pilot'ta hissedilirse v1.5'te yumuşatılır.
+- **Üye ölçüm self-girişi v1.5 önceliği.** §07'de v1 sadece PT girer. Pilot'ta "evde tartılıyorum" şikayeti gelirse v1.5 self-girişin önceliği artar.
+- **Ölçüm trend görselleştirme v1.5 önceliği.** §07'de v1 sadece liste + Δ delta. Pilot'ta "grafik istiyorum" geri bildirimi gelirse v1.5'te çizgi grafik eklenir.
