@@ -17,7 +17,9 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 
 > Bu tablo **yalnızca girilmiş fazları** içerir (discuss-phase başlamış: 🔄/✅/⚠️). Henüz girilmemiş fazlar numarasızdır ve "Sıradaki Fazlar" listesindedir.
 
-Henüz girilmiş faz yok.
+| # | Faz | Durum | Doküman |
+|---|-----|-------|---------|
+| 1 | Çekirdek altyapı + Auth (M0 + M1) | 🔄 Devam ediyor | [PHASE-1.md](phases/PHASE-1.md) |
 
 **Durum simgeleri:**
 - 🔄 **Devam ediyor** — discuss-phase başladı (aktif faz)
@@ -32,7 +34,6 @@ Henüz girilmiş faz yok.
 
 > Yaklaşan faz konuları — **numarasız**. Faza girildiğinde (discuss-phase) buradan çıkar, numara (mevcut en büyük faz no + 1) alıp Faz Durumu tablosuna 🔄 olarak geçer.
 
-- **Çekirdek altyapı + Auth (M0 + M1)** — PT ve üye telefon+SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye bağlanır; KVKK rızası alınır; CI/CD yeşil; env-bazlı config çalışır; 3 rol veri modeli yerleşti.
 - **Program akışı uçtan uca (M2)** — PT bir üyeye haftalık şablon yazar (çekirdek 50 egzersiz + custom); üye programı görür, antrenmanı tamamlar; offline cache + senkron çalışır; video embed oynar.
 - **Sürdürülebilirlik motoru + Bildirim (M3 + M4)** ⭐ — Streak +1/0 doğru hesaplanır; 1 gün telafi penceresi açılır/kapanır; T+2 üye push + T+7 PT in-app + T+14 kayıp risk doğru tetiklenir; sessiz saat penceresi (22–08) uygulanır; deep link doğru ekrana gider. (Bu faz [[ilkeler]] §En Yüksek Öncelikli Eksen #1'in doğrulandığı fazdır.)
 - **PT dashboard + Sağlık verisi (M5 + M6)** — PT ana ekranı tüm modüllerin çıktısını gösterir (banner stack adaptif 1/2+); üye detay drill-down çalışır; PT ölçüm ekler (24h düzenleme); üye yemek girer (24h düzenleme + disclaimer); gizlilik toggle iki tarafta çalışır; WhatsApp deep link açılır.
@@ -65,6 +66,6 @@ Henüz faz geçişi yok.
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 2: 5 yakın faz konusu numarasız listelendi; ilk faz `/devflow:discuss-phase` ile numara alacak.
+**Son Güncelleme:** 2026-05-29 — discuss-phase 1: Faz 1 (Çekirdek altyapı + Auth — M0 + M1) Faz Durumu tablosuna 🔄 olarak eklendi; Sıradaki Fazlar'dan çıkarıldı.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->

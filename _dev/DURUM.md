@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 3 (kickoff-verify): doküman tutarlılığı doğrulandı, CLAUDE.md repo köküne yazıldı, native memory yönlendirmesi kuruldu, ilk faz girişine hazır.
+**Son Güncelleme:** 2026-05-29 — discuss-phase 1: Faz 1 (Çekirdek altyapı + Auth — M0 + M1) kapsam tartışması tamamlandı; PHASE-1.md oluştu; sıradaki adım research-phase.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -8,11 +8,11 @@
 
 ## Aktif Faz
 
-**Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1) *(geçici ad; discuss-phase kesinleştirir)*
-**Milestone:** PT ve üye telefon + SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye bağlanır; KVKK rızası alınır; CI/CD yeşil; env-bazlı config çalışır; 3 rol veri modeli yerleşti. *(geçici — discuss-phase kesinleştirir)*
-**Adım:** discuss
-**İlerleme:** 0/0 task — faz dokümanı henüz yok; `/devflow:discuss-phase 1` ile PHASE-1.md doğacak
-**Faz Dokümanı:** Yok — discuss-phase 1'de oluşacak
+**Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
+**Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
+**Adım:** research
+**İlerleme:** 0/0 task — discuss-phase tamamlandı, task'lar plan-phase'de yazılacak
+**Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
 
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — henüz faz girilmedi, task yazılmadı.
+**Task:** Yok — kapsam tartışması tamamlandı, sıradaki adım research-phase; task'lar plan-phase'de yazılacak.
 **Durum:** ⬜ Bekliyor
-**İlerleme:** `/devflow:discuss-phase 1` ile ilk fazın kapsam tartışması başlatılacak; task'lar plan-phase'de yazılır.
+**İlerleme:** Bir sonraki oturumda `/devflow:research-phase 1` çalıştırılacak (TECH-STACK kararı dahil).
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-Henüz faz girilmediği için task yok.
+Henüz task yazılmadı — task'lar plan-phase 1'de yazılacak.
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -74,10 +74,11 @@ Henüz tamamlanmış task yok.
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok
-**Aktif Faz:** Faz 1 (geçici ad: Çekirdek altyapı + Auth) — discuss-phase'e girilecek
+**Aktif Task:** Yok — plan-phase 1'de yazılacak
+**Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
+**Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 3 (kickoff-verify): doküman tutarlılığı doğrulandı, CLAUDE.md repo köküne yazıldı, native memory yönlendirmesi kuruldu, ilk faz girişine hazır.
+**Son Güncelleme:** 2026-05-29 — discuss-phase 1: Faz 1 (Çekirdek altyapı + Auth — M0 + M1) kapsam tartışması tamamlandı; PHASE-1.md oluştu; sıradaki adım research-phase.

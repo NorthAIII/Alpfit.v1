@@ -12,7 +12,7 @@
 Alpfit (v1)
 ├── M0: Çekirdek Altyapı                  (cross-cutting — feature yok)
 ├── M1: Auth & Onboarding
-│   └── F1.1: Onboarding (davet + SMS OTP)          → —
+│   └── F1.1: Onboarding (davet + SMS OTP)          → Faz 1
 ├── M2: Program Domain
 │   ├── F2.1: Program Builder (PT)                  → —
 │   └── F2.2: Üye Program Görüntüleme + Tamamlama   → —
@@ -27,7 +27,7 @@ Alpfit (v1)
     └── F6.2: Üye Yemek Günlüğü                     → —
 ```
 
-> **Faz sütunu kuralı:** Bu oturumda tüm feature'larda faz `—`. Faz numarası, ilgili feature'ı kapsayan faza girildiğinde (discuss-phase) just-in-time atanır. Bkz. PHASES.md → Faz Numaralandırma Kuralı.
+> **Faz sütunu kuralı:** Faz numarası, ilgili feature'ı kapsayan faza girildiğinde (discuss-phase) just-in-time atanır. Bkz. PHASES.md → Faz Numaralandırma Kuralı.
 
 ---
 
@@ -68,7 +68,7 @@ M6 ← M0, M1
 
 | Feature | Modül | Versiyon | Faz | Durum |
 |---------|-------|----------|-----|-------|
-| F1.1: Onboarding (Davet + Auth) | M1 | v1 | — | ⬜ |
+| F1.1: Onboarding (Davet + Auth) | M1 | v1 | 1 | 🔄 |
 | F2.1: Program Builder (PT) | M2 | v1 | — | ⬜ |
 | F2.2: Üye Program Görüntüleme + Tamamlama | M2 | v1 | — | ⬜ |
 | F3.1: Sürdürülebilirlik Motoru | M3 | v1 | — | ⬜ |
@@ -88,4 +88,4 @@ M6 ← M0, M1
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — Kickoff Oturum 2: 7 modül + 8 feature kaydedildi, faz sütunu tüm satırlarda `—` (just-in-time atanacak).
+**Son Güncelleme:** 2026-05-29 — discuss-phase 1: F1.1 (Onboarding) Faz 1'e atandı (🔄 Devam ediyor); M0 cross-cutting altyapı da Faz 1 kapsamında.
