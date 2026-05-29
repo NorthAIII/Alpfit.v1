@@ -61,6 +61,8 @@ model User {
   gymOwnerLinks     GymOwnerTrainer[] @relation("trainer_link")
   // TASK-1.14 — versiyonlu KVKK rıza zinciri (append-only).
   consentRecords    ConsentRecord[]   @relation("user_consent_records")
+  // TASK-1.21 — opaque refresh token aileleri (rotate-on-use + replay detection).
+  refreshTokens     RefreshToken[]    @relation("user_refresh_tokens")
 
   @@index([role])
 }
@@ -216,4 +218,50 @@ model DevOtpLog {
 
   @@index([phoneE164])
   @@index([createdAt])
+}
+
+// =====================================================================
+// TASK-1.21 — Refresh token rotation (opaque + rotate-on-use + replay)
+// =====================================================================
+// "30 gün cihaz hatırlama" (F1.1 oturum yönetimi) + Research §Dikkat #8
+// (Fastify refresh rotation resmi recipe yok → bilinçli yazılır + test edilir).
+//
+// Tasarım kararları (DECISIONS "TASK-1.21"):
+//   - **Opaque** token (JWT değil): `crypto.randomBytes(32)` base64url. Token
+//     DB'de **YALNIZCA sha256 hash** olarak durur (`tokenHash @unique`) — ham
+//     token sadece response'ta gezer. DB dump'ı token'ları açığa çıkarmaz.
+//   - **Aile (family):** her ilk login yeni `familyId` başlatır (= bir cihaz).
+//     Rotation chain aynı `familyId`'yi taşır; `previousId` zincir takibi.
+//   - **rotate-on-use:** her başarılı /auth/refresh eski token'ı
+//     `revokedReason:'rotated'` yapar, yeni token verir (chain ilerler).
+//   - **Replay detection:** zaten revoke edilmiş token tekrar gelirse o ailenin
+//     TÜM aktif token'ları `revokedReason:'replay_detected'` ile iptal edilir
+//     (compromise = logout-all benzeri). Concurrent rotation race de aynı
+//     compare-and-set (atomik `updateMany ... WHERE revokedAt IS NULL`) ile
+//     çözülür: ilk istek kazanır, ikincisi replay sayılır.
+//
+// `tokenHash @unique` zaten lookup index'i sağlar → ayrı `@@index([tokenHash])`
+// gereksizdir (eklenmedi; çift index yazma maliyeti).
+model RefreshToken {
+  id            String    @id @default(cuid())
+  userId        String
+  // sha256(token) hex — ham token DB'de yok (dump'ta token açığa çıkmaz).
+  tokenHash     String    @unique
+  // Rotation chain'i gruplar; bir aile = bir cihaz/oturum.
+  familyId      String
+  // Önceki refresh token id'si (chain takibi; ilk login'de null).
+  previousId    String?
+  issuedAt      DateTime  @default(now())
+  expiresAt     DateTime
+  // revoke durumu: null = aktif. Reason: 'rotated' | 'logout_all' (TASK-1.22)
+  // | 'replay_detected'.
+  revokedAt     DateTime?
+  revokedReason String?
+  // userAgent vb. — analytics; PII log/Sentry yoluna gitmez (yalnızca DB).
+  deviceInfo    Json?
+
+  user          User      @relation("user_refresh_tokens", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([familyId])
 }

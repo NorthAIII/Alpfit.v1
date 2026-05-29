@@ -1,6 +1,6 @@
 # TASK-1.21: Refresh token rotation (30 gün opaque + rotate-on-use + replay attack koruma)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -179,8 +179,24 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **`RefreshToken` modeli + migration** (`20260529235000_refresh_token`): opaque token, DB'de yalnızca `tokenHash @unique` (sha256), `familyId` + `previousId` (rotation chain), `revokedAt`/`revokedReason`, `deviceInfo Json?`. Task taslağındaki gereksiz `@@index([tokenHash])` eklenmedi (`@unique` zaten index sağlar — şemada gerekçe notu).
+- **`auth/refresh-token.ts`**: `REFRESH_TOKEN_TTL_SEC` (30 gün), `generateRefreshToken` (`randomBytes(32)` base64url), `hashRefreshToken` (sha256), `issueRefreshToken` (client = PrismaClient veya tx; familyId yoksa yeni aile = `randomBytes(16)` hex), `cleanupExpiredRefreshTokens` (helper-only, cron'a bağlanmadı).
+- **`POST /auth/refresh` (`routes/auth-refresh.ts`)**: tek `$transaction` — lookup → revoke'lu token (replay) → aile bütünü `replay_detected` → expired → atomik `updateMany WHERE id=? AND revokedAt IS NULL` compare-and-set rotate (count=0 = concurrent race kaybı → replay) → aktif user kontrolü → yeni refresh (aynı aile, previousId=eski.id) + yeni access. audit `refresh_rotated`/`refresh_replay_detected`/`refresh_expired` (`refreshTokenId` whitelist). Sızdırmayan 400/401.
+- **Entegrasyon**: `auth-otp-verify` (mevcut üye login) + `auth-profile` (yeni üye) artık refresh basar; profile token User create ile **aynı transaction'da** (rollback → orphan yok). `errors.json` + `refreshInvalid`/`refreshExpired`/`refreshReplay`. `server.ts` route register. Mevcut test `beforeEach`'lerine `refreshToken.deleteMany` (FK constraint).
+- **Test** (`auth-refresh.test.ts`): 8 senaryo — rotation+URL-safe, replay+aile iptal, expired+row korunur, invalid, 400, aile (device) izolasyonu, concurrent race (1 başarılı + 1 reject), soft-delete user.
+
+**Kararlar (DECISIONS "TASK-1.21"):**
+- Opaque token (JWT değil) — DB'de hash; `JWT_REFRESH_SECRET` opaque tasarımda kullanılmıyor (şemada duruyor).
+- Replay = aile bütünüyle iptal (konservatif; v1.5+ granular). Concurrent race kaybeden de replay sayılır (atomik compare-and-set) — kazananın yeni token'ı da düşebilir, risk planında kabul.
+- `familyId` audit metadata'ya KONMADI (PII whitelist'te yok); `refreshTokenId` kullanıldı.
+
+**Test Sonucu:** backend **107 PASS** (15 dosya), typecheck + lint + format temiz.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-30

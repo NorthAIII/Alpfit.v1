@@ -59,6 +59,7 @@ describe('TASK-1.20 — POST /auth/profile', () => {
   });
 
   beforeEach(async () => {
+    await server.prisma.refreshToken.deleteMany();
     await server.prisma.consentRecord.deleteMany();
     await server.prisma.auditLog.deleteMany();
     await server.prisma.user.deleteMany();

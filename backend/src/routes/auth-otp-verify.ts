@@ -7,14 +7,15 @@
  *     - 410 expired       : aktif OTP yok (süresi doldu / zaten tüketildi)
  *     - 401 invalid_code  : kod yanlış (deneme sayacı arttı, < 5)
  *     - 423 locked        : bu hatalı deneme 5'e ulaştı → telefon kilitlendi
- *     - 200 mevcut üye  : { verified, userExists:true, isNew:false, accessToken }
+ *     - 200 mevcut üye  : { verified, userExists:true, isNew:false, accessToken, refreshToken, expiresAt }
  *     - 200 yeni üye    : { verified, userExists:false, isNew:true, registrationToken }
  *
  * F1.1 PRD: "5 hatalı kod girişinden sonra 15 dakika kilit". OTP doğru kod
  * doğrulanınca atomik tüketilir; ardından (TASK-1.20):
  *   - **mevcut aktif kullanıcı** → giriş: `accessToken` (15dk) + `user_login` audit,
  *   - **yeni kullanıcı** → `registrationToken` (10dk); profil `POST /auth/profile`
- *     ile bu jeton üzerinden açılır (kod tekrar gönderilmez). refreshToken 1.21'de.
+ *     ile bu jeton üzerinden açılır (kod tekrar gönderilmez). Mevcut üye girişinde
+ *     ayrıca 30 günlük **refresh token** (yeni aile) basılır (TASK-1.21).
  */
 import { parseTrPhone } from '@alpfit/shared';
 import { z } from 'zod';
@@ -30,6 +31,7 @@ import {
   peekOtp,
   registerFailedAttempt,
 } from '../auth/otp.js';
+import { issueRefreshToken } from '../auth/refresh-token.js';
 import { t } from '../i18n/index.js';
 import { logAuditEvent } from '../kvkk/audit.js';
 
@@ -132,9 +134,14 @@ export const authOtpVerifyRoutes: FastifyPluginAsync = async (app) => {
       metadata: { ip: req.ip },
     });
 
-    // 8a) Mevcut aktif kullanıcı → giriş: access token + user_login audit.
+    // 8a) Mevcut aktif kullanıcı → giriş: access + refresh (yeni aile) + audit.
     if (user !== null) {
       const accessToken = issueAccessToken(app, { id: user.id, role: user.role });
+      const userAgent = req.headers['user-agent'];
+      const refresh = await issueRefreshToken(app.prisma, {
+        userId: user.id,
+        deviceInfo: userAgent === undefined ? null : { userAgent },
+      });
       await logAuditEvent(app.prisma, {
         userId: user.id,
         eventType: 'user_login',
@@ -145,6 +152,8 @@ export const authOtpVerifyRoutes: FastifyPluginAsync = async (app) => {
         userExists: true as const,
         isNew: false as const,
         accessToken,
+        refreshToken: refresh.token,
+        expiresAt: refresh.expiresAt.toISOString(),
       });
     }
 

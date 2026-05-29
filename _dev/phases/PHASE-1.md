@@ -263,7 +263,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.18 | TASK-1.18 | ✅ Tamamlandı | OTP send endpoint (rate limit + Redis) — POST /auth/otp/send + Redis storage/TTL + atomik SET NX rate limit + healthz Redis PING |
 | 1.19 | TASK-1.19 | ✅ Tamamlandı | OTP verify endpoint + brute force — POST /auth/otp/verify + atomik GETDEL consume + otp:attempts INCR + 5 hatalı → otp:lockout 15dk + timingSafeEqual |
 | 1.20 | TASK-1.20 | ✅ Tamamlandı | JWT access token + auth middleware + profil create — @fastify/jwt HS256, access 15dk + kayıt jetonu 10dk (typ claim), app.authenticate (deletedAt:null), POST /auth/profile atomik $transaction, GET /auth/me |
-| 1.21 | TASK-1.21 | ⬜ Bekliyor | Refresh token rotation (30 gün + replay detection) |
+| 1.21 | TASK-1.21 | ✅ Tamamlandı | Refresh token rotation — opaque 30 gün DB-stored (sha256 hash), aile (familyId) + rotate-on-use + replay detection (aile iptal) + concurrent compare-and-set; POST /auth/refresh + verify/profile entegrasyonu |
 | 1.22 | TASK-1.22 | ⬜ Bekliyor | Logout + tüm cihazlardan çıkış endpoints |
 | 1.23 | TASK-1.23 | ⬜ Bekliyor | PT davet linki üretim endpoint |
 | 1.24 | TASK-1.24 | ⬜ Bekliyor | Davet kabul endpoint (lazy expiry + PT-Member ilişki) |

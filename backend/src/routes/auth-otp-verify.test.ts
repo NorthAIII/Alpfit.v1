@@ -59,6 +59,7 @@ describe('TASK-1.19 — POST /auth/otp/verify', () => {
 
   beforeEach(async () => {
     await server.prisma.devOtpLog.deleteMany();
+    await server.prisma.refreshToken.deleteMany();
     await server.prisma.auditLog.deleteMany();
     await server.prisma.trainerMember.deleteMany();
     await server.prisma.user.deleteMany();
@@ -91,21 +92,34 @@ describe('TASK-1.19 — POST /auth/otp/verify', () => {
     expect(res.json()).toMatchObject({ verified: true, userExists: true, isNew: false });
   });
 
-  it('200 — existing user login issues accessToken + writes user_login audit (TASK-1.20)', async () => {
+  it('200 — existing user login issues accessToken + refreshToken + user_login audit (TASK-1.20/1.21)', async () => {
     const phone = '+905551110100';
-    await server.prisma.user.create({
+    const created = await server.prisma.user.create({
       data: { phoneE164: phone, role: 'trainer', firstName: 'Mert', lastName: 'Demir' },
     });
     await storeOtp(server.redis, phone, KNOWN_CODE);
 
     const res = await verify(server, phone, KNOWN_CODE);
     expect(res.statusCode).toBe(200);
-    const json = res.json() as { accessToken?: string; registrationToken?: string };
+    const json = res.json() as {
+      accessToken?: string;
+      refreshToken?: string;
+      expiresAt?: string;
+      registrationToken?: string;
+    };
     expect(typeof json.accessToken).toBe('string');
+    expect(typeof json.refreshToken).toBe('string');
+    expect(typeof json.expiresAt).toBe('string');
     expect(json.registrationToken).toBeUndefined();
 
     const login = await server.prisma.auditLog.findMany({ where: { eventType: 'user_login' } });
     expect(login).toHaveLength(1);
+
+    // Yeni aile (previousId null) — ham token DB'de yok, sadece hash.
+    const tokens = await server.prisma.refreshToken.findMany({ where: { userId: created.id } });
+    expect(tokens).toHaveLength(1);
+    expect(tokens[0]?.previousId).toBeNull();
+    expect(tokens[0]?.revokedAt).toBeNull();
   });
 
   it('200 — new user receives a registrationToken (no accessToken) (TASK-1.20)', async () => {

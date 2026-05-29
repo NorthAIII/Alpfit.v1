@@ -13,6 +13,7 @@ import { authMeRoutes } from './routes/auth-me.js';
 import { authOtpSendRoutes } from './routes/auth-otp-send.js';
 import { authOtpVerifyRoutes } from './routes/auth-otp-verify.js';
 import { authProfileRoutes } from './routes/auth-profile.js';
+import { authRefreshRoutes } from './routes/auth-refresh.js';
 import { healthzRoutes } from './routes/healthz.js';
 import { internalDevOtpRoutes } from './routes/internal-dev-otp.js';
 
@@ -67,6 +68,7 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(authOtpSendRoutes({ env: opts.env }));
   await app.register(authOtpVerifyRoutes);
   await app.register(authProfileRoutes);
+  await app.register(authRefreshRoutes);
   await app.register(authMeRoutes);
 
   return app;

@@ -9,6 +9,23 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.21: Refresh Token — Opaque + Aile + rotate-on-use + Replay Detection
+
+**Bağlam:** Access token (TASK-1.20) 15dk; "30 gün cihaz hatırlama" (F1.1 oturum yönetimi) için uzun ömürlü refresh token gerekiyor. Research §Dikkat #8: "Fastify refresh-token rotation resmi recipe yok — topluluk patternleri olgun ama bilinçli yazılıp test edilmeli." Bu task pattern'i bilinçli yazar + replay senaryosunu test eder.
+
+**Karar 1 — Opaque token (JWT değil).** Refresh token `crypto.randomBytes(32)` base64url (URL-safe → mobile'da güvenle taşır). DB'de ham token DEĞİL, yalnızca `sha256(token)` hex saklanır (`RefreshToken.tokenHash @unique`). DB dump'ı çalınsa bile token'lar kullanılamaz. Access token JWT (stateless, kısa); refresh opaque (DB-stateful, revoke edilebilir) — iki farklı amaç, iki farklı mekanizma. `JWT_REFRESH_SECRET` env'i opaque tasarımda **kullanılmaz** (şemada duruyor, ileride imzalı varyanta dönülürse hazır).
+- *Alternatif (red):* JWT refresh — revoke için yine DB-blacklist gerekir; opaque + DB zaten revoke'u doğal verir.
+
+**Karar 2 — Aile (family) modeli + rotate-on-use.** Her **ilk login** yeni `familyId` başlatır (= bir cihaz/oturum). `POST /auth/refresh` her çağrıda eski token'ı `revokedReason:'rotated'` yapar ve aynı aileye yeni token basar (chain `previousId` ile ilerler) + yeni access verir. Bir kullanıcı birden fazla aktif aile (device) tutabilir; aileler birbirinden bağımsız (TASK-1.22 logout-all tüm aileleri düşürür).
+
+**Karar 3 — Replay detection: aile bütünüyle iptal.** Zaten revoke edilmiş (rotated/replay) bir token tekrar gelirse, o ailenin TÜM aktif token'ları `revokedReason:'replay_detected'` ile iptal edilir (`refresh_replay_detected` audit). Gerekçe: token yeniden-kullanımı = olası ele geçirme → logout-all benzeri konservatif davranış. v1.5+ daha granular (sadece o cihaz + uyarı) düşünülebilir.
+
+**Karar 4 — Concurrent rotation race = atomik compare-and-set.** Rotation tek `$transaction` içinde `updateMany({ where: { id, revokedAt: null }, ... })` ile yapılır. İki istemci aynı token'la aynı anda gelirse Postgres satır kilidi (READ COMMITTED) yalnızca birinde `count=1` verir; kaybeden `count=0` alır ve **replay** muamelesi görür (aile iptal). Yan etki: kazananın yeni token'ı da iptal olabilir → kullanıcı yeniden giriş yapar. Risk planında kabul edildi (gerçek çift istek nadir; 30 gün TTL içinde 1 re-login). Bu, task'ın "concurrent → biri başarılı diğeri replay detected" gereksinimini karşılar.
+
+**Karar 5 — Audit metadata.** `refresh_rotated` / `refresh_replay_detected` / `refresh_expired` event'leri `refreshTokenId` (PII whitelist'te zaten tanımlı, TASK-1.14) ile yazılır. `familyId` whitelist'te olmadığından metadata'ya konmaz (PII yüzeyini genişletmemek için whitelist ground-truth tutuldu).
+
+**Entegrasyon + temizlik.** OTP verify (mevcut üye login) + `/auth/profile` (yeni üye) akışları artık refresh token (yeni aile) basar; profile'da token User create ile **aynı transaction'da** üretilir (rollback → orphan token kalmaz). `cleanupExpiredRefreshTokens()` helper'ı sağlandı ama cron'a bağlanmadı (expired token zaten 401; DB temizliği TASK-1.15 retention ile birleşik kalır — nice-to-have). Test: 8 senaryo (rotation, replay+aile, expired, invalid, 400, aile izolasyonu, concurrent race, soft-delete). Backend 107 PASS.
+
 ### 2026-05-30 — TASK-1.20: JWT Access Token + Kayıt Jetonu + Auth Middleware + Profil Create
 
 **Bağlam:** TASK-1.19 verify yalnızca doğruluyordu; bu task oturum/kayıt token'larını ve profil oluşturmayı ekler. JWT kararı TECH-STACK'te netti (`@fastify/jwt` + HS256, access 15dk; refresh 30dk opaque DB-stored TASK-1.21). Plan dokümanında bir **çelişki** vardı: `POST /auth/profile` gövdesinde OTP kodunu "tekrar doğrula" diyordu, ama TASK-1.19 doğru kodu atomik `GETDEL` ile **anında tüketiyor** — profil adımında kod artık yok. Akış kararı kullanıcıya soruldu (auth/security mimari kararı; [[feedback-no-assumptions]]).

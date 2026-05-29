@@ -11,17 +11,18 @@
  *     - 400 invalid       : gövde şeması hatalı
  *     - 403 kvkk_required : kvkkConsent !== true (zorunlu KVKK aydınlatma rızası)
  *     - 409 phone_taken   : telefon zaten kayıtlı (giriş akışına yönlendir)
- *     - 201 { accessToken, user } : hesap açıldı, access token verildi
+ *     - 201 { accessToken, refreshToken, expiresAt, user } : hesap açıldı
  *
- * Atomiklik (test kriteri): User + ConsentRecord(lar) + AuditLog tek
- * `$transaction`'da yazılır — biri fail ederse hepsi rollback. `refreshToken`
- * TASK-1.21'de eklenir. v1 onboarding yalnızca `member`/`trainer` açar
+ * Atomiklik (test kriteri): User + ConsentRecord(lar) + AuditLog + ilk
+ * **refreshToken** (yeni aile) tek `$transaction`'da yazılır — biri fail ederse
+ * hepsi rollback. v1 onboarding yalnızca `member`/`trainer` açar
  * (`gym_owner` UI yok — 3 rol mimarisinde model slot'u korunur ama kayıt yolu yok).
  */
 import { parseTrPhone } from '@alpfit/shared';
 import { z } from 'zod';
 
 import { issueAccessToken } from '../auth/jwt.js';
+import { issueRefreshToken } from '../auth/refresh-token.js';
 import { t } from '../i18n/index.js';
 import { logAuditEvent } from '../kvkk/audit.js';
 import { KVKK_TEXT_VERSION } from '../kvkk/consent.js';
@@ -103,17 +104,20 @@ export const authProfileRoutes: FastifyPluginAsync = async (app) => {
     const grantHealth = body.healthConsent === true;
     const userAgent = req.headers['user-agent'] ?? null;
 
-    let user: {
-      id: string;
-      role: Role;
-      firstName: string;
-      lastName: string;
-      phoneE164: string;
-      gymName: string | null;
-      certificateNote: string | null;
+    let result: {
+      user: {
+        id: string;
+        role: Role;
+        firstName: string;
+        lastName: string;
+        phoneE164: string;
+        gymName: string | null;
+        certificateNote: string | null;
+      };
+      refresh: { token: string; expiresAt: Date };
     };
     try {
-      user = await app.prisma.$transaction(async (tx) => {
+      result = await app.prisma.$transaction(async (tx) => {
         const created = await tx.user.create({
           data: {
             phoneE164,
@@ -178,7 +182,17 @@ export const authProfileRoutes: FastifyPluginAsync = async (app) => {
           });
         }
 
-        return created;
+        // İlk login → yeni refresh token ailesi (30 gün). Aynı transaction'da
+        // basılır: User create rollback olursa orphan token kalmaz.
+        const refresh = await issueRefreshToken(tx, {
+          userId: created.id,
+          deviceInfo: userAgent === null ? null : { userAgent },
+        });
+
+        return {
+          user: created,
+          refresh: { token: refresh.token, expiresAt: refresh.expiresAt },
+        };
       });
     } catch (err) {
       // verify ↔ profile arası yarışta unique telefon ihlali → 409 (sızdırmaz).
@@ -190,7 +204,15 @@ export const authProfileRoutes: FastifyPluginAsync = async (app) => {
       throw err;
     }
 
-    const accessToken = issueAccessToken(app, { id: user.id, role: user.role });
-    return reply.code(201).send({ accessToken, user });
+    const accessToken = issueAccessToken(app, {
+      id: result.user.id,
+      role: result.user.role,
+    });
+    return reply.code(201).send({
+      accessToken,
+      refreshToken: result.refresh.token,
+      expiresAt: result.refresh.expiresAt.toISOString(),
+      user: result.user,
+    });
   });
 };

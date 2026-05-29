@@ -15,7 +15,10 @@
     "userNotFound": "Kullanıcı bulunamadı.",
     "roleForbidden": "Bu işlem için yetkin yok.",
     "kvkkConsentRequired": "KVKK aydınlatma metnini onaylamadan hesap açılamaz.",
-    "phoneAlreadyRegistered": "Bu telefon zaten kayıtlı, giriş yap."
+    "phoneAlreadyRegistered": "Bu telefon zaten kayıtlı, giriş yap.",
+    "refreshInvalid": "Oturum doğrulanamadı, yeniden giriş yap.",
+    "refreshExpired": "Oturum süresi doldu, yeniden giriş yap.",
+    "refreshReplay": "Güvenlik nedeniyle oturumların kapatıldı, yeniden giriş yap."
   },
   "invite": {
     "notFound": "Davet linki bulunamadı.",
