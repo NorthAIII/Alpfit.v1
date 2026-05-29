@@ -300,6 +300,57 @@ ssh root@178.104.140.36 '
 
 ---
 
+### Oturum 2026-05-29 #2 — Clone → Public HTTPS Healthz → Auto-Deploy Secret Fix (⏸️ Duraklatıldı)
+
+**Durum:** ⏸️ Duraklatıldı (context şişti, iş %95 bitti; closure 1 kısa oturuma kaldı)
+
+**Yapılanlar (commit'ler: 30b793c + 25391c0 + 4a69259 + 8d0f268):**
+
+- **Adım 5 — Clone + drift fix #1:** `git clone` GitHub Deploy Keys reddetti — önceki oturumun "Deploy key ✅" notu **drift**ti, gerçekte eklenmemişti; kullanıcı UI'dan ekledi (read-only, `alpfit-staging-server`). Clone başarılı; ama `_ops/staging/.env.staging.example` sunucuya gelmedi → `.gitignore`'da `.env.*` kuralı + `!.env.example` istisnası `.env.staging.example`'i yakalamıyordu → `!.env.*.example` istisnası eklendi, template commit edildi (30b793c). Pull → sunucuda template ✅.
+- **Adım 6 — `.env.staging`:** Sunucuda `openssl rand -hex 32` x3 → POSTGRES_PASSWORD, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET; sed in-place replace (DATABASE_URL içindeki şifre POSTGRES_PASSWORD ile global match), chmod 600 deploy:deploy. Doğrulama: 11 anahtar, 3 sır 64 char hex, 0 placeholder, DATABASE_URL ↔ POSTGRES_PASSWORD eşleşiyor. **Sırlar sadece sunucuda — ekrana yazılmadı.**
+- **Adım 7 — Bunker keşfi + drift fix #2:** Network adı `bunker_default` DEĞİL → **`bunker-network`** (docker-compose.yml düzeltildi, 25391c0, sunucuda pull). bunker-nginx mimarisi: nginx.conf host bind mount (`/opt/bunker/nginx/nginx.conf`), conf.d host-bind değil (kullanılmıyor), SSL **SAN cert paterni** (`/etc/letsencrypt/live/n8n.kiwiailab.com/`), deploy-hook (`copy-to-nginx.sh`) cert renewal sonrası otomatik `/opt/bunker/nginx/ssl/` mount'a kopyalar, certbot.timer aktif (systemd). Mevcut cert 6 domain (limoncloud, munar, n8n, ops, reverb-demo, umami). HTTP :80 regex wildcard `~^[a-z0-9-]+\.kiwiailab\.com$` ACME challenge için zaten yakalıyor (yeni HTTP server block GEREKMEZ). HTTPS :443 regex catch-all bunker_dashboard'a yönlendiriyor → **exact-match alpfit-staging block ŞART** (nginx exact > regex precedence).
+- **Adım 8 — DNS (kullanıcı):** Squarespace `alpfit-staging.kiwiailab.com` A → 178.104.140.36. Google/Cloudflare/Quad9/local resolver hepsinden 178.104.140.36 ✅.
+- **Adım 9 — Cert + nginx config + reload:** nginx.conf yedek (`nginx.conf.bak.alpfit-add-1780075330`). `certbot --expand --dry-run` ✅ → gerçek `certbot certonly --webroot -w /opt/bunker/certbot-webroot --expand --cert-name n8n.kiwiailab.com --key-type ecdsa -d <6 mevcut> -d alpfit-staging.kiwiailab.com` → yeni 7 domain SAN cert, deploy-hook nginx ssl mount'a otomatik kopyaladı. nginx.conf'a regex catch-all'dan ÖNCE alpfit-staging exact-match 443 server block (eski `listen 443 ssl http2;` syntax — Bunker'ın 4 diğer bloğuyla tutarlılık; deprecated warning fatal değil). `nginx -t` ✅ → `nginx -s reload` ✅. **Bunker regression yok** (n8n 200, ops 307 auth-redirect, umami 200). **`https://alpfit-staging.kiwiailab.com/healthz` PUBLIC HTTP/2 200** + JSON body + HSTS+X-Frame+X-XSS headers.
+- **Adım 10 — İlk deploy + migration:** Sunucuda `docker compose --env-file .env.staging build` (1m18s, image 170MB content), `up -d`: tüm 3 container healthy ~20s'de. Backend boot log `"alpfit backend ready"` + TR locale `"29 Mayıs 2026"`. **Prisma keşfi:** runner image'da `pnpm` YOK, `./node_modules/.bin/prisma migrate deploy` (shell script, `node` ile DEĞİL doğrudan çağrı) çalışıyor. Init migration (boş SQL) uygulandı, `_prisma_migrations` tablosu oluştu. Container içi /healthz `{"status":"ok","db":"up",...}`, bunker-nginx network içi DNS resolve (`alpfit-backend → 172.18.0.13`).
+- **Adım 11 — Auto-deploy (sorunlu, sonunda fix):** Boş smoke commit (4a69259) push. CI 5/5 yeşil ✅ ama **Deploy Staging 6/6 fail** (8-12s). gh CLI log: `ssh.ParsePrivateKey: ssh: no key found` + `dial tcp: lookup *** on 127.0.0.53:53: server misbehaving` → **iki secret format hatası**: STAGING_SSH_KEY parse edilmiyor (UI yapıştırmada bozuk) + STAGING_SSH_HOST sondaki gizli newline → DNS lookup. **Önceki oturumun "Deploy #3=8s SSH auth OK" yorumu YANLIŞ TEŞHİS** (gerçekte hiç auth olmamış). Kullanıcı yeni fine-grained GH_TOKEN üretti (Actions+Secrets:RW), gh CLI ile 3 secret temiz format yazıldı (`gh secret set ... < /tmp/staging_ssh_key` stdin redirect; trailing newline kontrol + ekleme; `--body` flag IP için). `workflow_dispatch` ile manuel tetik → **Deploy Staging ✅** ~15s'de, sunucuda commit 8d0f268, /healthz 200.
+
+**Kalan Closure (1 kısa oturum, ~10-15 dk):**
+
+- **Auto-deploy zincir görsel teyit (opsiyonel ama önerilen):** Boş `chore(TASK-1.10):` commit + push → CI ~75s yeşil → workflow_run otomatik Deploy Staging → sunucuda yeni commit + /healthz 200. Mekanizma zaten ispatlandı (workflow_dispatch çalıştı, önceki tüm push'larda da workflow_run tetikleniyordu — sadece secret fail oluyordu), bu sadece görsel onay.
+- **TASK closure:** TASK-1.10 durum ✅ + Tamamlanma Kriterleri kutucukları işaretle. PHASE-1.md task tablosunda ✅. `_dev/memory/staging-infra.md` güncelle: (a) network adı `bunker-network` (yanlış olan `bunker_default` notu varsa düzelt), (b) SAN cert + certbot --expand patern notu (her yeni Alpfit subdomain'i için ileride aynı komut), (c) GH Actions secret yazım kuralı (UI yerine `gh secret set < file` — UI multi-line + trailing newline tuzağı), (d) `.gitignore` `!.env.*.example` patern notu. MEMORY.md index'i pointer'larla güncelle (yeni öğrenim varsa). PHASES.md (faz tablosunda task 1.10 ✅). Archive: `_dev/tasks/TASK-1.10.md` → `_dev/tasks/archive/TASK-1.10.md`.
+- **Final commit:** `feat(TASK-1.10): complete staging deploy on shared hetzner vps with auto-deploy pipeline` — tüm doküman güncellemeleri + archive move tek commit.
+- **GH_TOKEN v2 revoke:** Kullanıcı closure sonrası https://github.com/settings/personal-access-tokens/active → `alpfit-deploy-debug-v2` → Delete.
+
+**Yeni oturumda ilk komut:**
+
+```bash
+# Auto-deploy zincir teyit (opsiyonel):
+cd /workspaces/Alpfit.v1
+git commit --allow-empty -m "chore(TASK-1.10): verify auto-deploy chain after secret fix"
+git push origin main
+# Sonra GH_TOKEN ile polling: CI ~75s + Deploy ~15-30s
+# Veya direkt closure'a geç — zincir zaten çalışıyor.
+```
+
+**Önemli durum notları:**
+
+- ✅ alpfit-backend container Up + healthy, /healthz public 200 (8d0f268 image)
+- ✅ Bunker subdomain'ler etkilenmedi (5 mevcut subdomain)
+- ✅ 7 domain SAN cert (2026-08-27'ye kadar geçerli, certbot.timer auto-renewal)
+- ✅ GH Actions auto-deploy çalışıyor (3 secret düzgün format)
+- ⚠️ GH_TOKEN v2 (alpfit-deploy-debug-v2) revoke edilecek
+- ⚠️ Önceki oturum "Deploy #3=8s SSH OK" yanlış teşhis idi — **retrospektife not:** Adım sonu kanıt = log + sonuç doğrulaması, dış görüntü değil
+
+**Süreç öğrenimleri (faz retrosuna gidecek):**
+
+- "Adım tamam ✅" demeden önce sonucu doğrula — sadece komutun exit code'una bakma, çıktıyı oku ve hedeflenen değişikliği kanıtla (deploy key UI'da, secret formatı, vb.)
+- GH Actions secret'ları UI yerine `gh secret set < file` ile yaz (newline/format tuzakları yok)
+- `.gitignore` `.env.*` kuralı `.env.<env>.example` template'lerini de yutar — `!.env.*.example` istisnası gerekir
+- bunker-nginx SAN cert + certbot --expand paterni: yeni subdomain'de mevcut tüm domain'leri `-d` ile geçirme (aksi takdirde cert prune olur)
+
+---
+
 **Oluşturulma:** 2026-05-29 (plan-phase 1, Coolify mimarisi)
 **Yeniden Yazıldı:** 2026-05-29 (mimari sapma — Coolify yerine docker-compose + shared VPS)
-**Duraklatma:** 2026-05-29 oturum #1 sonu — repo skeleton + sunucu hazırlık (Adım 1-4) tamam; Adım 5-11 yeni oturumda /devflow:resume ile devam.
+**Duraklatma #1:** 2026-05-29 oturum #1 sonu — repo skeleton + sunucu hazırlık (Adım 1-4) tamam; Adım 5-11 yeni oturumda /devflow:resume ile devam.
+**Duraklatma #2:** 2026-05-29 oturum #2 sonu — Adım 5-10 + secret fix + manual deploy ✅; auto-deploy zincir teyit + closure ritüeli yeni oturuma kaldı.

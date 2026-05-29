@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #1): mimari sapma (Coolify→docker-compose+bunker-nginx subdomain proxy, shared VPS, DECISIONS güncel) + repo skeleton (Dockerfile multi-stage, _ops/staging/docker-compose.yml, deploy-staging.yml workflow_run, shared/package.json exports field Node prod fix) + GitHub push (NorthAIII/Alpfit.v1) + sunucu Adım 1-4 (4GB swap, deploy user uid 1000 docker group, /opt/alpfit chown, 2 ed25519 key, GH deploy key + 3 secret); Deploy Staging #3=8s SSH auth OK; kalan Adım 5-11 (clone+env+keşif+DNS+nginx/SSL+deploy+auto smoke) yeni oturumda /devflow:resume.
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #2 sonu, context şişti): Adım 5-10 ✅ (clone+.gitignore drift fix+.env.staging sırlı doldu+bunker keşfi: bunker-network/SAN cert+webroot+deploy-hook+squarespace DNS+certbot --expand 7 domain+nginx server block+reload+ilk deploy: backend healthy, prisma migrate deploy uygulandı, public https://alpfit-staging.kiwiailab.com/healthz 200), Adım 11 auto-deploy: GH Actions secrets bozuk format hatası (ssh.ParsePrivateKey: no key found + DNS lookup trailing newline) → gh CLI ile 3 secret'ı temiz format ile yeniden yazıldı → workflow_dispatch başarılı (8d0f268 sunucuya sync, /healthz 200); kalan: boş commit ile push→CI→workflow_run zincir görsel teyit + TASK closure (doküman/archive); GH_TOKEN v2 (alpfit-deploy-debug-v2) 7 gün aktif — kullanıcı task bitiminde revoke edecek.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -30,8 +30,8 @@
 ## Aktif Task
 
 **Task:** TASK-1.10 — Staging deploy (shared Hetzner VPS — docker-compose + bunker-nginx subdomain proxy + GH Actions auto-deploy)
-**Durum:** ⏸️ Duraklatıldı (oturum #1 sonu, context şişti)
-**İlerleme:** Repo skeleton + sunucu Adım 1-4 ✅; Adım 5-11 (clone, env, bunker keşfi, DNS, nginx+SSL, ilk deploy + healthz, auto-deploy smoke, final dokümanlar) yeni oturumda `/devflow:resume` ile devam edilecek. Sıradaki ilk komut TASK-1.10.md "Sonraki Adım Detayı" bölümünde.
+**Durum:** ⏸️ Duraklatıldı (oturum #2 sonu, context şişti — neredeyse bitti)
+**İlerleme:** Adım 5-10 + GH secrets fix + workflow_dispatch deploy başarılı ✅. Public `https://alpfit-staging.kiwiailab.com/healthz` 200 dönüyor. Kalan iki ufak iş: (1) boş commit ile push→CI→workflow_run zincirini görsel teyit (~5-7 dk), (2) TASK closure ritüeli (TASK durumu ✅, PHASE-1 tablo, memory/staging-infra.md güncellemesi network adı + secret durumu, archive, final commit). Detay TASK-1.10.md "Oturum 2026-05-29 #2" bölümünde.
 
 ---
 
@@ -50,7 +50,7 @@
 | 1.07 | i18n shell (i18next mobile + backend, TR-only) | ✅ Tamamlandı |
 | 1.08 | Mobile test altyapısı (Jest + RTL + MSW) | ✅ Tamamlandı |
 | 1.09 | CI PR pipeline (GitHub Actions: test + lint + typecheck) | ✅ Tamamlandı |
-| 1.10 | Staging deploy (shared VPS — docker-compose + bunker-nginx + GH Actions) | ⏸️ Duraklatıldı (Adım 1-4 ✅, Adım 5-11 kaldı) |
+| 1.10 | Staging deploy (shared VPS — docker-compose + bunker-nginx + GH Actions) | ⏸️ Duraklatıldı (Adım 1-10 ✅ + manual deploy + secret fix, kalan: zincir teyit + closure) |
 | 1.11–1.16 | M0 Altyapı (Sentry, 3 rol model, KVKK, retention, yedek) | ⬜ Bekliyor (6) |
 | 1.17–1.25 | M1 Auth backend (SMS, OTP, JWT, refresh, davet, deep link) | ⬜ Bekliyor (9) |
 | 1.26–1.34 | M1 Mobile UI + akış + smoke (onboarding ekranları, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (9) |
@@ -98,13 +98,15 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Duraklatma Notu
 
-> ⏸️ **TASK-1.10 Duraklatıldı (2026-05-29 oturum #1 sonu)** — Context şişti, /devflow:resume ile devam.
+> ⏸️ **TASK-1.10 Duraklatıldı (2026-05-29 oturum #2 sonu)** — Context şişti; iş %95 bitti, /devflow:resume ile kısa closure.
 >
-> **Tamamlanan:** Mimari sapma kararı (Coolify→docker-compose+bunker-nginx subdomain proxy, DECISIONS.md güncel) + tüm repo skeleton (Dockerfile, _ops/staging/, deploy-staging.yml, shared exports field) + GitHub repo (NorthAIII/Alpfit.v1) + sunucu Adım 1-4 (swap 4GB, deploy user, /opt/alpfit, 2 ed25519 key, GH deploy key + 3 secret). Deploy Staging #3 = 8s (SSH auth OK doğrulandı).
+> **Bu oturumda tamamlanan:** Adım 5-10 (clone + 2 drift fix: `.gitignore` `.env.*.example` izni + `bunker-network` adı; sırlı `.env.staging`; bunker keşfi; Squarespace DNS; `certbot --expand` 7 domain SAN; nginx server block + reload; backend image build + compose up; prisma migrate deploy; container içi + bunker-nginx + **public HTTPS /healthz 200**) + **Adım 11 GH Actions secret fix** (önceki oturumun "Deploy #3 = 8s SSH OK" yorumu yanlış teşhisti — gerçekte `ssh.ParsePrivateKey: no key found` + `STAGING_SSH_HOST` trailing newline DNS lookup hatası; gh CLI ile 3 secret temiz format yazıldı; workflow_dispatch deploy ✅ — sunucuda 8d0f268, /healthz 200).
 >
-> **Kalan (Adım 5-11):** Clone → .env.staging → bunker keşfi (network+nginx+certbot) → Squarespace DNS → bunker-nginx config + SSL → ilk manuel deploy + healthz → GH Actions auto-deploy smoke → final dokümanlar.
+> **Kalan (~1 kısa oturum):** (a) Boş commit push → CI yeşil → workflow_run otomatik tetik → Deploy zinciri görsel teyit (~5-7 dk). (b) TASK closure: TASK-1.10 ✅ durum, PHASE-1 tablo, `memory/staging-infra.md` güncelle (network adı `bunker-network`, secret durumu, certbot --expand patern notu), archive, final commit.
 >
-> **Yeni oturumda:** `/devflow:resume` → TASK-1.10.md "Oturum Kaydı #1 → Son Yaklaşım" bölümünden devam (ilk komut: `sudo -u deploy git clone git@github.com:NorthAIII/Alpfit.v1.git /opt/alpfit`).
+> **Devam eden GH_TOKEN v2:** `alpfit-deploy-debug-v2` (Actions+Secrets:RW, 7 gün). Closure sonrası **kullanıcı revoke etmeli**.
+>
+> **Yeni oturumda:** `/devflow:resume` → TASK-1.10.md "Oturum 2026-05-29 #2" bölümünden devam.
 
 ## Hızlı Erişim
 
@@ -115,4 +117,4 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #1): mimari sapma (Coolify→docker-compose+bunker-nginx subdomain proxy, shared VPS, DECISIONS güncel) + repo skeleton (Dockerfile multi-stage, _ops/staging/docker-compose.yml, deploy-staging.yml workflow_run, shared/package.json exports field Node prod fix) + GitHub push (NorthAIII/Alpfit.v1) + sunucu Adım 1-4 (4GB swap, deploy user uid 1000 docker group, /opt/alpfit chown, 2 ed25519 key, GH deploy key + 3 secret); Deploy Staging #3=8s SSH auth OK; kalan Adım 5-11 (clone+env+keşif+DNS+nginx/SSL+deploy+auto smoke) yeni oturumda /devflow:resume.
+**Son Güncelleme:** 2026-05-29 — TASK-1.10 ⏸️ Duraklatıldı (oturum #2 sonu, context şişti): Adım 5-10 ✅ (clone+.gitignore drift fix+.env.staging sırlı doldu+bunker keşfi: bunker-network/SAN cert+webroot+deploy-hook+squarespace DNS+certbot --expand 7 domain+nginx server block+reload+ilk deploy: backend healthy, prisma migrate deploy uygulandı, public https://alpfit-staging.kiwiailab.com/healthz 200), Adım 11 auto-deploy: GH Actions secrets bozuk format hatası (ssh.ParsePrivateKey: no key found + DNS lookup trailing newline) → gh CLI ile 3 secret'ı temiz format ile yeniden yazıldı → workflow_dispatch başarılı (8d0f268 sunucuya sync, /healthz 200); kalan: boş commit ile push→CI→workflow_run zincir görsel teyit + TASK closure (doküman/archive); GH_TOKEN v2 (alpfit-deploy-debug-v2) 7 gün aktif — kullanıcı task bitiminde revoke edecek.
