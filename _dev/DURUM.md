@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.25 ✅: Deep link — backend `.well-known/` route (AASA + assetlinks, `application/json`) + `/davet/:code` masaüstü fallback (sunucu-taraflı inline QR, `qrcode` paketi); env `APPLE_APP_ID` + `ANDROID_SHA256_CERT_FINGERPRINTS` placeholder (Yakın 5'te gerçek değer). Mobile app.config deep link (gerçek staging `alpfit-staging.kiwiailab.com` + `alpfit.app` placeholder) + `app/davet/[code].tsx` preview ekranı + davet i18n. bunker-nginx tüm path'leri proxy'lediği için nginx'e dokunulmadı. backend 152 + mobile 36 PASS, typecheck/lint/format temiz. Sıradaki lineer TASK-1.26 (açılış ekranı).
+**Son Güncelleme:** 2026-05-30 — TASK-1.26 ✅: Açılış ekranı (`app/index.tsx`) — logo + tagline + "Üyeyim"/"Antrenörüm"/"Davetim var" üç buton; rol → `selectRole` + `/auth/phone`; "Davetim var" inline davet kodu input (TR-güvenli `trUpper`, 6 char, `ABC-123` mask) → preview valid ise `selectInvite` + navigate, değilse inline hata. Onboarding store (`src/onboarding/store.ts` YENİ, zustand 5 — kullanıcı onaylı; `exactOptionalPropertyTypes` için `| undefined` union). Deep link `app/davet/[code].tsx` "Devam et" artık store yazıp `/auth/phone`'a bypass. i18n `common.role.*`+`landing.*`+`errors.invitation_invalid`. Eski TASK-1.05 `__tests__/landing-screen.test.tsx` silinip test co-location ile `app/index.test.tsx`'e taşındı (kullanıcı onaylı). mobile 50 PASS, typecheck/lint/format temiz. Sıradaki lineer TASK-1.27 (telefon girişi).
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 26/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.26 açılış ekranı
+**İlerleme:** 27/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.27 telefon girişi
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.25 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.26 (açılış ekranı) henüz başlatılmadı.
+**Task:** Yok — TASK-1.26 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.27 (telefon girişi) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.26` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.27` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 26 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 27 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -66,7 +66,8 @@
 | 1.23 | PT davet linki üretim endpoint (+ liste + iptal) | ✅ Tamamlandı |
 | 1.24 | Davet kabul + preview endpoint (PT-Member ilişki) | ✅ Tamamlandı |
 | 1.25 | M1 Auth backend (deep link) | ✅ Tamamlandı |
-| 1.26–1.27 | M1 Mobile UI (açılış ekranı, telefon girişi) | ⬜ Bekliyor (2) |
+| 1.26 | Açılış ekranı (rol seçimi + manuel davet kodu + deep link dispatcher) | ✅ Tamamlandı |
+| 1.27 | M1 Mobile UI (telefon girişi) | ⬜ Bekliyor |
 | 1.28 | KVKK rıza ekranı (2 tickbox + placeholder metin) | ✅ Tamamlandı (sıra dışı) |
 | 1.29–1.34 | M1 Mobile UI + akış + smoke (OTP ekranı, profil, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (6) |
 
@@ -90,18 +91,17 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.26 — Açılış ekranı (rol seçimi + manuel davet kodu + deep link dispatcher) (2026-05-30) ✅
+
+- **Onboarding store (`mobile/src/onboarding/store.ts` YENİ)** — zustand 5 (kullanıcı onaylı). `flow: 'pt'|'member'|'member_via_invite'|undefined` + `invitationCode` + `phone`; `selectRole` (kodu temizler) / `selectInvite` (flow=member_via_invite) / `setPhone` / `reset`. `exactOptionalPropertyTypes` açık → alanlar `| undefined` union (opsiyonel değil).
+- **Açılış ekranı (`mobile/app/index.tsx` GÜNCELLE)** — TASK-1.05 placeholder override. Logo + tagline + üç buton ("Üyeyim"/"Antrenörüm"/"Davetim var"). Rol → `selectRole`+`/auth/phone`. "Davetim var" inline kod input (`trUpper` TR-güvenli, ASCII alfanümerik, 6 char, `ABC-123` mask) + "Devam" → `fetchInvitationPreview`; valid → `selectInvite`+navigate, değilse `errors:invitation_invalid` inline. Deep link `app/davet/[code].tsx` "Devam et" de store yazıp `/auth/phone`'a bypass eder. i18n `common.role.*`+`landing.*`+`errors.invitation_invalid` (eski `landing.greeting/todayPrefix` silindi).
+- Test ✅ — mobile **50 PASS** (`app/index.test.tsx` 9 + `store.test.ts` 7; davet test navigate/store assertion güncellendi). Eski `__tests__/landing-screen.test.tsx` (TASK-1.05) silinip co-location ile `app/index.test.tsx`'e taşındı (kullanıcı onaylı). typecheck/lint/format temiz.
+
 ### TASK-1.25 — Deep link kurulumu (Universal/App Link + .well-known/) (2026-05-30) ✅
 
 - **Backend (`routes/well-known.ts` + `routes/davet-web-fallback.ts` YENİ)** — `GET /.well-known/apple-app-site-association` (uzantısız, `application/json`, `appID`+`paths:["/davet/*"]`) + `GET /.well-known/assetlinks.json` (`package_name`+SHA256 fingerprint); `GET /davet/:code` masaüstü fallback HTML + **sunucu-taraflı inline QR** (`qrcode` paketi — kullanıcı onaylı, harici servis yok). Env `APPLE_APP_ID`+`ANDROID_SHA256_CERT_FINGERPRINTS` placeholder (Yakın 5'te gerçek + redeploy). bunker-nginx tüm path'leri proxy'lediği için nginx'e dokunulmadı (Coolify yok — TASK-1.10 sapması).
-- **Mobile** — `app.config.ts` deep link (`DEEP_LINK_DOMAINS = alpfit-staging.kiwiailab.com + alpfit.app` → iOS associatedDomains + Android autoVerify intentFilters); `app/davet/[code].tsx` (YENİ) preview ekranı (valid/notFound/expired/cancelled/used/network+retry, "Devam et" → `/` kod taşır); `src/api/invitations.ts` + `davet` i18n namespace; `public/.well-known/*` statik kopyalar (EAS Hosting Yakın 5). Auth-state dallanması TASK-1.26+'ya ertelendi (TODO).
+- **Mobile** — `app.config.ts` deep link (`DEEP_LINK_DOMAINS = alpfit-staging.kiwiailab.com + alpfit.app` → iOS associatedDomains + Android autoVerify intentFilters); `app/davet/[code].tsx` (YENİ) preview ekranı (valid/notFound/expired/cancelled/used/network+retry); `src/api/invitations.ts` + `davet` i18n namespace; `public/.well-known/*` statik kopyalar (EAS Hosting Yakın 5).
 - Test ✅ — backend **152 PASS** (well-known 2 + web-fallback 2) + mobile **36 PASS** (davet 6). typecheck/lint/format temiz. Elle cihaz testi rehberi `_dev/docs/deep-link-test.md`.
-
-### TASK-1.24 — Davet kabul + preview endpoint (2026-05-30) ✅
-
-- **`POST /invitations/:code/accept` (`routes/invitations-accept.ts` YENİ)** — auth korumalı. Doğrulama sırası: 404 (davet yok / PT soft-deleted) → 410 expired (lazy `markIfExpired`) → 409 already_used → 410 cancelled → **400 own_invitation (role 403'ten ÖNCE)** → 403 onlyMember → 409 already_has_trainer. Kabul atomik `$transaction`: compare-and-set `updateMany WHERE status='pending'` (count=0 → `InvitationRaceLostError` → 409) + `createPtMemberRelation` (P2002 → 409) + audit `invitation_accepted` (metadata `invitationId`). 200 `{trainerId,trainerFirstName,trainerLastName}`.
-- **`GET /invitations/:code` (`routes/invitations-preview.ts` YENİ)** — public (auth yok). 404 (yok/PT soft-deleted) / 410 expired·cancelled·accepted / 200 `{trainerFirstName,trainerLastName,expiresAt}`. PII: yalnızca PT ad+soyad (bilinçli — üye PT doğrular); telefon/üye verisi yok.
-- **`auth/relations.ts` (GÜNCELLE)** — placeholder dolduruldu: `getActivePtForMember` (soft-deleted PT filtreli) / `assertNoActivePt` / `createPtMemberRelation` (tx uyumlu); `assertSingleActivePtForMember` alias korundu. errors.json invite mesajları F1.1 diline güncellendi.
-- Test ✅ — backend **148 PASS** (accept 10 + preview 6; concurrent race dahil). typecheck/lint/format temiz.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -110,8 +110,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.25 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.26 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.26` (açılış ekranı)
+**Sıradaki:** `/devflow:run-task TASK-1.27` (telefon girişi)

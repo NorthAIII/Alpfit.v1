@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { fetchInvitationPreview, type InvitationPreviewResult } from '../../src/api/invitations';
+import { useOnboardingStore } from '../../src/onboarding/store';
 
 // Deep link landing ekranı (TASK-1.25). iOS Universal Link / Android App Link
 // `https://<domain>/davet/{kod}` app yüklüyken bu route'u açar; kullanıcı app'i
@@ -14,11 +15,12 @@ import { fetchInvitationPreview, type InvitationPreviewResult } from '../../src/
 // `GET /invitations/:code` ile önizlemek (PT adı / geçerlilik), TR durum
 // mesajlarını göstermek ve "Devam et" ile onboarding'e devretmek.
 //
-// KAPSAM NOTU — auth-state'e göre dallanma (üye → kabul, PT → hata, giriş
-// yapılmamış → rol seçimi) TASK-1.26+'ya bağlı: henüz auth context/store ve rol
-// seçim/kabul ekranları yok. "Devam et" şimdilik app girişine (`/`) yönlenir ve
-// davet kodunu param olarak taşır; onboarding akışı kurulunca (TASK-1.26) kod
-// oradan tüketilip kabul (`POST /invitations/:code/accept`, TASK-1.24) tetiklenir.
+// AKIŞ (TASK-1.26) — "Devam et" basınca onboarding store `member_via_invite`
+// akışına geçirilir (davet kodu kayıt) ve doğrudan telefon ekranına gidilir;
+// açılış ekranı (rol seçimi) BYPASS edilir. Davet kodunun kabulü
+// (`POST /invitations/:code/accept`, TASK-1.24) profil oluşturma adımında
+// tüketilecek. Auth-state'e göre dallanma (zaten giriş yapmış üye/PT) auto-login
+// katmanı kurulunca (TASK-1.33) eklenir — şu an herkes telefon akışına girer.
 
 function normalizeCode(raw: string | string[] | undefined): string {
   if (Array.isArray(raw)) {
@@ -32,6 +34,7 @@ export default function DavetCodeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ code: string }>();
   const code = normalizeCode(params.code);
+  const selectInvite = useOnboardingStore((s) => s.selectInvite);
 
   // null = yükleniyor; aksi halde önizleme sonucu.
   const [result, setResult] = useState<InvitationPreviewResult | null>(null);
@@ -52,9 +55,10 @@ export default function DavetCodeScreen() {
   useEffect(() => load(), [load]);
 
   function handleContinue() {
-    // TODO(TASK-1.26): onboarding rol seçimi/kabul akışı kurulunca buradan
-    // tüketilecek. Şimdilik app girişine yönlenir, kod param olarak taşınır.
-    router.push({ pathname: '/', params: { inviteCode: code } });
+    // Davet akışını store'a yaz (kod taşınır) ve açılış ekranını atlayıp
+    // doğrudan telefon ekranına geç.
+    selectInvite(code);
+    router.push('/auth/phone');
   }
 
   if (result === null) {

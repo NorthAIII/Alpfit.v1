@@ -1,6 +1,6 @@
 # TASK-1.26: Açılış ekranı (rol seçimi + manuel davet kodu + deep link dispatcher)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -137,7 +137,23 @@ mobile/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Onboarding store (`src/onboarding/store.ts` YENİ)** — zustand 5 (kullanıcı onayı 2026-05-30). State: `flow: 'pt' | 'member' | 'member_via_invite' | undefined`, `invitationCode`, `phone`; action'lar `selectRole` (davet kodunu temizler), `selectInvite` (flow=member_via_invite + kod), `setPhone`, `reset`. `exactOptionalPropertyTypes` açık olduğu için alanlar `| undefined` union (opsiyonel `?` değil) — reset/selectRole `undefined`'a set ediyor.
+- **Açılış ekranı (`app/index.tsx` GÜNCELLE)** — TASK-1.05 placeholder'ı override. Logo (app.name) + tagline; "Üyeyim" / "Antrenörüm" / "Davetim var" üç buton. Rol butonları `selectRole` + `/auth/phone` navigate. "Davetim var" inline expand → davet kodu input (TR-güvenli `trUpper`, ASCII alfanümeriğe indirgeme, 6 char, `ABC-123` mask) + "Devam" (6 char'da aktif). Geçerli kod → `fetchInvitationPreview` → valid ise `selectInvite` + navigate; değilse inline hata (`errors:invitation_invalid`).
+- **Deep link dispatcher (`app/davet/[code].tsx` GÜNCELLE)** — "Devam et" artık `selectInvite(code)` + `/auth/phone` (açılış ekranı bypass); eski `{pathname:'/', params}` TODO'su kaldırıldı.
+- **i18n** — `common.json`: `role.{member,trainer,invite}` + `landing.{tagline,inviteHint,inviteCodeLabel,invitePlaceholder,inviteSubmit,checking}` (eski `landing.greeting/todayPrefix` placeholder'ları silindi). `errors.json`: `invitation_invalid`.
+- **Accessibility** — butonlar `accessibilityRole="button"` + TR `accessibilityLabel`; "Davetim var" `accessibilityState.expanded`; kod input `accessibilityLabel="Davet kodu, 6 karakter"`; hata `accessibilityRole="alert"`.
+
+**Karar Notları:**
+- **State yönetimi:** zustand seçildi (kullanıcı onayı — AskUserQuestion). KVKK ekranının ertelediği "store kararı ayrı task/onay konusu" notu bu task'ta çözüldü.
+- **Test konumu:** Eski `__tests__/landing-screen.test.tsx` (TASK-1.05, silinen string'leri test ediyordu) + snapshot'ı silindi; yeni test co-location ile `app/index.test.tsx`'e taşındı (kvkk/davet deseni — kullanıcı onayı).
+
+**Test ✅** — mobile **50 PASS** (yeni: `app/index.test.tsx` 9 senaryo [3 buton render, rol navigate ×2, input expand, valid→navigate+store, 404→inline hata, <6 disabled, normalize, snapshot] + `store.test.ts` 7). `davet/[code].test.tsx` navigate/store assertion'ı güncellendi. typecheck/lint/format temiz.
+
+**Kalan (sonraki task'lar):** `/auth/phone` ekranı TASK-1.27'de; davet kabulü (`POST /invitations/:code/accept`) profil adımında; auto-login dallanması TASK-1.33. Manuel cihaz/screen-reader testi launch öncesi (Yakın 5).
 
 ---
 

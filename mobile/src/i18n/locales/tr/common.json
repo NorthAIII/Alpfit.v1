@@ -18,8 +18,17 @@
     "saving": "Kaydediliyor...",
     "empty": "Henüz içerik yok"
   },
+  "role": {
+    "member": "Üyeyim",
+    "trainer": "Antrenörüm",
+    "invite": "Davetim var"
+  },
   "landing": {
-    "greeting": "Merhaba Alpfit",
-    "todayPrefix": "{{date}} · Rol seçimi TASK-1.26'da gelecek."
+    "tagline": "Sürdürülebilir antrenman için",
+    "inviteHint": "Davet linkin varsa otomatik tanınır. Yoksa kodu elle gir.",
+    "inviteCodeLabel": "Davet kodu, 6 karakter",
+    "invitePlaceholder": "ABC-123",
+    "inviteSubmit": "Devam",
+    "checking": "Davet kontrol ediliyor..."
   }
 }

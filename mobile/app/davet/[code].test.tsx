@@ -1,6 +1,7 @@
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 
+import { useOnboardingStore } from '../../src/onboarding/store';
 import { server } from '../../test/msw/server';
 import { i18n, renderWithProviders } from '../../test/render-with-providers';
 
@@ -20,6 +21,7 @@ const PREVIEW_URL = '*/invitations/:code';
 describe('DavetCodeScreen', () => {
   beforeEach(() => {
     mockPush.mockClear();
+    useOnboardingStore.getState().reset();
   });
 
   it('geçerli davet → PT adı + son geçerlilik + Devam et render eder', async () => {
@@ -38,7 +40,7 @@ describe('DavetCodeScreen', () => {
     expect(getByRole('button', { name: i18n.t('davet:valid.cta') })).toBeOnTheScreen();
   });
 
-  it('Devam et basınca davet kodu param ile navigate eder', async () => {
+  it('Devam et basınca davet akışı store yazılır + telefon ekranına navigate eder', async () => {
     server.use(
       http.get(PREVIEW_URL, () =>
         HttpResponse.json({
@@ -52,10 +54,11 @@ describe('DavetCodeScreen', () => {
 
     const cta = await findByRole('button', { name: i18n.t('davet:valid.cta') });
     fireEvent.press(cta);
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: '/',
-      params: { inviteCode: 'ABC123' },
-    });
+    // Açılış ekranı bypass — doğrudan telefon ekranına; kod store'a yazıldı.
+    expect(mockPush).toHaveBeenCalledWith('/auth/phone');
+    const s = useOnboardingStore.getState();
+    expect(s.flow).toBe('member_via_invite');
+    expect(s.invitationCode).toBe('ABC123');
   });
 
   it('404 → "geçersiz" başlığı gösterir', async () => {

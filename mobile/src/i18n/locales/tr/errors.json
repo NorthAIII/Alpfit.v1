@@ -20,5 +20,6 @@
     "invalid": "Davet linki geçersiz.",
     "expired": "Davet linkinin süresi dolmuş.",
     "alreadyUsed": "Bu davet linki kullanılmış."
-  }
+  },
+  "invitation_invalid": "Bu davet geçerli değil veya süresi dolmuş."
 }
