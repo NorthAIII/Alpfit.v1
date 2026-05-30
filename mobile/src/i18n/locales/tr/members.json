@@ -1,0 +1,47 @@
+{
+  "tab": {
+    "members": "Üyeler"
+  },
+  "title": "Üyeler",
+  "section": {
+    "pending": "Bekleyen davetler",
+    "active": "Aktif üyeler"
+  },
+  "empty": {
+    "title": "Henüz üyen yok",
+    "subtitle": "Üyelerini davet linkiyle ekle — ilk açan kişi sana bağlanır.",
+    "cta": "İlk üyeni davet et"
+  },
+  "active": {
+    "empty": "Henüz aktif üye yok"
+  },
+  "pending": {
+    "expiresIn": "Geçerlilik {{days}} gün kaldı",
+    "expiresToday": "Bugün son geçerli",
+    "share": "Linki paylaş",
+    "cancel": "İptal et"
+  },
+  "invite": {
+    "cta": "+ Üye davet et",
+    "creating": "Oluşturuluyor…",
+    "title": "Davet linki hazır",
+    "subtitle": "Linki üyenle paylaş; ilk açan kişi sana bağlanır.",
+    "codeLabel": "Davet kodu",
+    "copy": "Linki kopyala",
+    "copied": "Kopyalandı",
+    "qr": "QR kodu göster",
+    "close": "Kapat"
+  },
+  "qr": {
+    "title": "Davet QR kodu",
+    "subtitle": "Üye, telefon kamerasıyla bu kodu okutsun.",
+    "imageLabel": "Davet kodu QR kod gösterimi",
+    "close": "Kapat"
+  },
+  "error": {
+    "load": "Liste yüklenemedi, tekrar dene.",
+    "create": "Davet oluşturulamadı, tekrar dene.",
+    "cancel": "Davet iptal edilemedi, tekrar dene.",
+    "session": "Oturum bulunamadı, tekrar giriş yap."
+  }
+}

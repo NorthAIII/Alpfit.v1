@@ -89,3 +89,119 @@ export async function fetchInvitationPreview(code: string): Promise<InvitationPr
   }
   return { kind: 'network' };
 }
+
+// --- PT (trainer-only) davet yönetimi (TASK-1.31) -------------------------------
+// "Üyeler" sekmesi: davet üret + bekleyenleri listele + iptal. Hepsi trainer
+// access token gerektirir (backend `app.authenticate` + `ensureTrainer`).
+
+/** PT'nin bekleyen daveti — `POST /invitations` + `GET /invitations` ortak şekli. */
+export interface PendingInvitation {
+  id: string;
+  code: string;
+  url: string;
+  expiresAt: string;
+}
+
+/** `POST /invitations` sonucunun UI eşlemi (201 → created; 401/403 → unauthorized). */
+export type CreateInvitationResult =
+  | { kind: 'created'; invitation: PendingInvitation }
+  | { kind: 'unauthorized' }
+  | { kind: 'network' };
+
+/** Trainer access token ile yeni davet linki üretir. */
+export async function createInvitation(accessToken: string): Promise<CreateInvitationResult> {
+  let res: Response;
+  try {
+    res = await fetch(`${getApiBaseUrl()}/invitations`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch {
+    return { kind: 'network' };
+  }
+  if (res.status === 201) {
+    try {
+      const invitation = (await res.json()) as PendingInvitation;
+      return { kind: 'created', invitation };
+    } catch {
+      return { kind: 'network' };
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    return { kind: 'unauthorized' };
+  }
+  return { kind: 'network' };
+}
+
+/** `GET /invitations` sonucunun UI eşlemi (200 → ok; 401/403 → unauthorized). */
+export type ListInvitationsResult =
+  | { kind: 'ok'; invitations: PendingInvitation[] }
+  | { kind: 'unauthorized' }
+  | { kind: 'network' };
+
+/** PT'nin bekleyen davetlerini çeker (en yeni önce — backend sıralar). */
+export async function listInvitations(accessToken: string): Promise<ListInvitationsResult> {
+  let res: Response;
+  try {
+    res = await fetch(`${getApiBaseUrl()}/invitations`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch {
+    return { kind: 'network' };
+  }
+  if (res.ok) {
+    try {
+      const invitations = (await res.json()) as PendingInvitation[];
+      return { kind: 'ok', invitations };
+    } catch {
+      return { kind: 'network' };
+    }
+  }
+  if (res.status === 401 || res.status === 403) {
+    return { kind: 'unauthorized' };
+  }
+  return { kind: 'network' };
+}
+
+/**
+ * `DELETE /invitations/:id` sonucunun UI eşlemi.
+ *   - 204 → cancelled
+ *   - 404 → not_found (zaten yok)
+ *   - 409 → not_cancellable (pending değil; accepted/expired/cancelled)
+ *   - 401/403 → unauthorized
+ */
+export type CancelInvitationResult =
+  | { kind: 'cancelled' }
+  | { kind: 'not_found' }
+  | { kind: 'not_cancellable' }
+  | { kind: 'unauthorized' }
+  | { kind: 'network' };
+
+/** PT kendi bekleyen davetini iptal eder. */
+export async function cancelInvitation(
+  id: string,
+  accessToken: string,
+): Promise<CancelInvitationResult> {
+  let res: Response;
+  try {
+    res = await fetch(`${getApiBaseUrl()}/invitations/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch {
+    return { kind: 'network' };
+  }
+  if (res.status === 204) {
+    return { kind: 'cancelled' };
+  }
+  if (res.status === 404) {
+    return { kind: 'not_found' };
+  }
+  if (res.status === 409) {
+    return { kind: 'not_cancellable' };
+  }
+  if (res.status === 401 || res.status === 403) {
+    return { kind: 'unauthorized' };
+  }
+  return { kind: 'network' };
+}

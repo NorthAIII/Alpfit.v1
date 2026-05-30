@@ -24,6 +24,7 @@ import { invitationsCancelRoutes } from './routes/invitations-cancel.js';
 import { invitationsCreateRoutes } from './routes/invitations-create.js';
 import { invitationsListRoutes } from './routes/invitations-list.js';
 import { invitationsPreviewRoutes } from './routes/invitations-preview.js';
+import { trainersMembersRoutes } from './routes/trainers-members.js';
 import { wellKnownRoutes } from './routes/well-known.js';
 
 import type { Env } from './config/env.js';
@@ -86,6 +87,7 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(invitationsCancelRoutes);
   await app.register(invitationsAcceptRoutes);
   await app.register(invitationsPreviewRoutes);
+  await app.register(trainersMembersRoutes);
   // Deep link altyapısı (TASK-1.25): iOS/Android `.well-known/` + masaüstü
   // davet fallback sayfası (QR). bunker-nginx tüm path'leri backend'e proxy'ler.
   await app.register(wellKnownRoutes({ env: opts.env }));

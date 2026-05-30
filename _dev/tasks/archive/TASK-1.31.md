@@ -1,6 +1,6 @@
 # TASK-1.31: PT "Üyeler" sekmesi UI (Bekleyen + Aktif liste + Linki kopyala + QR)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -147,7 +147,18 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30 ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Backend — `GET /trainers/me/members`** (`backend/src/routes/trainers-members.ts` YENİ + `server.ts` register): trainer-only (`ensureTrainer`), `TrainerMember where trainerId + endedAt:null + member.deletedAt:null`, `startedAt desc`. Response sadece `{ id, firstName, lastName, joinedAt }` — telefon/sağlık verisi DÖNMEZ (KVKK; test `905...` sızıntısını assert eder). `trainers-members.test.ts` 7 PASS (newest-first, boş, ended hariç, soft-deleted hariç, cross-trainer sızıntı yok, member 403, token yok 401).
+- **Mobile UI** — `app/(tabs)/_layout.tsx` (YENİ tab navigator, "Üyeler") + `app/(tabs)/members.tsx` (YENİ): tek scrollable liste, üstte Bekleyen davetler (kod + "X gün kaldı" + Paylaş + İptal), altta Aktif üyeler (ad+soyad); her iki liste boş → "İlk üyeni davet et" merkez CTA. `useFocusEffect` + pull-to-refresh ile `Promise.all([listInvitations, listMembers])`. "+ Üye davet et" → `createInvitation` → InviteModal.
+- **Modal'lar** — `src/components/members/InviteModal.tsx` (RN Modal, `expo-clipboard.setStringAsync(url)` → "Kopyalandı" her açılışta sıfırlanır, QR göster, Kapat) + `QrModal.tsx` (`react-native-qrcode-svg`, `<QRCode value={url} size={240} />` + kod yedeği). Modal sade (karar: yarıda iptal edilebilir).
+- **API + store + i18n** — `src/api/trainers.ts` (YENİ `listMembers` → ok/unauthorized/network + `TrainerMemberItem`); `src/api/invitations.ts` (GÜNCELLE: `PendingInvitation` + `createInvitation`/`listInvitations`/`cancelInvitation`); `src/auth/session.ts` (YENİ minimal in-memory zustand store: accessToken/refreshToken/role + setSession/clear); `src/i18n/locales/tr/members.json` (YENİ) + `i18n/index.ts` namespace + `i18next.d.ts` augmentation. Gün-kalan metni i18next çoğul tuzağından kaçınmak için `{{days}}` ile geçirildi.
+- **Paket** — `expo-clipboard ~56.0.3`, `react-native-qrcode-svg ^6.3.21`, `react-native-svg 15.15.4` (kullanıcı onayıyla "ikisini de kur").
+
+**Test ✅:** mobile **77 PASS** (9 suite; `app/(tabs)/members.test.tsx` 6: boş→CTA, bekleyen+aktif iki bölüm, davet et→201→modal, kopyala→Clipboard url, QR göster→URL kodlanır, iptal→DELETE+liste tazelenir) + backend trainers-members 7 PASS. typecheck/lint/format temiz (tümü exit 0).
+
+**Otonom Karar (kullanıcıya bildirildi):** `src/auth/session.ts` şimdilik in-memory; kalıcılık (secure storage) + otomatik giriş + gerçek role-guard token bağlama **TASK-1.33**'e ertelendi (bu task'ın kapsamı değil; ekran token'ı store'dan okur).
 
 ---
 
