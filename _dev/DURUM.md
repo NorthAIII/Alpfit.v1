@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — discuss-phase 2 ✅. Faz 2 (Program akışı uçtan uca, M2) kapsam tartışması tamamlandı; tüm kararlar PHASE-2.md'de. Research-phase bekliyor.
+**Son Güncelleme:** 2026-05-30 — research-phase 2 ✅. Faz 2 araştırması tamamlandı; kütüphane, DB schema, API ve auto-save kararları PHASE-2.md'de. Plan-phase bekliyor.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 2 — Program akışı uçtan uca (M2)
 **Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** research
-**İlerleme:** discuss-phase tamamlandı — `/devflow:research-phase 2` ile devam
+**Adım:** plan
+**İlerleme:** research-phase tamamlandı — `/devflow:plan-phase 2` ile devam
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 
 ---
@@ -30,8 +30,8 @@
 ## Aktif Task
 
 **Task:** — (Faz 2 henüz planlanmadı)
-**Durum:** Faz 2 discuss-phase bekliyor
-**Sonraki Adım:** `/devflow:discuss-phase 2` ile Faz 2 kapsam tartışmasını başlat.
+**Durum:** Faz 2 henüz planlanmadı
+**Sonraki Adım:** `/devflow:plan-phase 2` ile Faz 2 task'larını oluştur.
 
 ---
 

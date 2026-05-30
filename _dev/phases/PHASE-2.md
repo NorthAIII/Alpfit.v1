@@ -82,7 +82,113 @@
 
 ## Araştırma Bulguları
 
-> Bu bölüm `/devflow:research-phase 2` oturumunda doldurulur.
+> Bu bölüm `/devflow:research-phase 2` oturumunda (2026-05-30) dolduruldu.
+
+### Değerlendirilen Yaklaşımlar
+
+**Egzersiz Sıralama (PT Builder):**
+- `react-native-draggable-flatlist`: Projede kurulu Reanimated 4.3.1 ile tam uyumluluğu teyit edilmemiş (GitHub'da açık issue'lar); v1'de risk taşır.
+- Yukarı/Aşağı butonları (↑ ↓): Sıfır bağımlılık riski, pilot ölçeğinde PT için yeterli UX, 1 günde tamamlanır.
+- **Seçilen:** ↑ ↓ butonlar — v1.5'te gerçek drag'e geçilebilir (ILKELER §Scope disiplini).
+
+**Offline Cache:**
+- MMKV: 30× daha hızlı ama Expo managed workflow'da `expo prebuild` (dev build) gerektirir — Expo Go kaybedilir.
+- AsyncStorage + TanStack Query persister: Expo managed workflow'da sorunsuz, pilot ölçeğinde (küçük program JSON'u) hız farkı duyulmaz.
+- **Seçilen:** AsyncStorage persister — `@react-native-async-storage/async-storage` + `@tanstack/react-query-persist-client`.
+
+**Video Oynatma:**
+- `react-native-webview`: Expo SDK 56 + New Arch ile tam uyumlu; `npx expo install react-native-webview` yeterli. YouTube embed için `allowsInlineMediaPlayback={true}` + `mediaPlaybackRequiresUserAction={false}` gerekli (iOS inline playback).
+- **Seçilen:** `react-native-webview` + YouTube iframe embed.
+
+### Kullanılacak Kütüphaneler
+
+**Mobile (yeni eklenecek):**
+- `@tanstack/react-query` v5 — server state yönetimi (builder PATCH + viewer GET)
+- `@tanstack/react-query-persist-client` — offline persist koordinatörü
+- `@tanstack/query-async-storage-persister` — AsyncStorage adaptörü
+- `@react-native-async-storage/async-storage` — persist depolama
+- `react-native-webview` — YouTube embed in-app modal
+
+**Backend (yeni eklenecek):**
+- Yeni DB tabloları + Prisma migration (bkz. Teknik Kararlar → DB Schema)
+- Yeni Fastify route'ları (exercises, programs, workout-completions)
+
+### Teknik Kararlar
+
+**DB Schema — M2 yeni tablolar:**
+
+```
+Exercise
+  id, name (TR), muscleGroup?, videoUrl?, isCustom (bool), createdById? (trainerId)
+  @@index([isCustom]), @@index([createdById])
+
+Program (haftalık şablon)
+  id, trainerId, memberId, status (draft|active|archived), publishedAt?, archivedAt?
+  @@index([memberId, status]), @@index([trainerId])
+
+ProgramDay (şablon günleri)
+  id, programId, dayOfWeek (0=Pzt..6=Paz), title? (Push/Pull/Legs), position (sıra)
+  isOneOff (bool, default false), specificDate? (Date — tek seferlik gün için)
+  @@index([programId, dayOfWeek])
+
+ProgramDayExercise (gün içi egzersizler)
+  id, programDayId, exerciseId, sets (int), reps (String — "8" veya "8-12"),
+  restSeconds?, notes?, position (↑↓ sıra)
+  @@index([programDayId])
+
+WorkoutCompletion (tamamlama kaydı — M3'e sinyal)
+  id, memberId, programDayId, scheduledDate (Date), completedAt, isLate (bool)
+  @@unique([memberId, programDayId, scheduledDate])  — server-side idempotent
+  @@index([memberId, scheduledDate])
+```
+
+**Reps tipi String:** "8" veya "8–12" aralığı desteklensin diye — Int değil.
+
+**Tek seferlik gün:** ProgramDay'e `isOneOff: Boolean + specificDate?: Date` eklenir; `isOneOff=true` ise `dayOfWeek` baz alınmaz, sadece o tarihte gösterilir. Template günlerden ayrı model açmak yerine aynı tabloda flag çözümü tercih edildi (ilişki basit kalır).
+
+**API Endpoint Tasarımı:**
+
+```
+Exercises:
+  GET  /exercises               → listeleme (search + muscleGroup filtresi)
+  POST /exercises               → PT custom egzersiz ekle
+  PUT  /exercises/:id           → PT kendi custom'ını düzenle
+  DELETE /exercises/:id         → PT kendi custom'ını sil (soft delete)
+
+Programs:
+  POST /programs                → yeni program oluştur (draft, trainerId+memberId)
+  PATCH /programs/:id           → auto-save (debounced 1s, tam yapı gönderilir)
+  POST /programs/:id/publish    → PT explicit publish (üye görür)
+  POST /programs/:id/copy       → başka üyeye kopyala
+  GET  /programs/:id            → tam program (days + exercises)
+  GET  /members/:memberId/program → aktif program (PT view)
+  GET  /me/program              → kendi aktif programı (üye view)
+
+Workout Completions:
+  POST /workout-completions     → "Antrenmanı bitir" (idempotent)
+    body: { programDayId, scheduledDate, isLate? }
+  GET  /me/workout-completions  → geçmiş (cursor-based, 30/page)
+```
+
+**Auto-save Mimarisi:**
+
+Local state → `useEffect` + `setTimeout(1000)` debounce → `PATCH /programs/:id` (tüm yapı, küçük veri). "Taslak kaydedildi" / "Kaydediliyor..." / "Kaydetme hatası, tekrar dene" 3 state indicator. Publish butonu debounce bypass, direkt mutation.
+
+**TanStack Query Persist Kurulumu:**
+
+QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haftalık program cache'de kalır. Persist key: `alpfit-cache-v1` (versiyon prefix'i; schema değişince bump + invalidate).
+
+**Egzersiz Seeder:** `backend/prisma/seed.ts` — ilk aşamada ~20 placeholder egzersiz (video URL'siz); Yakın 5'te gerçek 50 + video URL güncellenir. `prisma db seed` ile çalıştırılır.
+
+### Dikkat Edilecekler
+
+- **New Arch + kütüphane filtresi:** Faz 2'de yeni paket eklenirken "Expo SDK 56 + New Arch uyumlu" kontrolü şart (TECH-STACK.md uyarısı).
+- **YouTube embed iOS:** `allowsInlineMediaPlayback={true}` + `mediaPlaybackRequiresUserAction={false}` olmadan iOS'ta tam ekrana geçer — dikkat.
+- **WorkoutCompletion idempotency:** `@@unique([memberId, programDayId, scheduledDate])` server tarafında; client retry'da backend 409 döndürür, mobile sessizce handle eder.
+- **Auto-save ve publish race:** Debounce süresi içinde PT publish basarsa inflight PATCH cancel edilmeli (mutasyonları yokla veya publish öncesi await son PATCH).
+- **Program değişikliği banner (M4 yokken):** M1'de kurulan `banner-store` kullanılır; `program_changed` event tipi eklenir. M4 fazında bu event push'a yükseltilir — değişiklik minimum.
+- **Streak alanı gizlenir:** Üye ana ekranında streak UI M3 fazına kadar `display: none` (PHASE-2.md Kapsam Tartışması kararı). Backend `workout_completion` endpoint'i M3 için hazır — streak hesabı yapılmaz.
+- **Shared Zod schemas:** `@alpfit/shared`'a program + exercise + completion şemaları eklenir (backend + mobile ortak tip güvencesi).
 
 ---
 
@@ -117,4 +223,4 @@
 ---
 
 **Oluşturulma:** 2026-05-30 (discuss-phase 2)
-**Son Güncelleme:** 2026-05-30 — discuss-phase 2: Kapsam tartışması tamamlandı.
+**Son Güncelleme:** 2026-05-30 — research-phase 2: Araştırma bulguları tamamlandı (kütüphane, DB schema, API, auto-save kararları).
