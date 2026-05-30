@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — research-phase 2 ✅. Faz 2 araştırması tamamlandı; kütüphane, DB schema, API ve auto-save kararları PHASE-2.md'de. Plan-phase bekliyor.
+**Son Güncelleme:** 2026-05-30 — plan-phase 2 ✅. 14 task dokümanı oluşturuldu (2.01–2.14); 4 backend + 10 mobile task. Verify-plan bekliyor.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 2 — Program akışı uçtan uca (M2)
 **Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** plan
-**İlerleme:** research-phase tamamlandı — `/devflow:plan-phase 2` ile devam
+**Adım:** verify-plan
+**İlerleme:** plan-phase tamamlandı — 14 task dokümanı hazır; `/devflow:verify-plan 2` ile devam
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 
 ---
@@ -29,15 +29,30 @@
 
 ## Aktif Task
 
-**Task:** — (Faz 2 henüz planlanmadı)
-**Durum:** Faz 2 henüz planlanmadı
-**Sonraki Adım:** `/devflow:plan-phase 2` ile Faz 2 task'larını oluştur.
+**Task:** — (plan-phase tamamlandı; verify-plan sonrası TASK-2.01 ile başlayacak)
+**Durum:** Planlama tamamlandı — 14 task hazır
+**Sonraki Adım:** `/devflow:verify-plan 2` ile task dokümanlarını doğrula.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-Faz 2 task'ları henüz oluşturulmadı — discuss-phase + plan-phase'de oluşacak.
+| # | Task | Durum |
+|---|------|-------|
+| 2.01 | DB Schema + Migration + Seeder + Shared Zod | ⬜ Bekliyor |
+| 2.02 | Exercises API | ⬜ Bekliyor |
+| 2.03 | Programs API | ⬜ Bekliyor |
+| 2.04 | WorkoutCompletions API | ⬜ Bekliyor |
+| 2.05 | Mobile: TanStack Query + Offline Persist | ⬜ Bekliyor |
+| 2.06 | Mobile: Exercises Hook + Bottom Sheet | ⬜ Bekliyor |
+| 2.07 | Mobile: Builder Giriş + Şablon Çatısı | ⬜ Bekliyor |
+| 2.08 | Mobile: Builder Egzersiz Listesi + ↑↓ | ⬜ Bekliyor |
+| 2.09 | Mobile: Builder Auto-save + Publish + Kopyalama | ⬜ Bekliyor |
+| 2.10 | Mobile: Üye Ana Ekranı Layout | ⬜ Bekliyor |
+| 2.11 | Mobile: Antrenman Ekranı + Video Modal | ⬜ Bekliyor |
+| 2.12 | Mobile: Tamamlama + Offline Senkron | ⬜ Bekliyor |
+| 2.13 | Mobile: Geçmiş Sekmesi | ⬜ Bekliyor |
+| 2.14 | Mobile: Program Değişikliği Banner | ⬜ Bekliyor |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -68,8 +83,8 @@ Faz 2 task'ları oluşturulunca burada gösterilecek.
 
 ## Hızlı Erişim
 
-**Aktif Task:** — (Faz 2 henüz planlanmadı — plan-phase'de oluşacak)
+**Aktif Task:** — (verify-plan sonrası TASK-2.01 ile başlayacak)
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:research-phase 2`
+**Sıradaki:** `/devflow:verify-plan 2`
