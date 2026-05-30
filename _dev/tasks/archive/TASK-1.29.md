@@ -1,6 +1,6 @@
 # TASK-1.29: OTP girişi ekranı (timer + yeniden gönder + hata feedback)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -149,7 +149,21 @@ mobile/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Ekran (`mobile/app/auth/otp.tsx` YENİ)** — 6 kutulu OTP girişi + 3 sayaç (tek `setInterval` ile döner): kod geçerlilik 5:00→0:00, "yeniden gönder" kilidi 60sn, brute-force kilidi (423 → 15dk countdown). `onComplete` (6 hane) → `verifyOtp`. Akış ayrımı: `registered` → `setRegistrationToken` + `/auth/kvkk` push; `logged_in` → `router.replace('/')` (token persist + ana ekran TASK-1.33 kapsamı, bu task'ta YOK). Hata: `invalid_code`→input reset+mesaj, `expired`→süre doldu, `locked`→countdown+input disabled, `network`→mesaj.
+- **OTP input (`mobile/src/auth/otp-input.tsx` YENİ)** — kontrollü 6 kutu, tek hane auto-advance, boş kutuda backspace → önceki kutuyu sil+odakla, 6 haneli paste/iOS `oneTimeCode` autofill kutulara dağıtılır (dolu kutuya üst-yazımda tekrar rakam atılır). `textContentType="oneTimeCode"` + `autoComplete="sms-otp"`.
+- **API (`mobile/src/api/auth.ts` GÜNCELLE)** — `verifyOtp` ayrık sonuç (logged_in/registered/invalid_code/expired/locked/network; 200 body `isNew`'a göre map), `fetchDevOtp` (dev/staging GET `/internal/dev-otp/:phone` admin bearer; başarısızlık → sessiz `unavailable`), `isDevOtpLookupEnabled` (`__DEV__` || `extra.devOtpLookup`).
+- **Store (`mobile/src/onboarding/store.ts` GÜNCELLE)** — `registrationToken` + `setRegistrationToken` (yeni üye onboarding artifact'ı; profil adımında tüketilir, kalıcı oturum DEĞİL).
+- **Config** — `.env.example` + `app.config.ts extra`: `EXPO_PUBLIC_DEV_OTP_LOOKUP` + `EXPO_PUBLIC_DEV_OTP_TOKEN` (DEV/STAGING ONLY; bundle'a girer uyarısı). i18n `auth.otp.*` (subtitle/hint/boxLabel/expiresIn/resend/resendCountdown/devLookup) + `errors.otp.*` (invalid/expired/locked `{{time}}`) yeniden düzenlendi.
+
+**Akış kararı (task Dikkat Noktaları doğrulandı):** Backend verify (TASK-1.19) mevcut üye için response'unda access+refresh, yeni üye için registrationToken döndürüyor — hizalama zaten yerinde, ek backend değişikliği gerekmedi. Mevcut-üye navigasyonu: home ekranı + token persist henüz yok (TASK-1.33), bu yüzden köke (`/`) replace edilir; TASK-1.33 auth-gate kurunca doğru yönlenir.
+
+**Test ✅** — mobile **64 PASS** (`app/auth/otp.test.tsx` 9: yeni→kvkk+token, mevcut→replace, yanlış→reset+mesaj, 423→kilit+disabled, timer 0→expired, resend 60sn→send, tek-tek 6 hane, paste, dev lookup). typecheck/lint/format temiz.
+
+**Kalan İşler:** Yok.
 
 ---
 

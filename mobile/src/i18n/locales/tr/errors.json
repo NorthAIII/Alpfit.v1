@@ -9,9 +9,9 @@
     "notMobile": "Sadece mobil hat (5XX) destekleniyor."
   },
   "otp": {
-    "invalid": "Kod hatalı veya süresi doldu.",
-    "tooManyAttempts": "Çok fazla deneme. Lütfen biraz sonra tekrar dene.",
-    "expired": "Kodun süresi doldu. Tekrar gönder."
+    "invalid": "Girdiğin kod hatalı, tekrar dene.",
+    "expired": "Kodun süresi doldu. Yeni kod iste.",
+    "locked": "Çok fazla yanlış deneme. {{time}} sonra tekrar dene."
   },
   "auth": {
     "sessionExpired": "Oturumun sona erdi. Tekrar giriş yap."

@@ -41,5 +41,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config.extra,
     apiBaseUrl: process.env['EXPO_PUBLIC_API_BASE_URL'] ?? null,
     sentryDsn: process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? null,
+    // Dev OTP lookup (TASK-1.29) — dev/staging "Dev OTP getir" butonu + internal
+    // endpoint token'ı. Production'da false/null; UI gizli, endpoint 404.
+    devOtpLookup: process.env['EXPO_PUBLIC_DEV_OTP_LOOKUP'] === 'true',
+    adminInternalToken: process.env['EXPO_PUBLIC_DEV_OTP_TOKEN'] ?? null,
   },
 });

@@ -28,6 +28,14 @@ export interface OnboardingState {
   invitationCode: string | undefined;
   /** Telefon ekranında doldurulur; OTP ekranı bunu kullanır. */
   phone: string | undefined;
+  /**
+   * OTP verify sonrası YENİ kullanıcıda dolar (TASK-1.29) — kısa ömürlü (10dk)
+   * kayıt jetonu; KVKK → profil adımında `POST /auth/profile` çağrısında
+   * kullanılır (TASK-1.30). Onboarding sürecinin geçici verisidir; kalıcı
+   * oturum jetonu (access/refresh, 30 gün cihaz hatırlama) DEĞİL — onlar
+   * TASK-1.33'teki ayrı session katmanına aittir, bu store'a yazılmaz.
+   */
+  registrationToken: string | undefined;
 
   /** "Üyeyim" / "Antrenörüm" rol seçimi — davet kodu temizlenir. */
   selectRole: (role: 'pt' | 'member') => void;
@@ -35,14 +43,20 @@ export interface OnboardingState {
   selectInvite: (code: string) => void;
   /** Telefon ekranından numara kaydı. */
   setPhone: (phone: string) => void;
+  /** OTP verify (yeni kullanıcı) kayıt jetonunu saklar. */
+  setRegistrationToken: (token: string) => void;
   /** Akışı baştan başlat (çıkış / iptal / yeniden onboarding). */
   reset: () => void;
 }
 
-const initialState: Pick<OnboardingState, 'flow' | 'invitationCode' | 'phone'> = {
+const initialState: Pick<
+  OnboardingState,
+  'flow' | 'invitationCode' | 'phone' | 'registrationToken'
+> = {
   flow: undefined,
   invitationCode: undefined,
   phone: undefined,
+  registrationToken: undefined,
 };
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({
@@ -51,5 +65,6 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   selectRole: (role) => set({ flow: role, invitationCode: undefined }),
   selectInvite: (code) => set({ flow: 'member_via_invite', invitationCode: code }),
   setPhone: (phone) => set({ phone }),
+  setRegistrationToken: (token) => set({ registrationToken: token }),
   reset: () => set({ ...initialState }),
 }));
