@@ -68,7 +68,7 @@ M6 ← M0, M1
 
 | Feature | Modül | Versiyon | Faz | Durum |
 |---------|-------|----------|-----|-------|
-| F1.1: Onboarding (Davet + Auth) | M1 | v1 | 1 | 🔄 |
+| F1.1: Onboarding (Davet + Auth) | M1 | v1 | 1 | ✅ |
 | F2.1: Program Builder (PT) | M2 | v1 | — | ⬜ |
 | F2.2: Üye Program Görüntüleme + Tamamlama | M2 | v1 | — | ⬜ |
 | F3.1: Sürdürülebilirlik Motoru | M3 | v1 | — | ⬜ |
@@ -88,4 +88,4 @@ M6 ← M0, M1
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — discuss-phase 1: F1.1 (Onboarding) Faz 1'e atandı (🔄 Devam ediyor); M0 cross-cutting altyapı da Faz 1 kapsamında.
+**Son Güncelleme:** 2026-05-30 — review-phase 1: F1.1 ✅ Tamamlandı (tüm otomatik+API UAT geçti; 10 manuel UAT Yakın 5'e ertelendi, kod tamamlandı).

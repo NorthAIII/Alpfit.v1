@@ -1,6 +1,6 @@
 # Phase 1: Çekirdek altyapı + Auth (M0 + M1)
 
-**Durum:** 🔄 Devam ediyor
+**Durum:** ✅ Tamamlandı
 
 ---
 
@@ -329,23 +329,63 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 
 ## Retrospektif
 
-> Bu bölüm `/devflow:review-phase 1` oturumunda doldurulacak.
+### Ne İyi Gitti?
+
+- **DECISIONS.md tam kararlandırma disiplini:** Her önemli karar alternatiflerle + gerekçeyle belgelendi (941 satır). Sonraki fazlarda "neden böyle?" sorusu anında cevaplanabiliyor; paralel refactoring riski düşük.
+- **Güvenlik katmanları altyapıya gömüldü:** KVKK PII 3-katman (Sentry + pino + whitelist), refresh token family/replay detection, brute force lockout, timingSafeEqual — bunların tamamı ilk fazda yerleşti. Sonraki fazlarda güvenlik borcu yok.
+- **Driver pattern + kapsam kararları tutuldu:** SmsProvider interface sayesinde Yakın 5'te live driver eklemek tek dosya. Kapsam tartışmasındaki "bu fazda push yok" ve "mock SMS" kararları sabit kaldı, scope büyümedi.
+- **Test disiplini güçlü:** Route başına companion test dosyası, concurrent race senaryoları, integration test per-suite Postgres izolasyonu, smoke testler. 173+114 test, hiç kırılmadan faz kapandı.
+- **Araştırma tuzakları kodda adreslenmiş:** Redis NX atomic, Prisma partial unique index (raw SQL + test), TR locale lint kuralı, Hetzner SPOF mitigation (B2 + drill prosedürü) — araştırmada tespit edilen 8 tuzakın tamamı uygulandı.
+
+### Ne Kötü Gitti?
+
+- **CI birden fazla commit boyunca kırık kaldı:** Redis servisi + mobile shared build eksikliği verify-phase'e kadar fark edilmedi (TASK-1.36). Task closure adımlarına "CI Actions kontrol et" eklenmesi bu tuzağı önlerdi.
+- **Manuel UAT tamamlanamadı:** Expo Go setup + zaman kısıtı nedeniyle 10 manual senaryo ertelendi — pilot öncesi tamamlanması şart (Yakın 5).
+- **TASK-1.10 Coolify→docker-compose sapması zincirleme etki yarattı:** Bu karar TASK-1.15, 1.16, 1.25'te her birinde uyum maliyeti oluşturdu. Sapma doğruydu ama task'lara erken yansıması daha az sürtünme yaratırdı.
+
+### Sonraki Faz İçin Öneriler
+
+- CI durumu her task PR merge'inden sonra kısaca kontrol edilmeli (GitHub Actions, 2–3 dakika).
+- Faz 1 manuel UAT (10 senaryo) Faz 2 ile paralelde ilerleyebilir, ama Yakın 5 (pilot) öncesi tamamlanmalı.
+- Program domain (M2) fazına başlamadan TECH-STACK.md'nin "Seçilen" satırları faz 1 kararlarıyla güncellenebilir (stack artık kesin).
+
+### Task-Spesifik Teknik Öğrenimler
+
+- **`@fastify/jwt` `expiresIn` saniye cinsindedir:** `900` → 15dk, `86400` → 1 gün. ms değer verilirse token anında expire olur.
+- **`crypto.randomInt(min, max)` üst sınır dışındadır:** `randomInt(100_000, 1_000_000)` 999999'u kapsamak için `1_000_000`; `999_999` off-by-one hatası.
+- **Redis Testcontainers devcontainer'da çalışmaz:** Docker-in-Docker yok; çözüm gerçek servis + per-suite `keyPrefix` izolasyonu.
+- **Prisma 7 `@@unique` DSL partial index için yetmez:** PostgreSQL `NULL ≠ NULL` nedeniyle `WHERE "endedAt" IS NULL` raw SQL şart; `migrate dev --create-only` + manuel SQL akışı.
+- **Expo tunnel için `@expo/ngrok` ayrıca kurulmalı:** Expo SDK 56'da otomatik gelmiyor; `pnpm add -D @expo/ngrok@">=4"` gerekli.
+- **Mobile snapshot'ta tarih pin zorunlu:** `formatTrDate(new Date())` gibi non-deterministik değer içeren snapshot → `jest.useFakeTimers().setSystemTime(...)` yoksa ertesi gün CI fail (TASK-1.15'te yakalandı; memory disiplini `feedback-snapshot-tarih-pin.md`'de kayıtlı).
+
+### DevFlow'a Öneri
+
+- verify-phase adım 1'e "CI son commit'te yeşil mi?" kontrolü eklenebilir. Bu fazda CI kırıkken verify-phase başlandı; CI fix ayrı task oldu. Otonom kontrol (gh run list) bu durumu erken yakalar.
 
 ---
 
 ## Kalite Kontrol Sonuçları
 
-> Bu bölüm `/devflow:review-phase 1` oturumunda doldurulacak.
+| Eksen | Durum | Not |
+|-------|-------|-----|
+| Modülerlik | ✅ | Route başına dosya (auth-otp-send.ts, invitations-accept.ts…); auth/ + db/ + observability/ modül ayrımı; 3 rol guard tek auth middleware |
+| Güvenlik & Gizlilik | ✅ | KVKK PII 3-katman, brute force + lockout, replay detection, timingSafeEqual (TASK-1.35); /internal/ internet'e açık değil |
+| Bakım Maliyeti | ✅ | DECISIONS.md 941 satır detaylı karar kaydı; driver pattern; env-bazlı config; i18n shell baştan kurulu |
+| Performans | ✅ | Redis atomic ops (SET NX, GETDEL); N+1 bu fazda yok; v1.5'te PT üye listesi pagination gerekecek (not alındı) |
+| Hata Yönetimi | ✅ | Semantic HTTP kodları (400/401/403/404/409/410/423/429); Sentry; retry logic (profile create 3 deneme); pino redact |
+| Test Kapsamı | ✅ | 173 backend + 114 mobile; route companion testler; concurrent race senaryoları; partial unique index deploy testi |
+| Erişilebilirlik | ⚠️ | TR locale (trLower/trUpper, i18n, +90 mask) ✅; screen reader + renk kontrast — manuel UAT ile doğrulanacak (Yakın 5) |
+| PT Sürtünme Ölçümü | ⚠️ | Faz 1 auth/infra fazı; onboarding akışı sade. WhatsApp+Word baseline ölçümü Faz 2 öncesi yapılmalı (DURUM.md blocker kayıtlı) |
 
 ---
 
 ## Sonuç
 
-- **Tamamlanma Tarihi:** —
+- **Tamamlanma Tarihi:** 2026-05-30
 - **Toplam Task:** 36 (34 içerik + TASK-1.35 security fix + TASK-1.36 CI fix)
-- **Notlar:** Verify-phase kısmen tamamlandı. CI kırık bulgusu (TASK-1.36) + 10 manuel UAT bekliyor. TASK-1.36 kapatılınca verify-phase yeniden çalıştırılacak.
+- **Notlar:** Tüm otomatik ve API UAT senaryoları geçti. 10 manuel UAT senaryosu (Expo Go) kullanıcı kararıyla Yakın 5 öncesi ertelendi; pilot öncesi tamamlanması şart.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-30 — TASK-1.36 ✅ (CI fix: Redis service + mobile shared build). Tüm 36 task tamamlandı. CI push sonrası yeşillenince staging güncellenir; Expo Go + staging hazır olunca verify-phase yeniden çalışacak.
+**Son Güncelleme:** 2026-05-30 — review-phase 1 tamamlandı. Retrospektif + kalite kontrol yazıldı. Faz ✅ Tamamlandı.

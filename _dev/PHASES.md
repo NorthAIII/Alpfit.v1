@@ -19,7 +19,7 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 
 | # | Faz | Durum | Doküman |
 |---|-----|-------|---------|
-| 1 | Çekirdek altyapı + Auth (M0 + M1) | 🔄 Devam ediyor | [PHASE-1.md](phases/PHASE-1.md) |
+| 1 | Çekirdek altyapı + Auth (M0 + M1) | ✅ Tamamlandı | [PHASE-1.md](phases/PHASE-1.md) |
 
 **Durum simgeleri:**
 - 🔄 **Devam ediyor** — discuss-phase başladı (aktif faz)
@@ -60,12 +60,12 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 
 **Faz Mezuniyeti Kuralı:** PHASES.md kompakt kalır. Her faz tamamlandığında (review-phase sonrası ✅), detayları zaten `phases/PHASE-N.md`'dedir. PHASES.md'ye faz detayı, retrospektif özeti, alt-faz oturum izi veya task listesi yazma — bunlar PHASE-N.md'ye aittir. PHASES.md sadece Faz Durumu tablosu + Sıradaki Fazlar listesi + geçiş notları (kısa) içerir.
 
-Henüz faz geçişi yok.
+| 2026-05-30 | Faz 1 → ✅ | 36 task, M0+M1 tamamlandı; 10 manuel UAT Yakın 5'e ertelendi; Faz 2 (Program domain M2) → discuss |
 
 <!-- KURAL: Her geçiş için TEK satır + kısa not. Geçiş gerekçesi/detayı PHASE-N.md retrospektifindedir, burada tekrar edilmez. "Önceki:" prefix veya HTML comment ile detay yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
 ---
 
-**Son Güncelleme:** 2026-05-29 — discuss-phase 1: Faz 1 (Çekirdek altyapı + Auth — M0 + M1) Faz Durumu tablosuna 🔄 olarak eklendi; Sıradaki Fazlar'dan çıkarıldı.
+**Son Güncelleme:** 2026-05-30 — review-phase 1: Faz 1 ✅ Tamamlandı. Faz Geçiş Notları güncellendi.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
