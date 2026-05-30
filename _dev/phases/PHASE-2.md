@@ -203,7 +203,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.03 | TASK-2.03 | ✅ Tamamlandı | Programs API — POST yeni, PATCH auto-save, POST publish, POST copy, GET görüntüleme (PT + üye view) |
 | 2.04 | TASK-2.04 | ✅ Tamamlandı | WorkoutCompletions API — POST idempotent tamamlama + GET geçmiş cursor-based pagination |
 | 2.05 | TASK-2.05 | ✅ Tamamlandı | Mobile: TanStack Query v5 + AsyncStorage offline persist altyapısı + react-native-webview kurulumu |
-| 2.06 | TASK-2.06 | ⬜ Bekliyor | Mobile: `useExercises` hook + ExerciseSearchBottomSheet (arama + kas grubu filtresi + custom egzersiz formu) |
+| 2.06 | TASK-2.06 | ✅ Tamamlandı | Mobile: `useExercises` hook + ExerciseSearchBottomSheet (arama + kas grubu filtresi + custom egzersiz formu) |
 | 2.07 | TASK-2.07 | ⬜ Bekliyor | Mobile: Program Builder giriş noktası — MemberDetailScreen + ProgramBuilderScreen çatısı + yatay gün sekmeleri |
 | 2.08 | TASK-2.08 | ⬜ Bekliyor | Mobile: Program Builder — gün içi egzersiz listesi + ExerciseDayCard + ↑↓ sıralama + egzersiz ekle/sil |
 | 2.09 | TASK-2.09 | ⬜ Bekliyor | Mobile: Program Builder — `useProgramAutoSave` hook (1s debounce PATCH) + publish butonu + kopyalama CTA |
@@ -240,4 +240,4 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 ---
 
 **Oluşturulma:** 2026-05-30 (discuss-phase 2)
-**Son Güncelleme:** 2026-05-30 — plan-phase 2: 14 task dokümanı oluşturuldu, Task Listesi tablosu dolduruldu.
+**Son Güncelleme:** 2026-05-30 — TASK-2.06 ✅: useExercises hook + ExerciseSearchBottomSheet tamamlandı.
