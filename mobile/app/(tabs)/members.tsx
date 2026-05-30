@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -49,6 +49,7 @@ const CLOSED_MODAL: ModalState = { visible: false, invitation: null };
 
 export default function MembersScreen() {
   const { t } = useTranslation('members');
+  const router = useRouter();
   const accessToken = useSessionStore((s) => s.accessToken);
 
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
@@ -301,16 +302,23 @@ export default function MembersScreen() {
               </Text>
               {members.length > 0 ? (
                 members.map((m) => (
-                  <View
+                  <Pressable
                     key={m.id}
                     style={[styles.row, m.id === highlightId ? styles.rowHighlight : null]}
+                    onPress={() =>
+                      router.push(
+                        `/member/${m.id}?firstName=${encodeURIComponent(m.firstName)}&lastName=${encodeURIComponent(m.lastName)}&joinedAt=${encodeURIComponent(m.joinedAt)}`,
+                      )
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`${m.firstName} ${m.lastName} detayına git`}
                   >
                     <View style={styles.rowMain}>
                       <Text style={styles.rowTitle}>
                         {m.firstName} {m.lastName}
                       </Text>
                     </View>
-                  </View>
+                  </Pressable>
                 ))
               ) : (
                 <Text style={styles.rowSubtitle}>{t('active.empty')}</Text>
