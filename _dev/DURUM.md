@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.26 ✅: Açılış ekranı (`app/index.tsx`) — logo + tagline + "Üyeyim"/"Antrenörüm"/"Davetim var" üç buton; rol → `selectRole` + `/auth/phone`; "Davetim var" inline davet kodu input (TR-güvenli `trUpper`, 6 char, `ABC-123` mask) → preview valid ise `selectInvite` + navigate, değilse inline hata. Onboarding store (`src/onboarding/store.ts` YENİ, zustand 5 — kullanıcı onaylı; `exactOptionalPropertyTypes` için `| undefined` union). Deep link `app/davet/[code].tsx` "Devam et" artık store yazıp `/auth/phone`'a bypass. i18n `common.role.*`+`landing.*`+`errors.invitation_invalid`. Eski TASK-1.05 `__tests__/landing-screen.test.tsx` silinip test co-location ile `app/index.test.tsx`'e taşındı (kullanıcı onaylı). mobile 50 PASS, typecheck/lint/format temiz. Sıradaki lineer TASK-1.27 (telefon girişi).
+**Son Güncelleme:** 2026-05-30 — TASK-1.27 ✅: Telefon girişi ekranı (`app/auth/phone.tsx` YENİ) — `+90` sabit ön ek + 10 haneli ulusal input, inline doğrulama 50ms debounce (7+ hane geçersiz→kırmızı, geçerli→yeşil), "Devam" tap → `setPhone`+`sendOtp` (`POST /auth/otp/send`) → 200 `/auth/otp` navigate, 429→60s countdown, network→mesaj+PII'siz Sentry. Yeni/mevcut üye ayrımı YAPILMAZ (F1.1 sızıntı önlemi). `src/auth/phone-mask.ts` (YENİ mask+parser, shared/phone.ts köprüsü) + `src/api/auth.ts` (YENİ sendOtp ayrık sonuç). i18n `auth.phone.*` genişletildi + `errors.rate_limit`/`network`. mobile 55 PASS, typecheck/lint/format temiz. Sıradaki lineer TASK-1.29 (OTP ekranı; 1.28 sıra dışı tamam).
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 27/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.27 telefon girişi
+**İlerleme:** 28/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.29 OTP ekranı
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.26 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.27 (telefon girişi) henüz başlatılmadı.
+**Task:** Yok — TASK-1.27 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.29 (OTP ekranı) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.27` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.29` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 27 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 28 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -67,7 +67,7 @@
 | 1.24 | Davet kabul + preview endpoint (PT-Member ilişki) | ✅ Tamamlandı |
 | 1.25 | M1 Auth backend (deep link) | ✅ Tamamlandı |
 | 1.26 | Açılış ekranı (rol seçimi + manuel davet kodu + deep link dispatcher) | ✅ Tamamlandı |
-| 1.27 | M1 Mobile UI (telefon girişi) | ⬜ Bekliyor |
+| 1.27 | M1 Mobile UI (telefon girişi) | ✅ Tamamlandı |
 | 1.28 | KVKK rıza ekranı (2 tickbox + placeholder metin) | ✅ Tamamlandı (sıra dışı) |
 | 1.29–1.34 | M1 Mobile UI + akış + smoke (OTP ekranı, profil, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (6) |
 
@@ -91,17 +91,17 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.27 — Telefon girişi ekranı (+90 inline validation) (2026-05-30) ✅
+
+- **Ekran (`mobile/app/auth/phone.tsx` YENİ)** — `+90` sabit ön ek + 10 haneli ulusal input (`5XX XXX XX XX` mask). Inline doğrulama 50ms debounce: 7+ hane geçersiz → kırmızı border + "Sadece TR mobil hat (+90 5XX)", geçerli → yeşil. "Devam" tap → `setPhone(e164)` + `sendOtp` (`POST /auth/otp/send`); 200 → `/auth/otp` navigate, 429 → 60s countdown mesajı, network → "Bağlantı sorunu" + PII'siz `Sentry.captureException`. **Yeni/mevcut ayrım YAPILMAZ** (F1.1 "telefon kayıtlı mı?" sızıntı önlemi — ayrım OTP verify `isNew`'da).
+- **Yardımcılar (YENİ)** — `mobile/src/auth/phone-mask.ts` (mask + parser köprüsü; doğrulama tek kaynak `shared/phone.ts`, paste'te `90`/`0` öneki atılır) + `mobile/src/api/auth.ts` (`sendOtp` ayrık sonuç: sent/invalid_phone/rate_limited/network; `getApiBaseUrl` davet istemcisinden). i18n `auth.phone.*` genişletildi + flat `errors.rate_limit`(`{{seconds}}`)/`errors.network`.
+- Test ✅ — mobile **55 PASS** (`app/auth/phone.test.tsx` 5: valid→send+navigate, invalid→disabled+inline, 429→countdown, network→mesaj, mask gruplama). typecheck/lint/format temiz.
+
 ### TASK-1.26 — Açılış ekranı (rol seçimi + manuel davet kodu + deep link dispatcher) (2026-05-30) ✅
 
 - **Onboarding store (`mobile/src/onboarding/store.ts` YENİ)** — zustand 5 (kullanıcı onaylı). `flow: 'pt'|'member'|'member_via_invite'|undefined` + `invitationCode` + `phone`; `selectRole` (kodu temizler) / `selectInvite` (flow=member_via_invite) / `setPhone` / `reset`. `exactOptionalPropertyTypes` açık → alanlar `| undefined` union (opsiyonel değil).
 - **Açılış ekranı (`mobile/app/index.tsx` GÜNCELLE)** — TASK-1.05 placeholder override. Logo + tagline + üç buton ("Üyeyim"/"Antrenörüm"/"Davetim var"). Rol → `selectRole`+`/auth/phone`. "Davetim var" inline kod input (`trUpper` TR-güvenli, ASCII alfanümerik, 6 char, `ABC-123` mask) + "Devam" → `fetchInvitationPreview`; valid → `selectInvite`+navigate, değilse `errors:invitation_invalid` inline. Deep link `app/davet/[code].tsx` "Devam et" de store yazıp `/auth/phone`'a bypass eder. i18n `common.role.*`+`landing.*`+`errors.invitation_invalid` (eski `landing.greeting/todayPrefix` silindi).
 - Test ✅ — mobile **50 PASS** (`app/index.test.tsx` 9 + `store.test.ts` 7; davet test navigate/store assertion güncellendi). Eski `__tests__/landing-screen.test.tsx` (TASK-1.05) silinip co-location ile `app/index.test.tsx`'e taşındı (kullanıcı onaylı). typecheck/lint/format temiz.
-
-### TASK-1.25 — Deep link kurulumu (Universal/App Link + .well-known/) (2026-05-30) ✅
-
-- **Backend (`routes/well-known.ts` + `routes/davet-web-fallback.ts` YENİ)** — `GET /.well-known/apple-app-site-association` (uzantısız, `application/json`, `appID`+`paths:["/davet/*"]`) + `GET /.well-known/assetlinks.json` (`package_name`+SHA256 fingerprint); `GET /davet/:code` masaüstü fallback HTML + **sunucu-taraflı inline QR** (`qrcode` paketi — kullanıcı onaylı, harici servis yok). Env `APPLE_APP_ID`+`ANDROID_SHA256_CERT_FINGERPRINTS` placeholder (Yakın 5'te gerçek + redeploy). bunker-nginx tüm path'leri proxy'lediği için nginx'e dokunulmadı (Coolify yok — TASK-1.10 sapması).
-- **Mobile** — `app.config.ts` deep link (`DEEP_LINK_DOMAINS = alpfit-staging.kiwiailab.com + alpfit.app` → iOS associatedDomains + Android autoVerify intentFilters); `app/davet/[code].tsx` (YENİ) preview ekranı (valid/notFound/expired/cancelled/used/network+retry); `src/api/invitations.ts` + `davet` i18n namespace; `public/.well-known/*` statik kopyalar (EAS Hosting Yakın 5).
-- Test ✅ — backend **152 PASS** (well-known 2 + web-fallback 2) + mobile **36 PASS** (davet 6). typecheck/lint/format temiz. Elle cihaz testi rehberi `_dev/docs/deep-link-test.md`.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -110,8 +110,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.26 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.27 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.27` (telefon girişi)
+**Sıradaki:** `/devflow:run-task TASK-1.29` (OTP ekranı)

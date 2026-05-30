@@ -21,5 +21,7 @@
     "expired": "Davet linkinin süresi dolmuş.",
     "alreadyUsed": "Bu davet linki kullanılmış."
   },
-  "invitation_invalid": "Bu davet geçerli değil veya süresi dolmuş."
+  "invitation_invalid": "Bu davet geçerli değil veya süresi dolmuş.",
+  "rate_limit": "Çok fazla deneme. {{seconds}} sn sonra tekrar dene.",
+  "network": "Bağlantı sorunu, tekrar dene."
 }

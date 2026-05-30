@@ -1,6 +1,6 @@
 # TASK-1.27: Telefon girişi ekranı (+90 inline validation)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -137,7 +137,19 @@ mobile/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **`mobile/src/auth/phone-mask.ts` (YENİ)** — TR mask + parser köprüsü. `extractNationalDigits` (yalnızca rakam, baştaki `90`/`0` önekini atar — paste tolere, en fazla 10 hane), `maskTrNational` (`5XX XXX XX XX` kısmi gruplama), `parseNationalTrPhone` (`+90` ekleyip `@alpfit/shared` → `parseTrPhone`'a verir). Doğrulama mantığı tek kaynak `shared/phone.ts`'de kaldı; burası sadece ekran ↔ ulusal numara köprüsü.
+- **`mobile/src/api/auth.ts` (YENİ)** — `sendOtp(e164)` → `POST /auth/otp/send` (TASK-1.18). Ayrık sonuç: `sent`(expiresInSec) / `invalid_phone`(400) / `rate_limited`(429 + `Retry-After`) / `network`. `getApiBaseUrl` davet istemcisinden yeniden kullanıldı (genel client katmanı henüz yok).
+- **`mobile/app/auth/phone.tsx` (YENİ)** — `+90` sabit ön ek + 10 haneli ulusal input. Inline doğrulama 50ms debounce (per-keystroke libphonenumber parse'ını seyreltir): 7+ hane + geçersiz → kırmızı border + "Sadece TR mobil hat (+90 5XX)"; geçerli → yeşil border. "Devam" yalnızca geçerli + gönderim yok + countdown yok iken aktif. Tap → `setPhone(e164)` + `sendOtp` → 200 ise `/auth/otp`'a navigate; 429 → 60s countdown mesajı; network → "Bağlantı sorunu" + jenerik (PII'siz) `Sentry.captureException`. **Yeni/mevcut üye ayrımı YAPILMAZ** (F1.1 sızıntı önlemi — ayrım OTP verify `isNew`'da).
+- **i18n** — `auth.json` `phone` genişletildi (`title`/`subtitle`/`prefix`/`error.invalid`/`cta`); `errors.json`'a flat `rate_limit` (`{{seconds}}` interpolasyon) + `network` eklendi.
+- Erişilebilirlik: input `accessibilityLabel`, `keyboardType="phone-pad"`, `autoComplete="tel"`; hata metinleri `accessibilityRole="alert"`; CTA `accessibilityState.disabled`.
+
+**Test:** mobile **55 PASS** (`app/auth/phone.test.tsx` 5: valid→send+navigate, invalid→disabled+inline, 429→countdown, network→mesaj, mask gruplama). typecheck/lint/format temiz.
+
+**Kalan İşler:** Yok — task tamam.
 
 ---
 
