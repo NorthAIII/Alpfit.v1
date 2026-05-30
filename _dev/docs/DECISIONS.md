@@ -9,6 +9,22 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.32: Davet Kabul Bildirimi — In-App Polling + `TrainerMember` Event Kaynağı
+
+**Bağlam:** Üye davet kabul edince PT'ye "[İsim] davetini kabul etti" bildirimi gösterilmeli. F1.1 PRD bunu push olarak tanımlar ama push altyapısı (APNs/FCM) M4'e ertelendi (discuss-phase kararı, PHASE-1 §"Davet kabul push"). Bu fazda sadece **in-app** (uygulama açıkken) yöntem gerekir. İki soru: (1) gerçek-zaman taşıma yöntemi (polling vs SSE vs WebSocket)? (2) event'leri hangi tablodan üretelim?
+
+**Seçenekler:**
+1. **Taşıma:** (a) **polling** — basit, v1'de 1 PT × 5-10 üye → trafik düşük; foreground-only (iOS background fetch kotası); (b) SSE — HTTP/2 stream, ek kurulum; (c) WebSocket — bi-directional, overkill (tek yön yeterli).
+2. **Event kaynağı:** (a) **`AuditLog`** (task taslağının önerisi) — ama `invitation_accepted` kaydı **kabul eden ÜYENİN** `userIdHash`'ini tutar (PT'nin değil) + `trainerId`/isim içermez → PT-scoped "benim davetlerim kabul edildi mi" sorgusu **yapılamaz**; (b) **`TrainerMember`** — kabul akışı (TASK-1.24) aktif ilişki satırı oluşturur; `trainerId` + `member` ilişkisi (isim) + `startedAt` (event zamanı) hepsi mevcut; (c) `Invitation.acceptedByUserId` — ama isim için yeni relation/migration gerekir.
+
+**Karar:** Taşıma = **polling** (20sn, foreground-only, ağ hatasında 1s→5s→30s backoff). Event kaynağı = **`TrainerMember`** — `GET /trainers/me/events?since=<ts>` `where trainerId + endedAt:null + member.deletedAt:null + startedAt > since` sorgular, `{ type:'invitation_accepted', memberId, memberFirstName, occurredAt }` döner. Cursor strict `>` + istemci-tarafı dedup (`memberId:occurredAt`).
+
+**Gerekçe:** AuditLog mimarisi (KVKK gereği üye-hash + trainerId yok, TASK-1.14) PT-scoped sorguya yapısal olarak elverişsiz; `TrainerMember` zaten `trainers-members` endpoint'inin kanıtlanmış pattern'i ve v1'de "yeni aktif ilişki == davet kabulü" (ilişki yalnızca accept akışında kurulur). Polling [[ilkeler]] sadelik + v1 düşük-trafik gerçeğine uyar; M4'te push altyapısı kurulunca taşıma SSE/push'a taşınır, in-app banner katmanı (store + stack) aynı kalır.
+
+**İlgili Task/Faz:** TASK-1.32 (Faz 1). M4 (Yakın 3) push altyapısı kurulunca polling → push migration; banner UI katmanı korunur.
+
+---
+
 ### 2026-05-30 — TASK-1.25: Deep Link — Backend `.well-known/` Servisi + Env Placeholder + Sunucu-Taraflı QR
 
 **Bağlam:** iOS Universal Link + Android App Link kurulumu (`https://<domain>/davet/{kod}` app yüklüyse app'i açsın). İşletim sistemleri domain'den `.well-known/apple-app-site-association` (iOS, uzantısız, MIME application/json) + `.well-known/assetlinks.json` (Android) dosyalarını çeker. Üç soru: (1) bu dosyaları nerede servis edelim? (2) Apple Team ID + Android cert fingerprint henüz yok (hesaplar Yakın 5'te açılıyor) — nasıl placeholder tutalım? (3) masaüstü fallback QR'ı nasıl üretelim?

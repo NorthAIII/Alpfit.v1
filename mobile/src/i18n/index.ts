@@ -8,6 +8,7 @@ import davetTr from './locales/tr/davet.json';
 import errorsTr from './locales/tr/errors.json';
 import kvkkTr from './locales/tr/kvkk.json';
 import membersTr from './locales/tr/members.json';
+import notificationsTr from './locales/tr/notifications.json';
 import profileTr from './locales/tr/profile.json';
 
 const isDev = process.env['NODE_ENV'] !== 'production';
@@ -20,6 +21,7 @@ export const namespaces = [
   'errors',
   'kvkk',
   'members',
+  'notifications',
   'profile',
 ] as const;
 export type Namespace = (typeof namespaces)[number];
@@ -32,6 +34,7 @@ const resources = {
     errors: errorsTr,
     kvkk: kvkkTr,
     members: membersTr,
+    notifications: notificationsTr,
     profile: profileTr,
   },
 } as const;

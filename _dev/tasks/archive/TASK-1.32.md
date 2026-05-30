@@ -1,6 +1,6 @@
 # TASK-1.32: Davet kabul banner + liste real-time güncellemesi
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -147,7 +147,23 @@ mobile/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Backend** — `GET /trainers/me/events?since=<ISO>` (`backend/src/routes/trainers-events.ts` YENİ + `server.ts` register). Trainer-only (`ensureTrainer`); kaynak **`TrainerMember`** (`trainerId + endedAt:null + member.deletedAt:null + startedAt > since`, newest-first), `{ type:'invitation_accepted', memberId, memberFirstName, occurredAt }`. `since` opsiyonel; geçersizse 400. `memberFirstName` döner, telefon DÖNMEZ. i18n `errors.events.invalidSince`. **Kaynak kararı:** task taslağı AuditLog öneriyordu ama AuditLog kabul eden üyenin hash'ini tutar (PT'nin değil) + trainerId/isim yok → PT-scoped sorgu yapılamaz; TrainerMember doğal kaynak (DECISIONS.md TASK-1.32).
+- **Mobile event katmanı** — `src/api/trainers.ts` `listPtEvents` (YENİ); `src/events/banner-store.ts` (YENİ zustand: dedup `memberId:occurredAt` + MAX_VISIBLE 5 + overflow sayacı); `src/events/use-pt-events.ts` (YENİ polling hook: `useFocusEffect` foreground-only, 20sn interval, baseline=focus anı, ağ hatasında 1s→5s→30s backoff, unauthorized→dur).
+- **Mobile UI** — `src/components/in-app-banner.tsx` (YENİ: Animated slide-down + 4sn auto-dismiss + tap + "X"; `useNativeDriver:false`), `src/components/banner-stack.tsx` (YENİ: store'dan görünür banner'lar + "+N daha" rozeti, sabit üst overlay). `app/(tabs)/members.tsx` (GÜNCELLE): `usePtEvents` mount + `onNewEvents`→`load('refresh')`+highlight; `BannerStack` render; yeni üye satırı ~1sn highlight (rowHighlight).
+- **i18n** — mobile yeni `notifications` namespace (`invitationAccepted`/`dismiss`/`moreCount`); index + d.ts + namespaces güncellendi. Overflow sayacında i18next çoğul tuzağından kaçınmak için `{{n}}` ([[tr-locale]] / members `{{days}}` deseni).
+
+**Test:**
+- Backend `trainers-events.test.ts` **8 PASS** (newest-first + since-filter strict> + since-yok + cross-trainer sızmaz + soft-deleted hariç + geçersiz since 400 + member 403 + token yok 401). Backend full suite **167 PASS**.
+- Mobile: `banner-store.test.ts` (4: enqueue/dedup/dismiss-seen/overflow), `use-pt-events.test.ts` (4: interval-poll/enqueue+callback/blur-stop/token-yok), `in-app-banner.test.tsx` (3: render+tap/X-dismiss/auto-dismiss), `members.test.tsx` (+1 banner entegrasyon). Mobile full suite **89 PASS**. typecheck/lint/format temiz.
+
+**Otonom kararlar:**
+- Event kaynağı AuditLog → TrainerMember (yapısal gerekçe, DECISIONS).
+- BannerStack `members.tsx` içinde mount (tek tab var); ileride çok-tab olunca overlay tab layout'a taşınır (kod yorumunda not).
+- `useNativeDriver:false` (native animated test ortamında yok; kısa banner perf farkı önemsiz).
 
 ---
 

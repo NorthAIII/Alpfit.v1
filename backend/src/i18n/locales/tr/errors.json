@@ -32,6 +32,9 @@
     "forbidden": "Bu davet sana ait değil.",
     "notCancellable": "Bu davet artık iptal edilemez."
   },
+  "events": {
+    "invalidSince": "Geçersiz zaman damgası."
+  },
   "generic": {
     "internal": "Sunucu hatası. Lütfen daha sonra tekrar dene."
   }

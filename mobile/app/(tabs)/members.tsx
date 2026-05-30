@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -17,10 +17,14 @@ import {
   listInvitations,
   type PendingInvitation,
 } from '../../src/api/invitations';
-import { listMembers, type TrainerMemberItem } from '../../src/api/trainers';
+import { listMembers, type PtEvent, type TrainerMemberItem } from '../../src/api/trainers';
 import { useSessionStore } from '../../src/auth/session';
+import { BannerStack } from '../../src/components/banner-stack';
 import { InviteModal } from '../../src/components/members/InviteModal';
 import { QrModal } from '../../src/components/members/QrModal';
+import { usePtEvents } from '../../src/events/use-pt-events';
+
+import type { BannerItem } from '../../src/events/banner-store';
 
 // PT "Üyeler" sekmesi (TASK-1.31). Tek scrollable liste, iki başlık: üstte
 // "Bekleyen davetler" (varsa — PT aksiyon alabilir: paylaş / iptal), altta
@@ -29,6 +33,8 @@ import { QrModal } from '../../src/components/members/QrModal';
 // yenilenir. Access token oturum store'undan gelir (TASK-1.33 öncesi bellek-içi).
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Yeni katılan üyenin satırının highlight'lı kalma süresi (ms). */
+const HIGHLIGHT_MS = 1_000;
 
 /** Davetin bitmesine kalan tam gün (negatifse 0). */
 function daysRemaining(expiresAt: string): number {
@@ -53,6 +59,9 @@ export default function MembersScreen() {
   const [actionError, setActionError] = useState<ActionError>('none');
   const [inviteModal, setInviteModal] = useState<ModalState>(CLOSED_MODAL);
   const [qrModal, setQrModal] = useState<ModalState>(CLOSED_MODAL);
+  // Davet kabul banner'ı sonrası yeni üye satırını ~1sn vurgular.
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(
     async (mode: 'initial' | 'refresh') => {
@@ -86,6 +95,46 @@ export default function MembersScreen() {
     useCallback(() => {
       void load('initial');
     }, [load]),
+  );
+
+  // Yeni üyeyi geçici olarak vurgula (önceki timer'ı iptal et → üst üste binmesin).
+  const highlight = useCallback((memberId: string) => {
+    if (highlightTimer.current) {
+      clearTimeout(highlightTimer.current);
+    }
+    setHighlightId(memberId);
+    highlightTimer.current = setTimeout(() => setHighlightId(null), HIGHLIGHT_MS);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (highlightTimer.current) {
+        clearTimeout(highlightTimer.current);
+      }
+    },
+    [],
+  );
+
+  // Davet kabul event'leri (in-app polling). Yeni event → liste tazele + vurgula.
+  const onNewEvents = useCallback(
+    (events: PtEvent[]) => {
+      void load('refresh');
+      const latest = events[0];
+      if (latest) {
+        highlight(latest.memberId);
+      }
+    },
+    [load, highlight],
+  );
+  usePtEvents({ accessToken, onNewEvents });
+
+  // Banner'a dokununca: listeyi tazele + ilgili üyeyi vurgula (tek tab — odak yeterli).
+  const onBannerPress = useCallback(
+    (banner: BannerItem) => {
+      void load('refresh');
+      highlight(banner.memberId);
+    },
+    [load, highlight],
   );
 
   const handleCreate = useCallback(async () => {
@@ -252,7 +301,10 @@ export default function MembersScreen() {
               </Text>
               {members.length > 0 ? (
                 members.map((m) => (
-                  <View key={m.id} style={styles.row}>
+                  <View
+                    key={m.id}
+                    style={[styles.row, m.id === highlightId ? styles.rowHighlight : null]}
+                  >
                     <View style={styles.rowMain}>
                       <Text style={styles.rowTitle}>
                         {m.firstName} {m.lastName}
@@ -280,6 +332,8 @@ export default function MembersScreen() {
         code={qrModal.invitation?.code ?? null}
         onClose={() => setQrModal(CLOSED_MODAL)}
       />
+
+      <BannerStack onBannerPress={onBannerPress} />
     </View>
   );
 }
@@ -358,6 +412,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 10,
+  },
+  rowHighlight: {
+    backgroundColor: '#1E2A3D',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
   },
   rowMain: {
     flex: 1,

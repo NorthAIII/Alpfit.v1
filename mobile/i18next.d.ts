@@ -10,6 +10,7 @@ declare module 'i18next' {
       errors: typeof import('./src/i18n/locales/tr/errors.json');
       kvkk: typeof import('./src/i18n/locales/tr/kvkk.json');
       members: typeof import('./src/i18n/locales/tr/members.json');
+      notifications: typeof import('./src/i18n/locales/tr/notifications.json');
       profile: typeof import('./src/i18n/locales/tr/profile.json');
     };
   }

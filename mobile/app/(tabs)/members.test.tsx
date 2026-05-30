@@ -1,10 +1,11 @@
-import { fireEvent, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, waitFor } from '@testing-library/react-native';
 import * as mockReact from 'react';
 import { Text } from 'react-native';
 
 import * as invitationsApi from '../../src/api/invitations';
 import * as trainersApi from '../../src/api/trainers';
 import { useSessionStore } from '../../src/auth/session';
+import { useBannerStore } from '../../src/events/banner-store';
 import { i18n, renderWithProviders } from '../../test/render-with-providers';
 
 import MembersScreen from './members';
@@ -19,6 +20,7 @@ jest.mock('../../src/api/invitations', () => ({
 }));
 jest.mock('../../src/api/trainers', () => ({
   listMembers: jest.fn(),
+  listPtEvents: jest.fn(),
 }));
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(() => Promise.resolve()) }));
 
@@ -76,9 +78,11 @@ describe('MembersScreen', () => {
       refreshToken: 'ref-1',
       role: 'trainer',
     });
+    useBannerStore.getState().clear();
     // Varsayılan: boş listeler (testler gerektikçe override eder).
     inv.listInvitations.mockResolvedValue({ kind: 'ok', invitations: [] });
     trn.listMembers.mockResolvedValue({ kind: 'ok', members: [] });
+    trn.listPtEvents.mockResolvedValue({ kind: 'ok', events: [] });
   });
 
   it('boş liste → "İlk üyeni davet et" CTA görünür', async () => {
@@ -131,6 +135,30 @@ describe('MembersScreen', () => {
     expect(await findByText(labels.qrTitle)).toBeOnTheScreen();
     // Mock QRCode value prop'unu yansıtır.
     expect(await findByText(`QR:${URL}`)).toBeOnTheScreen();
+  });
+
+  it('davet kabul banner → görünür + dokununca liste tazelenir', async () => {
+    trn.listMembers.mockResolvedValue({ kind: 'ok', members: [member] });
+
+    const { findByText, findByLabelText } = renderWithProviders(<MembersScreen />);
+    await findByText('Ayşe Kaya'); // ilk yükleme tamam
+
+    // Hook yerine store'a doğrudan event enqueue → ekran içi BannerStack render eder.
+    act(() => {
+      useBannerStore.getState().enqueue([
+        {
+          type: 'invitation_accepted',
+          memberId: 'm1',
+          memberFirstName: 'Ayşe',
+          occurredAt: '2026-05-30T10:00:00.000Z',
+        },
+      ]);
+    });
+
+    const bannerMsg = i18n.t('notifications:invitationAccepted', { name: 'Ayşe' });
+    fireEvent.press(await findByLabelText(bannerMsg));
+    // Banner tap → load('refresh') → listMembers en az 2 kez (ilk + tazeleme).
+    await waitFor(() => expect(trn.listMembers.mock.calls.length).toBeGreaterThanOrEqual(2));
   });
 
   it('"İptal et" tap → DELETE çağrılır, liste yenilenir', async () => {
