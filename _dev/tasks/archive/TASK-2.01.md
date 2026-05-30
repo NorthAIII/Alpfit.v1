@@ -130,9 +130,9 @@ packages/shared/src/
 
 - [x] Tüm alt görevler tamamlandı
 - [x] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
+- [x] Git commit & push yapıldı (conventional commits formatı)
 - [x] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] DURUM.md güncellendi
 
 ---
 

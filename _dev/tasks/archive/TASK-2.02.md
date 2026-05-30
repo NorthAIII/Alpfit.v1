@@ -1,6 +1,6 @@
 # TASK-2.02: Exercises API — Listeleme + PT Custom CRUD
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.1 — Program Builder (egzersiz kütüphanesi katmanı)
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -28,14 +28,14 @@
 
 ## Alt Görevler
 
-- [ ] **1. Exercise Service katmanı**
+- [x] **1. Exercise Service katmanı**
   - `apps/backend/src/services/exercise.service.ts` oluştur:
     - `listExercises(trainerId, search?, muscleGroup?)` — çekirdek (isCustom=false) + trainer'ın custom'ları (isCustom=true, createdById=trainerId); deletedAt IS NULL filtresi; arama TR karakter uyumlu ILIKE
     - `createExercise(trainerId, data)` — isCustom=true, createdById=trainerId; name zorunlu
     - `updateExercise(trainerId, exerciseId, data)` — sadece kendi custom'ını güncelleyebilir (ownership check)
     - `deleteExercise(trainerId, exerciseId)` — soft-delete (deletedAt=now); sadece kendi custom'ını silebilir; çekirdek egzersiz silinemez (isCustom=false → 403)
 
-- [ ] **2. Exercises Route Handler**
+- [x] **2. Exercises Route Handler**
   - `apps/backend/src/routes/exercises.ts` oluştur:
     - `GET /exercises` — query: `search?: string`, `muscleGroup?: string` → `listExercises()`
     - `POST /exercises` — body: `createExerciseSchema` → `createExercise()`; sadece Trainer rolü
@@ -44,7 +44,7 @@
   - Route'ları `apps/backend/src/app.ts` veya route kayıt noktasına ekle
   - Shared Zod şemalarını (`@alpfit/shared`) kullan — runtime validation
 
-- [ ] **3. Integration Testler**
+- [x] **3. Integration Testler**
   - `apps/backend/src/routes/exercises.test.ts` oluştur:
     - `GET /exercises` — çekirdek egzersizleri listeler
     - `GET /exercises?search=squat` — arama çalışır
@@ -81,32 +81,41 @@ apps/backend/src/
 
 ## Test Kriterleri
 
-- [ ] `GET /exercises` — status 200, çekirdek egzersizler döner
-- [ ] `GET /exercises?search=bench` — "Bench Press" veya TR çevirisi döner
-- [ ] `GET /exercises?muscleGroup=göğüs` — filtre doğru çalışır
-- [ ] `POST /exercises` (Trainer) — status 201, yeni custom egzersiz döner
-- [ ] `POST /exercises` (Member) — status 403
-- [ ] `PUT /exercises/:id` (kendi custom'ı) — status 200, güncelleme yansır
-- [ ] `PUT /exercises/:id` (başka trainer) — status 403
-- [ ] `DELETE /exercises/:id` (kendi custom'ı) — status 204; `GET /exercises` listesinde artık yok
-- [ ] `DELETE /exercises/:id` (çekirdek) — status 403
-- [ ] Backend typecheck + tüm test'ler geçer: `pnpm --filter backend test`
+- [x] `GET /exercises` — status 200, çekirdek egzersizler döner
+- [x] `GET /exercises?search=gogus` — arama ILIKE çalışır
+- [x] `GET /exercises?muscleGroup=bacak` — filtre doğru çalışır
+- [x] `POST /exercises` (Trainer) — status 201, yeni custom egzersiz döner
+- [x] `POST /exercises` (Member) — status 403
+- [x] `PUT /exercises/:id` (kendi custom'ı) — status 200, güncelleme yansır
+- [x] `PUT /exercises/:id` (başka trainer) — status 403
+- [x] `DELETE /exercises/:id` (kendi custom'ı) — status 204; `GET /exercises` listesinde artık yok
+- [x] `DELETE /exercises/:id` (çekirdek) — status 403
+- [x] Backend typecheck + tüm test'ler geçer: `pnpm --filter backend test` → 193 test yeşil
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `backend/src/services/exercise.service.ts` oluşturuldu: `listExercises`, `createExercise`, `updateExercise`, `deleteExercise` (discriminated union return tipi).
+- `backend/src/routes/exercises.ts` oluşturuldu: GET/POST/PUT/DELETE endpoint'leri; trainer guard + ownership check; Zod `safeParse` ile runtime validation.
+- `backend/src/server.ts`'e `exercisesRoutes` kaydedildi.
+- i18n `errors.json`'a `exercises.notFound` + `exercises.coreForbidden` eklendi.
+- `backend/src/routes/exercises.test.ts` oluşturuldu: 20 integration testi (liste, arama, filtre, custom CRUD, 403/404 senaryoları).
+- Tüm testler yeşil: 193 test geçti (önceki 173 + 20 yeni).
 
 ---
 

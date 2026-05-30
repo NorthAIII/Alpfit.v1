@@ -35,6 +35,10 @@
   "events": {
     "invalidSince": "Geçersiz zaman damgası."
   },
+  "exercises": {
+    "notFound": "Egzersiz bulunamadı.",
+    "coreForbidden": "Çekirdek egzersizler düzenlenemez."
+  },
   "generic": {
     "internal": "Sunucu hatası. Lütfen daha sonra tekrar dene."
   }

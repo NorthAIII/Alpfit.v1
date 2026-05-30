@@ -199,7 +199,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | # | Task | Durum | Açıklama |
 |---|------|-------|----------|
 | 2.01 | TASK-2.01 | ✅ Tamamlandı | DB Schema — 5 M2 tablosu (Exercise, Program, ProgramDay, ProgramDayExercise, WorkoutCompletion) + Prisma migration + seeder (~20 placeholder) + Shared Zod şemaları |
-| 2.02 | TASK-2.02 | ⬜ Bekliyor | Exercises API — GET liste/arama/filtre + POST custom + PUT + DELETE soft-delete |
+| 2.02 | TASK-2.02 | ✅ Tamamlandı | Exercises API — GET liste/arama/filtre + POST custom + PUT + DELETE soft-delete |
 | 2.03 | TASK-2.03 | ⬜ Bekliyor | Programs API — POST yeni, PATCH auto-save, POST publish, POST copy, GET görüntüleme (PT + üye view) |
 | 2.04 | TASK-2.04 | ⬜ Bekliyor | WorkoutCompletions API — POST idempotent tamamlama + GET geçmiş cursor-based pagination |
 | 2.05 | TASK-2.05 | ⬜ Bekliyor | Mobile: TanStack Query v5 + AsyncStorage offline persist altyapısı + react-native-webview kurulumu |

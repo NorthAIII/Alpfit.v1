@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-2.01 ✅. Prisma M2 migration + 20 placeholder egzersiz seed + Shared Zod şemaları (exercise/program/workout-completion) tamamlandı. 173 backend testi 0 hata.
+**Son Güncelleme:** 2026-05-30 — TASK-2.02 ✅. Exercises API (GET liste/search/filtre + POST custom + PUT + DELETE soft-delete) tamamlandı. 193 backend testi 0 hata.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.02 — Exercises API
+**Task:** TASK-2.03 — Programs API
 **Durum:** Bekliyor
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.02 başlat.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.03 başlat.
 
 ---
 
@@ -40,7 +40,7 @@
 | # | Task | Durum |
 |---|------|-------|
 | 2.01 | DB Schema + Migration + Seeder + Shared Zod | ✅ Tamamlandı |
-| 2.02 | Exercises API | ⬜ Bekliyor |
+| 2.02 | Exercises API | ✅ Tamamlandı |
 | 2.03 | Programs API | ⬜ Bekliyor |
 | 2.04 | WorkoutCompletions API | ⬜ Bekliyor |
 | 2.05 | Mobile: TanStack Query + Offline Persist | ⬜ Bekliyor |
@@ -76,9 +76,12 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 **TASK-2.01** (2026-05-30) — DB Schema + Migration + Seeder + Shared Zod ✅
 - Prisma schema: 5 yeni M2 tablosu + User relation'ları eklendi.
-- `prisma migrate dev --name m2_program_domain` başarıyla uygulandı.
-- 20 TR-isimli placeholder egzersiz seed edildi (idempotent).
-- Shared Zod şemaları: exercise, program, workout-completion — 0 TS hatası, 173 backend testi yeşil.
+- 20 TR-isimli placeholder egzersiz seed edildi (idempotent). 173 backend testi yeşil.
+
+**TASK-2.02** (2026-05-30) — Exercises API ✅
+- `exercise.service.ts`: `listExercises` / `createExercise` / `updateExercise` / `deleteExercise`.
+- `exercises.ts` route: GET liste+search+filtre, POST custom, PUT, DELETE soft-delete; trainer guard + ownership.
+- 20 integration testi eklendi. 193 backend testi 0 hata.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -87,8 +90,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-2.02
+**Aktif Task:** TASK-2.03
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` (TASK-2.02)
+**Sıradaki:** `/devflow:run-task` (TASK-2.03)
