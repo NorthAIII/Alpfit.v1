@@ -45,6 +45,10 @@
     "memberNoRelation": "Bu üye sana bağlı değil.",
     "notDraft": "Yalnızca taslak programlar düzenlenebilir."
   },
+  "workoutCompletions": {
+    "forbidden": "Bu işlem için yetkin yok.",
+    "programDayNotFound": "Antrenman günü bulunamadı."
+  },
   "generic": {
     "internal": "Sunucu hatası. Lütfen daha sonra tekrar dene."
   }

@@ -1,6 +1,6 @@
 # TASK-2.04: WorkoutCompletions API — İdempotent Tamamlama + Geçmiş Pagination
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.2 — Üye Program Görüntüleme + Tamamlama
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -29,7 +29,7 @@
 
 ## Alt Görevler
 
-- [ ] **1. WorkoutCompletion Service katmanı**
+- [x] **1. WorkoutCompletion Service katmanı**
   - `apps/backend/src/services/workout-completion.service.ts` oluştur:
     - `completeWorkout(memberId, data)`:
       - `data`: `{ programDayId, scheduledDate, isLate? }`
@@ -43,13 +43,13 @@
       - Her satırda: id, completedAt, scheduledDate, isLate, programDay (dayOfWeek + title + **programId**) — programId, TASK-2.13 WorkoutDetailScreen'de `GET /programs/:id` için gerekli
       - Limit: 30 per page; response: `{ items, nextCursor }`
 
-- [ ] **2. WorkoutCompletions Route Handler**
+- [x] **2. WorkoutCompletions Route Handler**
   - `apps/backend/src/routes/workout-completions.ts` oluştur:
     - `POST /workout-completions` — body: `createWorkoutCompletionSchema` → `completeWorkout(req.user.id, body)`; sadece Member rolü
     - `GET /me/workout-completions` — query: `cursor?: string`, `limit?: number` → `getMyWorkoutHistory(req.user.id, cursor, limit)`; sadece Member rolü
   - Route'ları app'e kaydet
 
-- [ ] **3. Integration Testler**
+- [x] **3. Integration Testler**
   - `apps/backend/src/routes/workout-completions.test.ts` oluştur:
     - `POST /workout-completions` — 200/201, kayıt DB'ye düştü
     - `POST /workout-completions` (aynı data tekrar) → 200, DB'de tek kayıt (idempotent)
@@ -84,27 +84,34 @@ apps/backend/src/
 
 ## Test Kriterleri
 
-- [ ] `POST /workout-completions` → 200, DB'de kayıt oluştu
-- [ ] `POST /workout-completions` aynı üçlü (`memberId, programDayId, scheduledDate`) ile tekrar → 200, DB'de hâlâ tek kayıt
-- [ ] `GET /me/workout-completions` → `{ items: [...], nextCursor: "..." }` formatında döner
-- [ ] `GET /me/workout-completions?cursor=X` → cursor sonrasındaki kayıtlar döner (öncekiler yok)
-- [ ] Backend typecheck + tüm test'ler geçer: `pnpm --filter backend test`
+- [x] `POST /workout-completions` → 200, DB'de kayıt oluştu
+- [x] `POST /workout-completions` aynı üçlü (`memberId, programDayId, scheduledDate`) ile tekrar → 200, DB'de hâlâ tek kayıt
+- [x] `GET /me/workout-completions` → `{ items: [...], nextCursor: "..." }` formatında döner
+- [x] `GET /me/workout-completions?cursor=X` → cursor sonrasındaki kayıtlar döner (öncekiler yok)
+- [x] Backend typecheck + tüm test'ler geçer: `pnpm --filter backend test`
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `workout-completion.service.ts`: `completeWorkout` (upsert idempotent) + `getMyWorkoutHistory` (cursor-based pagination, limit cap 100) oluşturuldu.
+- `workout-completions.ts` route: POST + GET endpoint'leri; sadece member rolü; route server.ts'e kayıt edildi.
+- `workout-completions.test.ts`: 8 integration testi — POST 200/idempotent/400/403, GET list/cursor/boş/403.
+- 227 backend testi 0 hata (önceki: 219, yeni: +8).
 
 ---
 
