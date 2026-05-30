@@ -56,6 +56,8 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # shared/dist is absent on CI — build before mobile typecheck resolves @alpfit/shared exports
+      - run: pnpm -F @alpfit/shared build
       - run: pnpm -F @alpfit/mobile typecheck
       - run: pnpm -F @alpfit/mobile test:coverage
       - uses: actions/upload-artifact@v4
@@ -84,8 +86,16 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgres://dev:dev@postgres:5432/dev
+      REDIS_URL: redis://redis:6379
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

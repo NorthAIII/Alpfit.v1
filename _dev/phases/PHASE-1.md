@@ -278,7 +278,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.33 | TASK-1.33 | ✅ Tamamlandı | 30 gün cihaz hatırlama (secure storage + auto-login) — `expo-secure-store ~56.0.4`; `src/auth/storage.ts` (refresh+rol Keychain/Keystore, access saklanmaz), `src/api/client.ts` (refresh TEK-uçuş singleton + `authedFetch` 401-interceptor + `fetchMe`), `src/auth/auth-actions.ts` (`persistLogin`/`bootstrapSession`/`homePathForRole`), `session.ts` `clearSession`; `api/auth.ts` logout/logout-all; login persisti bağlandı (otp+profile → session store'a artık YAZIYOR); `_layout.tsx` boot gate (in-app overlay, expo-splash-screen EKLENMEDİ); `(tabs)/settings.tsx` + Ayarlar sekmesi (çıkış 2-adım onay); i18n `settings`. **Reuse:** `GET /auth/me` (TASK-1.20) — yeni backend yok; session.ts extend (auth-store.ts değil). Mobile 110 PASS (+21); backend dokunulmadı |
 | 1.34 | TASK-1.34 | ✅ Tamamlandı | Uçtan uca onboarding smoke — backend `test/smoke/onboarding-flow.test.ts` (4 senaryo, gerçek HTTP zinciri: PT akışı+audit, üye+davet kabul, replay, brute-force lockout; her senaryo ayrı telefon → Redis send-slot izolasyonu) + mobile `test/smoke/onboarding-flow.test.tsx` (4 senaryo: Landing→telefon→OTP→KVKK→profil→home, deep-link davet+auto-accept, PT davet üret+kopyala, auto-login boot) MSW backend mock (`test/msw/handlers.ts` reusable builder'lar) + ekran-zinciri (mockRouter+onboarding store). Sentry modülü smoke'da stub'lanır (AsyncExpiringMap interval leak). `_dev/docs/staging-smoke-test.md` manuel checklist (kullanıcı). Backend 171 PASS (+4), mobile 114 PASS (+4); yeni kaynak kod YOK — sadece test |
 | 1.35 | TASK-1.35 | ✅ Tamamlandı | admin-internal timingSafeEqual: `admin-internal.ts` + `internal-dev-otp.ts` `!==` → `timingSafeEqual` + uzunluk guard; `retention-job.test.ts` + `internal-dev-otp.test.ts` length-mismatch senaryosu eklendi (+2 test). Backend 173 PASS; typecheck + lint temiz. |
-| 1.36 | TASK-1.36 | ⬜ Bekliyor | CI kırık (Redis eksik + mobile shared build): Son 5+ commit CI:failure → staging hiç güncellenmedi. ci.yml'e Redis service + mobile typecheck'e shared build adımı eklenmeli. |
+| 1.36 | TASK-1.36 | ✅ Tamamlandı | CI kırık (Redis eksik + mobile shared build): ci.yml backend job'a `redis:7-alpine` service + `REDIS_URL` env eklendi; mobile job'a `pnpm -F @alpfit/shared build` adımı typecheck'ten önce eklendi. |
 
 **Durum simgeleri:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -295,7 +295,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 5 | Security: admin-internal timingSafeEqual eksik (dev-only endpoint) | Otomatik | ✅ Geçti | TASK-1.35 uygulandı — timingSafeEqual + uzunluk guard |
 | 6 | Brute force lockout: 5 hatalı OTP → 423 kilit (smoke ✅) | Otomatik | ✅ Geçti | Backend smoke TASK-1.34 |
 | 7 | Replay detection: rotate sonrası eski refresh token → 401 (smoke ✅) | Otomatik | ✅ Geçti | Backend smoke TASK-1.34 |
-| — | **CI kırık: son 5+ commit CI:failure → staging eski** | Otomatik | ❌ Bulgu | Redis CI'da yok + mobile shared build eksik → deploy hiç tetiklenmedi → TASK-1.36 açıldı |
+| — | **CI kırık: son 5+ commit CI:failure → staging eski** | Otomatik | ✅ Düzeltildi | Redis CI'da yok + mobile shared build eksik → TASK-1.36: ci.yml Redis service + shared build adımı eklendi |
 | 8 | PT akışı: Açılış → Antrenörüm → Telefon → Dev OTP → KVKK → Profil → Üyeler sekmesi | Manuel | ⬜ | Bekliyor — TASK-1.36 + Expo Go kurulumu sonrası |
 | 9 | Davet linki: üretildi, link panoya kopyalandı | Manuel | ⬜ | Bekliyor |
 | 10 | QR modal: PT davet modalında QR kodu görünür | Manuel | ⬜ | Bekliyor |
@@ -316,15 +316,14 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 
 **Tarih:** 2026-05-30
 **Toplam Senaryo:** 20 (7 otomatik + 1 CI bulgu + 2 API + 10 manuel bekliyor)
-**Geçen:** 9 (otomatik 7 + API 2)
-**Bulunan:** 1 (CI kırık → TASK-1.36)
-**Bekliyor:** 10 (manuel, Expo Go + TASK-1.36 sonrası)
+**Geçen:** 10 (otomatik 7 + CI fix + API 2)
+**Bekliyor:** 10 (manuel, Expo Go + staging güncelleme sonrası)
 
 **Otomatik kontrol özeti:** Backend 173 PASS, mobile 114 PASS, lint/typecheck temiz, staging healthz yeşil, security review clean.
 
-**Kritik bulgu:** CI son 5+ commit'te kırık (Redis eksik + mobile shared build). Staging auth/invitation route'ları 404 — yalnızca healthz yanıt veriyor. TASK-1.36 açıldı.
+**CI fix (TASK-1.36):** ci.yml Redis service + mobile shared build adımı eklendi. CI push sonrası yeşillenince Deploy Staging tetiklenecek.
 
-**Manuel UAT durumu:** 10 senaryo TASK-1.36 tamamlanıp staging güncellenince ve Expo Go kurulunca verify-phase yeniden çalıştırılacak.
+**Manuel UAT durumu:** 10 senaryo CI yeşillendikten ve Expo Go kurulumundan sonra verify-phase yeniden çalıştırılacak.
 
 ---
 
@@ -349,4 +348,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-30 — verify-phase 1 kısmen tamamlandı. Otomatik kontroller geçti (backend 171 + mobile 114 + lint/typecheck + staging healthz). Security review: TASK-1.35 açıldı (admin-internal timingSafeEqual). Manuel UAT 13 senaryo bekliyor (cihaz + staging). TASK-1.35 sonrası verify-phase yeniden çalışacak.
+**Son Güncelleme:** 2026-05-30 — TASK-1.36 ✅ (CI fix: Redis service + mobile shared build). Tüm 36 task tamamlandı. CI push sonrası yeşillenince staging güncellenir; Expo Go + staging hazır olunca verify-phase yeniden çalışacak.

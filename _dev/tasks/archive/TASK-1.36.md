@@ -1,6 +1,6 @@
 # TASK-1.36: CI kırık — Redis servisi eksik + mobile typecheck shared build
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M0 Çekirdek Altyapı
 **Feature:** —
 **Faz:** Phase 1 (phases/PHASE-1.md)
@@ -77,6 +77,21 @@ Staging backend'de yalnızca healthz yanıt veriyor; auth/invitation route'ları
 - [ ] Git commit & push yapıldı
 - [ ] Bu doküman güncellendi
 - [ ] DURUM.md güncellendi
+
+---
+
+---
+
+## Oturum Kaydı
+
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `.github/workflows/ci.yml` backend job'ına `redis:7-alpine` service eklendi (health-cmd: `redis-cli ping`, 5sn interval, 10 deneme)
+- `REDIS_URL: redis://redis:6379` env değişkeni backend job'a eklendi
+- Mobile job'da `pnpm install` sonrasına `pnpm -F @alpfit/shared build` adımı eklendi (typecheck'ten önce)
+- Yerel doğrulama: `pnpm -F @alpfit/shared build` ✅, backend 173 PASS ✅, mobile typecheck ✅
 
 ---
 
