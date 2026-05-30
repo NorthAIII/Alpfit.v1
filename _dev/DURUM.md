@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-2.11 ✅. WorkoutScreen (egzersiz listesi + tik state + "Antrenmanı Bitir" placeholder) + VideoModal (react-native-webview, YouTube embed, iOS flags) + shared programDayExerciseSchema exercise alanı eklendi. 213 mobile test 0 hata.
+**Son Güncelleme:** 2026-05-31 — TASK-2.12 ✅. completeWorkout API + useCompleteWorkout (networkMode: online, invalidateQueries) + WorkoutScreen tamamlama akışı (success/offline toast, replace navigate, hasNavigated ref). 220 mobile test 0 hata.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.12 — Mobile: Tamamlama + Offline Senkron
+**Task:** TASK-2.13 — Mobile: Geçmiş Sekmesi
 **Durum:** Bekliyor
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.12 başlat.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.13 başlat.
 
 ---
 
@@ -50,7 +50,7 @@
 | 2.09 | Mobile: Builder Auto-save + Publish + Kopyalama | ✅ Tamamlandı |
 | 2.10 | Mobile: Üye Ana Ekranı Layout | ✅ Tamamlandı |
 | 2.11 | Mobile: Antrenman Ekranı + Video Modal | ✅ Tamamlandı |
-| 2.12 | Mobile: Tamamlama + Offline Senkron | ⬜ Bekliyor |
+| 2.12 | Mobile: Tamamlama + Offline Senkron | ✅ Tamamlandı |
 | 2.13 | Mobile: Geçmiş Sekmesi | ⬜ Bekliyor |
 | 2.14 | Mobile: Program Değişikliği Banner | ⬜ Bekliyor |
 
@@ -74,17 +74,17 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-2.10** (2026-05-30) — Mobile: Üye Ana Ekranı Layout ✅
-- `src/hooks/useMemberHome.ts` (YENİ): useMyActiveProgram (staleTime 1dk, gcTime 7gün) + getTodayWorkout + toAlpfitDay helpers.
-- `src/components/WeeklyBand.tsx` (YENİ): Pzt-Paz 7 hücre, today highlight, ▶/⬜/□/- durum ikonları.
-- `app/home/index.tsx`: loading/hata/bekleme/antrenman/dinlenme durumları; streak null render.
-- 14 yeni test. 187 mobile test 0 hata.
-
 **TASK-2.11** (2026-05-30) — Mobile: Antrenman Ekranı + Video Modal ✅
 - `shared/src/schemas/program.ts`: programDayExerciseSchema'ya exercise nested field eklendi (rebuild).
 - `src/components/VideoModal.tsx` (YENİ): toEmbedUrl util (watch?v= + youtu.be/), WebView iOS flags, hata durumu.
 - `app/workout/[programDayId].tsx` (YENİ): programDayId ile gün filtreleme, PDE id bazlı tik state, "Antrenmanı Bitir" placeholder, VideoModal entegrasyonu.
 - 26 yeni test (16 WorkoutScreen + 10 VideoModal). 213 mobile test 0 hata.
+
+**TASK-2.12** (2026-05-31) — Mobile: Tamamlama + Offline Senkron ✅
+- `src/api/completions.ts` (YENİ): completeWorkout — POST /workout-completions, 409 sessizce return.
+- `src/hooks/useCompleteWorkout.ts` (YENİ): useMutation, networkMode:'online', invalidateQueries.
+- `app/workout/[programDayId].tsx`: finishState machine (idle/submitting/done/offline), success/offline toast, replace navigate, hasNavigated ref.
+- 7 yeni test. 220 mobile test 0 hata.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -93,8 +93,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-2.12
+**Aktif Task:** TASK-2.13
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` (TASK-2.12)
+**Sıradaki:** `/devflow:run-task` (TASK-2.13)

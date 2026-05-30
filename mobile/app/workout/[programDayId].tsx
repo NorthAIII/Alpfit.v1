@@ -1,28 +1,45 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { VideoModal } from '../../src/components/VideoModal';
+import { useCompleteWorkout } from '../../src/hooks/useCompleteWorkout';
 import { useMyActiveProgram } from '../../src/hooks/useMemberHome';
 
 import type { Program } from '../../src/api/programs';
 
 type WorkoutExercise = Program['days'][number]['exercises'][number];
 
+type FinishState = 'idle' | 'submitting' | 'done' | 'offline';
+
+/** Cihaz yerel saatine göre YYYY-MM-DD döner (TR zaman dilimi). */
+function toLocalYMD(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export default function WorkoutScreen() {
   const router = useRouter();
-  const { programDayId } = useLocalSearchParams<{
+  const {
+    programDayId,
+    scheduledDate: scheduledDateParam,
+    isLate: isLateParam,
+  } = useLocalSearchParams<{
     programDayId: string;
-    scheduledDate?: string; // TASK-2.12'de tamamlama sinyalinde kullanılır
-    isLate?: string; // TASK-2.12'de geç tamamlama bayrağı
+    scheduledDate?: string;
+    isLate?: string;
   }>();
 
   const { data: program, isLoading, isError, refetch } = useMyActiveProgram();
+  const { mutate, isPaused } = useCompleteWorkout();
 
-  // Tik state: ProgramDayExercise id'si (aynı egzersiz iki kez eklenebilir — PDE id benzersiz)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [finishState, setFinishState] = useState<FinishState>('idle');
+  const hasNavigated = useRef(false);
 
   const day = program?.days.find((d) => d.id === programDayId) ?? null;
   const exercises: WorkoutExercise[] = day
@@ -30,6 +47,16 @@ export default function WorkoutScreen() {
     : [];
 
   const allChecked = exercises.length > 0 && checkedIds.size === exercises.length;
+
+  // TanStack Query online manager offline tespit ederse mutation pause edilir.
+  // (NetInfo kuruluysa bu yol çalışır; yoksa onError yolu tetiklenir.)
+  useEffect(() => {
+    if (!(finishState === 'submitting' && isPaused && !hasNavigated.current)) return;
+    hasNavigated.current = true;
+    setFinishState('offline');
+    const t = setTimeout(() => router.replace('/home'), 1500);
+    return () => clearTimeout(t);
+  }, [isPaused, finishState, router]);
 
   function toggleExercise(pdeId: string) {
     setCheckedIds((prev) => {
@@ -49,9 +76,36 @@ export default function WorkoutScreen() {
   }
 
   function handleFinishWorkout() {
-    // TASK-2.12'de POST /workout-completions bağlanacak
-    console.log('workout done');
-    Alert.alert('Harika iş!');
+    if (finishState !== 'idle') return;
+
+    const scheduledDate = scheduledDateParam ?? toLocalYMD(new Date());
+    const isLate = isLateParam === 'true';
+
+    setFinishState('submitting');
+    mutate(
+      { programDayId: programDayId!, scheduledDate, isLate },
+      {
+        onSuccess: () => {
+          if (!hasNavigated.current) {
+            hasNavigated.current = true;
+            setFinishState('done');
+            setTimeout(() => router.replace('/home'), 1500);
+          }
+        },
+        onError: (err) => {
+          // Ağ hatası → optimistik tamamlama, arka planda senkron beklenir
+          const isNetworkError = err instanceof TypeError;
+          if (isNetworkError && !hasNavigated.current) {
+            hasNavigated.current = true;
+            setFinishState('offline');
+            setTimeout(() => router.replace('/home'), 1500);
+          } else if (!isNetworkError) {
+            setFinishState('idle');
+            Alert.alert('Hata', "Kaydedilemedi. Destek için PT'ne yaz.");
+          }
+        },
+      },
+    );
   }
 
   // ── Yükleniyor ──────────────────────────────────────────────────────────────
@@ -98,6 +152,8 @@ export default function WorkoutScreen() {
       </View>
     );
   }
+
+  const isButtonDisabled = !allChecked || finishState !== 'idle';
 
   return (
     <View style={styles.container}>
@@ -179,19 +235,43 @@ export default function WorkoutScreen() {
       {/* Antrenmanı Bitir footer */}
       <View style={styles.footer}>
         <Pressable
-          style={[styles.finishButton, !allChecked && styles.finishButtonDisabled]}
-          onPress={allChecked ? handleFinishWorkout : undefined}
-          disabled={!allChecked}
+          style={[styles.finishButton, isButtonDisabled && styles.finishButtonDisabled]}
+          onPress={isButtonDisabled ? undefined : handleFinishWorkout}
+          disabled={isButtonDisabled}
           accessibilityRole="button"
-          accessibilityLabel={allChecked ? 'Antrenmanı Bitir' : 'Tüm egzersizleri işaretle'}
-          accessibilityState={{ disabled: !allChecked }}
+          accessibilityLabel={
+            finishState === 'submitting'
+              ? 'Kaydediliyor'
+              : allChecked
+                ? 'Antrenmanı Bitir'
+                : 'Tüm egzersizleri işaretle'
+          }
+          accessibilityState={{ disabled: isButtonDisabled }}
           testID="finish-button"
         >
-          <Text style={[styles.finishLabel, !allChecked && styles.finishLabelDisabled]}>
-            {allChecked ? 'Antrenmanı Bitir 🎉' : 'Tüm egzersizleri işaretle'}
+          <Text style={[styles.finishLabel, isButtonDisabled && styles.finishLabelDisabled]}>
+            {finishState === 'submitting'
+              ? 'Kaydediliyor...'
+              : allChecked
+                ? 'Antrenmanı Bitir 🎉'
+                : 'Tüm egzersizleri işaretle'}
           </Text>
         </Pressable>
       </View>
+
+      {/* Başarı toast */}
+      {finishState === 'done' ? (
+        <View style={styles.toast} testID="success-toast">
+          <Text style={styles.toastText}>🎉 Harika iş! Antrenmanını tamamladın.</Text>
+        </View>
+      ) : null}
+
+      {/* Offline toast */}
+      {finishState === 'offline' ? (
+        <View style={[styles.toast, styles.toastOffline]} testID="offline-toast">
+          <Text style={styles.toastText}>Bağlantı yok — internet gelince otomatik kaydedilecek.</Text>
+        </View>
+      ) : null}
 
       {/* Video Modal */}
       {activeVideoUrl ? (
@@ -332,6 +412,28 @@ const styles = StyleSheet.create({
   },
   finishLabelDisabled: {
     color: '#5A6373',
+  },
+
+  // Toast (başarı / offline)
+  toast: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: '#22C55E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+  },
+  toastOffline: {
+    backgroundColor: '#F59E0B',
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 
   // Loading/Error/NotFound ortak

@@ -1,9 +1,9 @@
 // WorkoutScreen component testi.
-// useMyActiveProgram ve VideoModal mock'lanır.
+// useMyActiveProgram, useCompleteWorkout ve VideoModal mock'lanır.
 // expo-router useLocalSearchParams ile programDayId inject edilir.
 
 import { Alert } from 'react-native';
-import { fireEvent } from '@testing-library/react-native';
+import { act, fireEvent, waitFor } from '@testing-library/react-native';
 
 import { renderWithProviders } from '../../test/render-with-providers';
 
@@ -11,14 +11,19 @@ import WorkoutScreen from './[programDayId]';
 
 const mockBack = jest.fn();
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 
 jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn().mockReturnValue({ programDayId: 'day-mon' }),
-  useRouter: () => ({ back: mockBack, push: mockPush }),
+  useRouter: () => ({ back: mockBack, push: mockPush, replace: mockReplace }),
 }));
 
 jest.mock('../../src/hooks/useMemberHome', () => ({
   useMyActiveProgram: jest.fn(),
+}));
+
+jest.mock('../../src/hooks/useCompleteWorkout', () => ({
+  useCompleteWorkout: jest.fn(),
 }));
 
 // VideoModal — bağımsız bileşen, kendi testleri var; burada sadece "açıldı" kontrol edilir
@@ -46,6 +51,8 @@ jest.mock('../../src/components/VideoModal', () => ({
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const memberHomeHooks = jest.mocked(require('../../src/hooks/useMemberHome'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const completeWorkoutHooks = jest.mocked(require('../../src/hooks/useCompleteWorkout'));
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 
@@ -103,10 +110,32 @@ function setupHooks(overrides: {
   });
 }
 
+function setupComplete(overrides: {
+  mutate?: jest.Mock;
+  isPaused?: boolean;
+} = {}) {
+  completeWorkoutHooks.useCompleteWorkout.mockReturnValue({
+    mutate: overrides.mutate ?? jest.fn(),
+    isPaused: overrides.isPaused ?? false,
+  });
+}
+
+/** Tüm egzersizleri işaretler. */
+function checkAll(getByTestId: ReturnType<typeof renderWithProviders>['getByTestId']) {
+  fireEvent.press(getByTestId(`checkbox-${EX_A.id}`));
+  fireEvent.press(getByTestId(`checkbox-${EX_B.id}`));
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('WorkoutScreen', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Default complete hook
+    setupComplete();
+  });
+
+  // ── Yükleme / hata durumları ────────────────────────────────────────────────
 
   it('yüklenirken loading durumu gösterilir', () => {
     setupHooks({ isLoading: true });
@@ -131,7 +160,6 @@ describe('WorkoutScreen', () => {
 
   it('programDayId eşleşmezse not-found durumu gösterilir', () => {
     setupHooks({ data: PROGRAM });
-    // programDayId'yi bilinmeyen bir değere çek
     jest.mocked(require('expo-router').useLocalSearchParams).mockReturnValue({
       programDayId: 'unknown-day',
     });
@@ -143,6 +171,8 @@ describe('WorkoutScreen', () => {
     });
   });
 
+  // ── Egzersiz listesi ────────────────────────────────────────────────────────
+
   it('egzersiz listesi doğru sırada gösterilir', () => {
     setupHooks({ data: PROGRAM });
     const { getByText } = renderWithProviders(<WorkoutScreen />);
@@ -150,11 +180,13 @@ describe('WorkoutScreen', () => {
     expect(getByText('Squat')).toBeOnTheScreen();
   });
 
-  it('gün başlığı header\'da gösterilir', () => {
+  it("gün başlığı header'da gösterilir", () => {
     setupHooks({ data: PROGRAM });
     const { getByTestId } = renderWithProviders(<WorkoutScreen />);
     expect(getByTestId('workout-title').props['children']).toBe('Üst Vücut');
   });
+
+  // ── Tik mantığı ─────────────────────────────────────────────────────────────
 
   it('tik kutusuna tap: egzersiz işaretlenir', () => {
     setupHooks({ data: PROGRAM });
@@ -174,6 +206,8 @@ describe('WorkoutScreen', () => {
     expect(getByTestId(`checkbox-${EX_A.id}`).props['accessibilityState']['checked']).toBe(false);
   });
 
+  // ── Tamamlama butonu durumları ───────────────────────────────────────────────
+
   it('tümü tiklenmeden "Antrenmanı Bitir" butonu disabled', () => {
     setupHooks({ data: PROGRAM });
     const { getByTestId } = renderWithProviders(<WorkoutScreen />);
@@ -181,36 +215,180 @@ describe('WorkoutScreen', () => {
     expect(btn.props['accessibilityState']['disabled']).toBe(true);
   });
 
-  it('tümü tiklendikten sonra buton aktif ve basılabilir', () => {
+  it('tümü tiklendikten sonra buton aktif', () => {
     setupHooks({ data: PROGRAM });
     const { getByTestId } = renderWithProviders(<WorkoutScreen />);
-    fireEvent.press(getByTestId(`checkbox-${EX_A.id}`));
-    fireEvent.press(getByTestId(`checkbox-${EX_B.id}`));
+    checkAll(getByTestId);
     const btn = getByTestId('finish-button');
     expect(btn.props['accessibilityState']['disabled']).toBe(false);
   });
 
-  it('finish butonuna basılınca Alert çağrılır (TASK-2.12 placeholder)', () => {
-    const alertSpy = jest.spyOn(Alert, 'alert');
+  // ── POST /workout-completions çağrısı ───────────────────────────────────────
+
+  it('"Antrenmanı Bitir" basılınca mutate çağrılır', () => {
+    const mockMutate = jest.fn();
+    setupComplete({ mutate: mockMutate });
     setupHooks({ data: PROGRAM });
+
     const { getByTestId } = renderWithProviders(<WorkoutScreen />);
-    fireEvent.press(getByTestId(`checkbox-${EX_A.id}`));
-    fireEvent.press(getByTestId(`checkbox-${EX_B.id}`));
+    checkAll(getByTestId);
     fireEvent.press(getByTestId('finish-button'));
-    expect(alertSpy).toHaveBeenCalledWith('Harika iş!');
+
+    expect(mockMutate).toHaveBeenCalledTimes(1);
+    const [variables] = mockMutate.mock.calls[0] as [{ programDayId: string; scheduledDate: string; isLate: boolean }];
+    expect(variables.programDayId).toBe('day-mon');
+    expect(variables.scheduledDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(variables.isLate).toBe(false);
   });
+
+  it('scheduledDate URL param varsa onu kullanır', () => {
+    jest.mocked(require('expo-router').useLocalSearchParams).mockReturnValue({
+      programDayId: 'day-mon',
+      scheduledDate: '2026-06-15',
+    });
+    const mockMutate = jest.fn();
+    setupComplete({ mutate: mockMutate });
+    setupHooks({ data: PROGRAM });
+
+    const { getByTestId } = renderWithProviders(<WorkoutScreen />);
+    checkAll(getByTestId);
+    fireEvent.press(getByTestId('finish-button'));
+
+    const [variables] = mockMutate.mock.calls[0] as [{ scheduledDate: string }];
+    expect(variables.scheduledDate).toBe('2026-06-15');
+
+    // Restore
+    jest.mocked(require('expo-router').useLocalSearchParams).mockReturnValue({
+      programDayId: 'day-mon',
+    });
+  });
+
+  // ── Başarı akışı ─────────────────────────────────────────────────────────────
+
+  it('başarı sonrası success-toast gösterilir', async () => {
+    jest.useFakeTimers();
+    const mockMutate = jest.fn((_vars, options: { onSuccess: () => void }) => {
+      options.onSuccess();
+    });
+    setupComplete({ mutate: mockMutate });
+    setupHooks({ data: PROGRAM });
+
+    const { getByTestId } = renderWithProviders(<WorkoutScreen />);
+    checkAll(getByTestId);
+    fireEvent.press(getByTestId('finish-button'));
+
+    await waitFor(() => expect(getByTestId('success-toast')).toBeOnTheScreen());
+
+    jest.useRealTimers();
+  });
+
+  it('başarı sonrası 1.5sn içinde /home navigate edilir (replace)', async () => {
+    jest.useFakeTimers();
+    const mockMutate = jest.fn((_vars, options: { onSuccess: () => void }) => {
+      options.onSuccess();
+    });
+    setupComplete({ mutate: mockMutate });
+    setupHooks({ data: PROGRAM });
+
+    const { getByTestId } = renderWithProviders(<WorkoutScreen />);
+    checkAll(getByTestId);
+    fireEvent.press(getByTestId('finish-button'));
+
+    await act(async () => jest.advanceTimersByTime(1500));
+    expect(mockReplace).toHaveBeenCalledWith('/home');
+
+    jest.useRealTimers();
+  });
+
+  // ── Offline (ağ hatası) akışı ─────────────────────────────────────────────────
+
+  it('ağ hatası → offline-toast gösterilir', async () => {
+    jest.useFakeTimers();
+    const mockMutate = jest.fn((_vars, options: { onError: (err: Error) => void }) => {
+      options.onError(new TypeError('Network request failed'));
+    });
+    setupComplete({ mutate: mockMutate });
+    setupHooks({ data: PROGRAM });
+
+    const { getByTestId } = renderWithProviders(<WorkoutScreen />);
+    checkAll(getByTestId);
+    fireEvent.press(getByTestId('finish-button'));
+
+    await waitFor(() => expect(getByTestId('offline-toast')).toBeOnTheScreen());
+
+    jest.useRealTimers();
+  });
+
+  it('ağ hatası → 1.5sn içinde /home navigate edilir (replace)', async () => {
+    jest.useFakeTimers();
+    const mockMutate = jest.fn((_vars, options: { onError: (err: Error) => void }) => {
+      options.onError(new TypeError('Network request failed'));
+    });
+    setupComplete({ mutate: mockMutate });
+    setupHooks({ data: PROGRAM });
+
+    const { getByTestId } = renderWithProviders(<WorkoutScreen />);
+    checkAll(getByTestId);
+    fireEvent.press(getByTestId('finish-button'));
+
+    await act(async () => jest.advanceTimersByTime(1500));
+    expect(mockReplace).toHaveBeenCalledWith('/home');
+
+    jest.useRealTimers();
+  });
+
+  // ── TanStack Query pause (offline detection) akışı ───────────────────────────
+
+  it('isPaused=true (TanStack offline tespiti) → offline-toast gösterilir', async () => {
+    jest.useFakeTimers();
+    // mutate çağrıldığında state 'submitting' geçer; isPaused true olunca effect tetiklenir
+    const mockMutate = jest.fn(); // kasıtlı olarak callback çağırmaz — TanStack pause simülasyonu
+    setupComplete({ mutate: mockMutate, isPaused: true });
+    setupHooks({ data: PROGRAM });
+
+    const { getByTestId, queryByTestId } = renderWithProviders(<WorkoutScreen />);
+    checkAll(getByTestId);
+
+    // Henüz submitting olmadığı için isPaused effect tetiklenmez
+    expect(queryByTestId('offline-toast')).toBeNull();
+
+    // Butona basınca state → submitting + isPaused=true → effect → offline
+    fireEvent.press(getByTestId('finish-button'));
+
+    await waitFor(() => expect(getByTestId('offline-toast')).toBeOnTheScreen());
+
+    jest.useRealTimers();
+  });
+
+  // ── HTTP hata akışı ──────────────────────────────────────────────────────────
+
+  it('HTTP hata → Alert gösterilir, navigate edilmez', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert');
+    const mockMutate = jest.fn((_vars, options: { onError: (err: Error) => void }) => {
+      options.onError(new Error('completeWorkout: 500'));
+    });
+    setupComplete({ mutate: mockMutate });
+    setupHooks({ data: PROGRAM });
+
+    const { getByTestId } = renderWithProviders(<WorkoutScreen />);
+    checkAll(getByTestId);
+    fireEvent.press(getByTestId('finish-button'));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledWith('Hata', expect.stringContaining('Kaydedilemedi')));
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  // ── Video Modal ──────────────────────────────────────────────────────────────
 
   it('videoUrl olan egzersizde ▶ butonu görünür', () => {
     setupHooks({ data: PROGRAM });
     const { getByTestId } = renderWithProviders(<WorkoutScreen />);
-    // EX_A has videoUrl
     expect(getByTestId(`video-button-${EX_A.id}`)).toBeOnTheScreen();
   });
 
   it('videoUrl olmayan egzersizde ▶ butonu görünmez', () => {
     setupHooks({ data: PROGRAM });
     const { queryByTestId } = renderWithProviders(<WorkoutScreen />);
-    // EX_B has no videoUrl
     expect(queryByTestId(`video-button-${EX_B.id}`)).toBeNull();
   });
 
@@ -229,7 +407,7 @@ describe('WorkoutScreen', () => {
     expect(queryByTestId('video-modal-mock')).toBeNull();
   });
 
-  it('3 videoUrl\'li egzersiz: tüm ▶ butonları görünür (EX_C ile)', () => {
+  it('3 videoUrl\'li egzersiz: tüm ▶ butonları doğru görünür', () => {
     const programWithVideo = {
       ...PROGRAM,
       days: [
@@ -246,7 +424,7 @@ describe('WorkoutScreen', () => {
     setupHooks({ data: programWithVideo });
     const { getByTestId, queryByTestId } = renderWithProviders(<WorkoutScreen />);
     expect(getByTestId(`video-button-${EX_A.id}`)).toBeOnTheScreen();
-    expect(queryByTestId(`video-button-${EX_B.id}`)).toBeNull(); // no video
+    expect(queryByTestId(`video-button-${EX_B.id}`)).toBeNull(); // video yok
     expect(getByTestId(`video-button-${EX_C.id}`)).toBeOnTheScreen();
   });
 });

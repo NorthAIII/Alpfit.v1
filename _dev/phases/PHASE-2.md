@@ -209,7 +209,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.09 | TASK-2.09 | ✅ Tamamlandı | Mobile: Program Builder — `useProgramAutoSave` hook (1s debounce PATCH) + publish butonu + kopyalama CTA |
 | 2.10 | TASK-2.10 | ✅ Tamamlandı | Mobile: Üye Ana Ekranı temel layout — streak gizli, BUGÜN kartı, WeeklyBand, bekleme durumu |
 | 2.11 | TASK-2.11 | ✅ Tamamlandı | Mobile: Antrenman Ekranı — egzersiz listesi + yerel tik state + VideoModal (react-native-webview + YouTube embed) |
-| 2.12 | TASK-2.12 | ⬜ Bekliyor | Mobile: Antrenman tamamlama + offline kuyruğu + senkron (POST /workout-completions, idempotent, optimistic UI) |
+| 2.12 | TASK-2.12 | ✅ Tamamlandı | Mobile: Antrenman tamamlama + offline kuyruğu + senkron (POST /workout-completions, idempotent, optimistic UI) |
 | 2.13 | TASK-2.13 | ⬜ Bekliyor | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |
 | 2.14 | TASK-2.14 | ⬜ Bekliyor | Mobile: Program değişikliği banner — banner-store'a `program_changed` tipi + MemberHomeScreen banner stack |
 
@@ -240,4 +240,4 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 ---
 
 **Oluşturulma:** 2026-05-30 (discuss-phase 2)
-**Son Güncelleme:** 2026-05-30 — TASK-2.09 ✅: useProgramAutoSave (debounce PATCH) + publish + kopyalama CTA/modal + MemberDetailScreen programStatus param. 173 test 0 hata.
+**Son Güncelleme:** 2026-05-31 — TASK-2.12 ✅: completeWorkout API + useCompleteWorkout (networkMode: online) + WorkoutScreen tamamlama akışı (success/offline toast, replace navigate). 220 test 0 hata.
