@@ -9,6 +9,8 @@ import { registerAuthGuard } from './auth/middleware.js';
 import { getPrisma } from './db/prisma.js';
 import { getRedis, type Redis } from './redis/client.js';
 import { adminInternalRoutes } from './routes/admin-internal.js';
+import { authLogoutAllRoutes } from './routes/auth-logout-all.js';
+import { authLogoutRoutes } from './routes/auth-logout.js';
 import { authMeRoutes } from './routes/auth-me.js';
 import { authOtpSendRoutes } from './routes/auth-otp-send.js';
 import { authOtpVerifyRoutes } from './routes/auth-otp-verify.js';
@@ -69,6 +71,8 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(authOtpVerifyRoutes);
   await app.register(authProfileRoutes);
   await app.register(authRefreshRoutes);
+  await app.register(authLogoutRoutes);
+  await app.register(authLogoutAllRoutes);
   await app.register(authMeRoutes);
 
   return app;

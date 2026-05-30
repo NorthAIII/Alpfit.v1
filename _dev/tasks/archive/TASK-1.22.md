@@ -1,6 +1,6 @@
 # TASK-1.22: Tüm cihazlardan çıkış endpoint
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -103,18 +103,31 @@ backend/
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (`feat(TASK-1.22): add logout and logout-all endpoints`)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
-- [ ] PHASE-1.md task tablosu güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (`feat(TASK-1.22): add logout and logout-all endpoints`)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
+- [x] PHASE-1.md task tablosu güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `POST /auth/logout` (`routes/auth-logout.ts` YENİ) — `app.authenticate` (access token) korumalı; body `{ refreshToken }`. Token hash lookup → `userId` match (başka kullanıcının token'ı → **403** `forbidden`, hedef token dokunulmaz). Idempotency: bilinmeyen token **204**, zaten revoke **204** (yeni audit yok). Gerçek revoke atomik compare-and-set (`updateMany WHERE id=? AND revokedAt IS NULL`) → race'te çift audit önlenir; `revokedReason:'logout'` + `user_logout` audit (`refreshTokenId` whitelist). 400 eksik gövde, 401 middleware.
+- `POST /auth/logout-all` (`routes/auth-logout-all.ts` YENİ) — `app.authenticate` korumalı; kullanıcının tüm `revokedAt IS NULL` token'ları tek `updateMany` ile batch revoke (`revokedReason:'logout_all'`). `user_logout_all` audit **her zaman** yazılır, metadata `count` (revoke edilen sayı, PII yok). 204.
+- Access token logout/logout-all sonrası 15dk TTL dolana kadar geçerli kalır (stateless JWT; kabul edilen trade-off — jti blacklist v1.5+). logout-all GET /auth/me testinde doğrulandı.
+- errors.json `auth.logoutTokenForbidden` ("Bu oturum sana ait değil.") eklendi. İki route `server.ts`'e kaydedildi (import sırası: `auth-logout-all` → `auth-logout`).
+
+**Kalan İşler:** Yok. Mobile "Çıkış / Tüm cihazlardan çıkış" UI tarafı sonraki M1 Mobile task'lerinde (TASK-1.33 ayarlar/cihaz hatırlama).
+
+**Test Sonucu:**
+- Yeni: `auth-logout.test.ts` (6 senaryo: bu cihaz revoke + diğer aktif / 403 cross-user / idempotent already-revoked / idempotent unknown / 400 / 401) + `auth-logout-all.test.ts` (5 senaryo: 3→0 aktif + count=3 audit / access hâlâ geçerli (me 200) / yalnızca çağıranın token'ı / boş→count=0 audit / 401).
+- backend **118 PASS** (107 + 11). typecheck / lint / format temiz.
 
 ---
 
