@@ -18,9 +18,11 @@ import { authProfileRoutes } from './routes/auth-profile.js';
 import { authRefreshRoutes } from './routes/auth-refresh.js';
 import { healthzRoutes } from './routes/healthz.js';
 import { internalDevOtpRoutes } from './routes/internal-dev-otp.js';
+import { invitationsAcceptRoutes } from './routes/invitations-accept.js';
 import { invitationsCancelRoutes } from './routes/invitations-cancel.js';
 import { invitationsCreateRoutes } from './routes/invitations-create.js';
 import { invitationsListRoutes } from './routes/invitations-list.js';
+import { invitationsPreviewRoutes } from './routes/invitations-preview.js';
 
 import type { Env } from './config/env.js';
 import type { PrismaClient } from './db/prisma.js';
@@ -80,6 +82,8 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(invitationsCreateRoutes({ env: opts.env }));
   await app.register(invitationsListRoutes({ env: opts.env }));
   await app.register(invitationsCancelRoutes);
+  await app.register(invitationsAcceptRoutes);
+  await app.register(invitationsPreviewRoutes);
 
   return app;
 }

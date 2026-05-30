@@ -1,6 +1,6 @@
 # TASK-1.24: Davet kabul endpoint (lazy expiry + tek kullanımlık + PT-Member ilişki)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -152,7 +152,21 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **`backend/src/routes/invitations-accept.ts` (YENİ)** — `POST /invitations/:code/accept` (auth korumalı). Davet `code @unique` ile çekilir (trainer ad/soyad/deletedAt join). Doğrulama sırası: davet yok **veya PT soft-deleted** → 404; lazy expire (`markIfExpired`) → 410 `expired`; accepted → 409 `already_used`; cancelled → 410 `cancelled`; **own_invitation → 400 (role 403'ten ÖNCE** — aksi halde PT kendi davetinde role guard'a takılır); role !== member → 403; üyenin aktif PT'si var → 409 `already_has_trainer`. Kabul atomik `$transaction`: compare-and-set `updateMany WHERE status='pending'` (count=0 → `InvitationRaceLostError` → 409) + `createPtMemberRelation` (P2002 → 409 already_has_trainer) + `logAuditEvent('invitation_accepted', {invitationId})`. 200 `{trainerId, trainerFirstName, trainerLastName}`.
+- **`backend/src/routes/invitations-preview.ts` (YENİ)** — `GET /invitations/:code` public (auth yok). Davet yok/PT soft-deleted → 404; lazy expire → 410 `{status:'expired'}`; cancelled/accepted → 410; pending → 200 `{trainerFirstName, trainerLastName, expiresAt}`. PII: yalnızca PT ad+soyad (bilinçli — üye PT'sini doğrulasın); telefon/üye verisi yok.
+- **`backend/src/auth/relations.ts` (GÜNCELLE)** — placeholder dolduruldu: `getActivePtForMember` (soft-deleted PT filtreli), `assertNoActivePt`, `createPtMemberRelation`; eski `assertSingleActivePtForMember` alias olarak korundu (TASK-1.13 test'i kırılmaz). Tüm helper'lar `Pick<PrismaClient,'trainerMember'>` alır (tx uyumlu).
+- **i18n** (`errors.json` invite bölümü) — `expired`/`cancelled`/`onlyMember`/`alreadyHasTrainer`/`ownInvitation` eklendi; `notFound`/`alreadyUsed`/`expired` metinleri F1.1 diline güncellendi.
+- **`server.ts`** — iki route register edildi (accept + preview).
+
+**Test:** ✅ accept 10 senaryo + preview 6 senaryo (concurrent race dahil: Promise.all → biri 200 biri 409, tek aktif TrainerMember). Backend **148 PASS** (önceki 132). typecheck + lint + format temiz.
+
+**Karar notları:**
+- AuditLog metadata yalnızca `invitationId` (TASK-1.23 deseni) — memberHash/trainerHash whitelist'te yok; `userId` zaten `logAuditEvent`'te hash'lenir, ham ID yazılmaz. Whitelist'e alan eklemek bilinçli karar gerektirir, gerek görülmedi.
+- Race güvencesi iki katman: davet tek-kullanımı status compare-and-set ile (aynı kodu 2 üye); aktif PT tekliği DB partial unique index ile (P2002 yakalanır).
 
 ---
 

@@ -22,9 +22,13 @@
     "logoutTokenForbidden": "Bu oturum sana ait değil."
   },
   "invite": {
-    "notFound": "Davet linki bulunamadı.",
-    "expired": "Davet linkinin süresi dolmuş.",
-    "alreadyUsed": "Bu davet linki kullanılmış.",
+    "notFound": "Davet bağlantısı geçersiz.",
+    "expired": "Bu davet süresi geçmiş. PT'nden yeni link iste.",
+    "cancelled": "Davet iptal edilmiş. PT'nden yeni link iste.",
+    "alreadyUsed": "Bu davet zaten kullanılmış.",
+    "onlyMember": "Sadece üye davet kabul edebilir.",
+    "alreadyHasTrainer": "Zaten bir PT'ye bağlısın. Yeni PT için önce mevcut PT'nle ilişkini sonlandır.",
+    "ownInvitation": "Kendi davetini kabul edemezsin.",
     "forbidden": "Bu davet sana ait değil.",
     "notCancellable": "Bu davet artık iptal edilemez."
   },
