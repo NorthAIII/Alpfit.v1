@@ -207,7 +207,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.07 | TASK-2.07 | ✅ Tamamlandı | Mobile: Program Builder giriş noktası — MemberDetailScreen + ProgramBuilderScreen çatısı + yatay gün sekmeleri |
 | 2.08 | TASK-2.08 | ✅ Tamamlandı | Mobile: Program Builder — gün içi egzersiz listesi + ExerciseDayCard + ↑↓ sıralama + egzersiz ekle/sil |
 | 2.09 | TASK-2.09 | ✅ Tamamlandı | Mobile: Program Builder — `useProgramAutoSave` hook (1s debounce PATCH) + publish butonu + kopyalama CTA |
-| 2.10 | TASK-2.10 | ⬜ Bekliyor | Mobile: Üye Ana Ekranı temel layout — streak gizli, BUGÜN kartı, WeeklyBand, bekleme durumu |
+| 2.10 | TASK-2.10 | ✅ Tamamlandı | Mobile: Üye Ana Ekranı temel layout — streak gizli, BUGÜN kartı, WeeklyBand, bekleme durumu |
 | 2.11 | TASK-2.11 | ⬜ Bekliyor | Mobile: Antrenman Ekranı — egzersiz listesi + yerel tik state + VideoModal (react-native-webview + YouTube embed) |
 | 2.12 | TASK-2.12 | ⬜ Bekliyor | Mobile: Antrenman tamamlama + offline kuyruğu + senkron (POST /workout-completions, idempotent, optimistic UI) |
 | 2.13 | TASK-2.13 | ⬜ Bekliyor | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |

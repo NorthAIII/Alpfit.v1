@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-2.09 ✅. useProgramAutoSave hook (1sn debounce PATCH) + publish butonu (boş gün guard, race condition önlem) + kopyalama CTA/modal + MemberDetailScreen programStatus param. 173 mobile test 0 hata.
+**Son Güncelleme:** 2026-05-30 — TASK-2.10 ✅. MemberHomeScreen (loading/hata/bekleme/antrenman/dinlenme durumları) + WeeklyBand bileşeni + useMemberHome hook + fetchMyActiveProgram API. 187 mobile test 0 hata.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.10 — Mobile: Üye Ana Ekranı Layout
+**Task:** TASK-2.11 — Mobile: Antrenman Ekranı + Video Modal
 **Durum:** Bekliyor
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.10 başlat.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.11 başlat.
 
 ---
 
@@ -48,7 +48,7 @@
 | 2.07 | Mobile: Builder Giriş + Şablon Çatısı | ✅ Tamamlandı |
 | 2.08 | Mobile: Builder Egzersiz Listesi + ↑↓ | ✅ Tamamlandı |
 | 2.09 | Mobile: Builder Auto-save + Publish + Kopyalama | ✅ Tamamlandı |
-| 2.10 | Mobile: Üye Ana Ekranı Layout | ⬜ Bekliyor |
+| 2.10 | Mobile: Üye Ana Ekranı Layout | ✅ Tamamlandı |
 | 2.11 | Mobile: Antrenman Ekranı + Video Modal | ⬜ Bekliyor |
 | 2.12 | Mobile: Tamamlama + Offline Senkron | ⬜ Bekliyor |
 | 2.13 | Mobile: Geçmiş Sekmesi | ⬜ Bekliyor |
@@ -74,16 +74,17 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-2.08** (2026-05-30) — Mobile: Builder Egzersiz Listesi + ↑↓ ✅
-- `ExerciseDayCard.tsx`: ProgramDayExercise tipi, set/reps input, ↑↓ sıralama, Alert silme, "Detay ekle" toggle.
-- `app/program/[programId].tsx`: 7 günlük local state, CRUD + boş gün state, ExerciseSearchBottomSheet entegrasyonu.
-- 14 yeni test. 152 mobile test 0 hata.
-
 **TASK-2.09** (2026-05-30) — Mobile: Builder Auto-save + Publish + Kopyalama ✅
 - `src/hooks/useProgramAutoSave.ts` (YENİ): 1sn debounce PATCH, saveState, cancelPendingAutoSave.
 - `src/hooks/useProgram.ts`: usePublishProgram + useCopyProgram + useTrainerMembers eklendi.
 - `app/program/[programId].tsx`: auto-save indicator, publish butonu (boş gün guard + race condition önlem), kopyalama CTA + Modal.
 - `app/member/[memberId].tsx`: programStatus param eklendi. 173 mobile test 0 hata.
+
+**TASK-2.10** (2026-05-30) — Mobile: Üye Ana Ekranı Layout ✅
+- `src/hooks/useMemberHome.ts` (YENİ): useMyActiveProgram (staleTime 1dk, gcTime 7gün) + getTodayWorkout + toAlpfitDay helpers.
+- `src/components/WeeklyBand.tsx` (YENİ): Pzt-Paz 7 hücre, today highlight, ▶/⬜/□/- durum ikonları.
+- `app/home/index.tsx`: loading/hata/bekleme/antrenman/dinlenme durumları; streak null render; TASK-2.11 placeholder navigate.
+- 14 yeni test. 187 mobile test 0 hata.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -92,7 +93,7 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-2.10
+**Aktif Task:** TASK-2.11
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`

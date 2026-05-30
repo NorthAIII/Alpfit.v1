@@ -1,6 +1,6 @@
 # TASK-2.10: Mobile — Üye Ana Ekranı Temel Layout (Streak Gizli, BUGÜN Kartı, Haftalık Band)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.2 — Üye Program Görüntüleme + Tamamlama
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -34,7 +34,7 @@ Streak alanı `display: none` ile gizlenir — M3 fazında açılacak. Bu kapsam
 
 ## Alt Görevler
 
-- [ ] **1. `useMemberHome` Query Hook**
+- [x] **1. `useMemberHome` Query Hook**
   - `apps/mobile/src/hooks/useMemberHome.ts` oluştur:
     - `useMyActiveProgram()` — `GET /me/program` query
     - `staleTime: 60 * 1000` (1 dk — üye açtıkça tazelensin ama çok request atmasın)
@@ -42,7 +42,7 @@ Streak alanı `display: none` ile gizlenir — M3 fazında açılacak. Bu kapsam
     - Program yoksa `null` döner (bekleme durumu)
     - `getTodayWorkout(program)` util: `dayOfWeek = today`, programdan o günün `ProgramDay`'ini bul
 
-- [ ] **2. `WeeklyBand` Bileşeni**
+- [x] **2. `WeeklyBand` Bileşeni**
   - `apps/mobile/src/components/WeeklyBand.tsx` oluştur:
     - Props: `programDays`, `workoutCompletions` (bu haftanın tamamlamaları — şimdilik placeholder/boş)
     - Pzt-Paz 7 hücre, yatay sıra
@@ -55,7 +55,7 @@ Streak alanı `display: none` ile gizlenir — M3 fazında açılacak. Bu kapsam
       - Gelecek gün (dinlenme): `-`
     - Bugünkü hücre highlight (arka plan rengi)
 
-- [ ] **3. `MemberHomeScreen` — Ana Layout**
+- [x] **3. `MemberHomeScreen` — Ana Layout**
   - `apps/mobile/src/screens/MemberHomeScreen.tsx` oluştur (veya mevcut varsa güncelle):
     - **Üst alan (streak — GİZLİ):** `{ display: 'none' }` veya `null` — M3'te açılacak. Yorum bırak: `{/* TASK-M3: streak alanı buraya gelecek */}`
     - **Banner stack alanı:** TASK-2.14'te bağlanacak; şimdilik boş `View` placeholder
@@ -66,13 +66,13 @@ Streak alanı `display: none` ile gizlenir — M3 fazında açılacak. Bu kapsam
     - **Haftalık Band:** `WeeklyBand` bileşeni
     - **Alt navigasyon:** "Geçmiş" sekmesi tab'ı (TASK-2.13'te doldurulacak)
 
-- [ ] **4. Bekleme Durumu**
+- [x] **4. Bekleme Durumu**
   - Program yokken (`useMyActiveProgram` null dönerse):
     - Streak alanı hâlâ gizli
     - Ortalanmış tek kart: "🏋️ [PT Adı] senin için programını hazırlıyor. Hazır olduğunda buradan görebileceksin."
     - PT adını `GET /me/trainer` endpoint'inden çek (veya Faz 1'de kayıtlı profile verisinden al)
 
-- [ ] **5. Loading + Hata Durumları**
+- [x] **5. Loading + Hata Durumları**
   - Program yükleniyor: skeleton placeholder (BUGÜN kartı alanında)
   - Program yüklenemedi: "Programını yükleyemedik. İnternetini kontrol et." + "Yenile" butonu
 
@@ -100,30 +100,35 @@ apps/mobile/src/
 
 ## Test Kriterleri
 
-- [ ] Program varken bugün antrenman varsa BUGÜN kartı "Antrenmana git →" gösterir
-- [ ] Bugün dinlenme günüyse "Bugün dinlenme günün 🌿" gösterilir
-- [ ] Program yokken bekleme durumu ("PT hazırlıyor" kartı) gösterilir
-- [ ] WeeklyBand 7 hücre gösteriyor; bugünkü hücre highlight'lı
-- [ ] "Antrenmana git →" butonuna basılınca WorkoutScreen navigate oluyor (TASK-2.11 sonrası tam çalışacak)
-- [ ] Streak alanı görünmüyor (null render)
-- [ ] Yükleniyor durumunda skeleton/indicator gösterilir
-- [ ] TypeScript typecheck: 0 hata
+- [x] Program varken bugün antrenman varsa BUGÜN kartı "Antrenmana git →" gösterir
+- [x] Bugün dinlenme günüyse "Bugün dinlenme günün 🌿" gösterilir
+- [x] Program yokken bekleme durumu ("PT hazırlıyor" kartı) gösterilir
+- [x] WeeklyBand 7 hücre gösteriyor; bugünkü hücre highlight'lı
+- [x] "Antrenmana git →" butonuna basılınca WorkoutScreen navigate oluyor (TASK-2.11 sonrası tam çalışacak; `@ts-expect-error` ile geçici tipleme)
+- [x] Streak alanı görünmüyor (null render)
+- [x] Yükleniyor durumunda skeleton/indicator gösterilir
+- [x] TypeScript typecheck: 0 hata
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+**2026-05-30** — TASK-2.10 tamamlandı.
+- `mobile/src/api/programs.ts`: `fetchMyActiveProgram()` eklendi (GET /me/program, 404→null)
+- `mobile/src/hooks/useMemberHome.ts` (YENİ): `useMyActiveProgram` (staleTime 1dk, gcTime 7gün) + `getTodayWorkout` util + `toAlpfitDay/todayAlpfitDay` helpers
+- `mobile/src/components/WeeklyBand.tsx` (YENİ): Pzt-Paz 7 hücre, today highlight, ▶/⬜/□/- durum ikonları
+- `mobile/app/home/index.tsx` güncellendi: loading/hata/bekleme/dinlenme/antrenman durumları; `@ts-expect-error` ile TASK-2.11 placeholder navigate; streak null render
+- 14 yeni test (WeeklyBand: 5, MemberHomeScreen: 9). 187 mobile test 0 hata. TypeScript 0 hata.
 
 ---
 

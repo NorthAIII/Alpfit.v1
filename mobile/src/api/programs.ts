@@ -57,6 +57,14 @@ export async function publishProgram(programId: string): Promise<Program> {
   return res.json() as Promise<Program>;
 }
 
+/** GET /me/program — üyenin kendi aktif programı (member view). 404 → null. */
+export async function fetchMyActiveProgram(): Promise<Program | null> {
+  const res = await authedFetch('/me/program');
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('fetchMyActiveProgram failed');
+  return res.json() as Promise<Program>;
+}
+
 /** POST /programs/:id/copy — hedef üyeye yeni draft oluşturur. */
 export async function copyProgramToMember(
   programId: string,
