@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — TASK-2.14 ✅. memberBannerStore + useProgramChangedBanner (AsyncStorage dismiss persist) + MemberHomeScreen nötr banner UI. 251 mobile test 0 hata. Faz 2 tüm task'lar tamamlandı — verify-phase bekleniyor.
+**Son Güncelleme:** 2026-05-31 — verify-phase 2 başlatıldı. 519 test ✅, güvenlik ✅; lint (35 hata) + format (25 dosya) + backend typecheck (2 hata) CI fail. TASK-2.15 açıldı — düzeltme sonrası UAT tekrar.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 2 — Program akışı uçtan uca (M2)
 **Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** verify
-**İlerleme:** 14/14 task tamamlandı. Sıradaki: `/devflow:verify-phase 2`
+**Adım:** task (CI düzeltme)
+**İlerleme:** 14/15 task tamamlandı. TASK-2.15 CI kalite düzeltmesi → ardından verify-phase 2 yeniden.
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** —
-**Durum:** Faz 2 tüm task'lar ✅ tamamlandı.
-**Sonraki Adım:** `/devflow:verify-phase 2` ile kullanıcı kabul testini başlat.
+**Task:** TASK-2.15 — CI Kalite: Lint + Format + Backend Typecheck
+**Durum:** ⬜ Bekliyor
+**Sonraki Adım:** `/devflow:run-task TASK-2.15` → düzeltme sonrası `/devflow:verify-phase 2` yeniden.
 
 ---
 
@@ -53,6 +53,7 @@
 | 2.12 | Mobile: Tamamlama + Offline Senkron | ✅ Tamamlandı |
 | 2.13 | Mobile: Geçmiş Sekmesi | ✅ Tamamlandı |
 | 2.14 | Mobile: Program Değişikliği Banner | ✅ Tamamlandı |
+| 2.15 | CI Kalite: Lint + Format + Backend Typecheck | ⬜ Bekliyor |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -74,13 +75,6 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-2.13** (2026-05-31) — Mobile: Geçmiş Sekmesi ✅
-- `src/api/completions.ts`: fetchMyWorkoutHistory + WorkoutCompletionItem tipi eklendi.
-- `src/hooks/useWorkoutHistory.ts` (YENİ): useInfiniteQuery, 30/sayfa, gcTime 7 gün.
-- `app/home/history.tsx` (YENİ): WorkoutHistoryScreen — FlatList infinite scroll, boş durum, isLate ikon.
-- `app/workout-history/[programDayId].tsx` (YENİ): WorkoutDetailScreen — okuma modu, badge.
-- 17 yeni test. 237 mobile test 0 hata.
-
 **TASK-2.14** (2026-05-31) — Mobile: Program Değişikliği Banner ✅
 - `shared/src/schemas/program.ts`: `hasUnreadUpdate: z.boolean().optional()` eklendi.
 - `mobile/test/mocks/async-storage.ts` (YENİ): In-memory AsyncStorage test mock'u + jest config + setup reset.
@@ -89,6 +83,10 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 - `app/home/index.tsx`: Nötr mavi banner UI ("ℹ️ Programında güncelleme var") + ✕ dismiss.
 - 14 yeni test. 251 mobile test 0 hata.
 
+**verify-phase 2** (2026-05-31) — Otomatik kontroller ⚠️ kısmi
+- 519 test ✅, güvenlik ✅. Lint 35 hata + format 25 dosya + backend typecheck 2 hata → TASK-2.15.
+- 19 UAT senaryosu hazırlandı (faz dokümanında). TASK-2.15 sonrası UAT tekrar.
+
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
 <!-- KURAL: "Son Tamamlanan Faz", "Son Tamamlanan Sprint" gibi ek özet bölümleri EKLEME — faz durum özeti PHASES.md'de, faz detayları PHASE-N.md'de. DURUM yalnızca aktif durum + son 2 task özeti. -->
@@ -96,8 +94,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** —
+**Aktif Task:** TASK-2.15 — CI kalite düzeltmesi
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:verify-phase 2`
+**Sıradaki:** `/devflow:run-task TASK-2.15` → ardından `/devflow:verify-phase 2`
