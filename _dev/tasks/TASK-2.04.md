@@ -40,7 +40,7 @@
     - `getMyWorkoutHistory(memberId, cursor?, limit=30)`:
       - `completedAt` desc sıra
       - Cursor-based pagination: `cursor` varsa `{ id: { lt: cursor } }` (veya `completedAt` cursor)
-      - Her satırda: id, completedAt, scheduledDate, isLate, programDay (dayOfWeek + title)
+      - Her satırda: id, completedAt, scheduledDate, isLate, programDay (dayOfWeek + title + **programId**) — programId, TASK-2.13 WorkoutDetailScreen'de `GET /programs/:id` için gerekli
       - Limit: 30 per page; response: `{ items, nextCursor }`
 
 - [ ] **2. WorkoutCompletions Route Handler**

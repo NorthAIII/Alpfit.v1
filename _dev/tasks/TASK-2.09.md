@@ -84,8 +84,8 @@ apps/mobile/src/
 - **Race condition önlemi:** `cancelPendingAutoSave()` publish butonuna basıldığında debounce timer'ı temizler. Eğer PATCH zaten uçuştaysa, publish mutation PATCH'ın tamamlanmasını beklesin (`isLoading` kontrolü) — yoksa iki eşzamanlı mutasyon çelişebilir.
 - **Debounce timer temizleme:** `useEffect` cleanup'ında `clearTimeout`; component unmount'ta da çalışsın.
 - **"Üyeler" listesi kopyalama için:** `GET /trainer/members` veya mevcut Faz 1 endpoint'i kullan — kendi üyelerinin listesi. Kendisi (mevcut program sahibi üye) listede de görünebilir ama "Aynı üyeye kopyalama" anlamsız; opsiyonel olarak listeden çıkarılabilir.
-- **Publish sonrası banner:** TASK-2.03 response'ındaki `bannerEvent: "program_changed"` — TASK-2.14'te bağlanacak. Bu task'ta sadece publish başarısını handle et.
-- **Draft boş program:** PT hiç egzersiz eklemeden "Kaydet" basarsa — publish backend'de hata verebilir ya da boş program kaydedebilir. M2 modül spec'ine göre taslak otomatik saklanır ama boş aktif program anlamsız. Backend'in boş publish'i reddetmesi (422?) için kontrol ekle veya mobile'da "En az 1 egzersiz ekle" validasyonu.
+- **Publish sonrası banner:** Backend'in `hasUnreadUpdate` flag'i (TASK-2.03) üye tarafında banner tetikler — TASK-2.14'te bağlanacak. Bu task'ta sadece publish başarısını handle et.
+- **Draft boş program — mobile validasyon:** PT hiç egzersiz eklemeden "Kaydet" basarsa "En az 1 gün için egzersiz ekle" uyarısı göster ve publish mutation çağırma. Publish butonu tüm günler boşken disabled olabilir ya da basıldığında anlık alert verilebilir. Backend'e 422 eklemek gerekmez.
 
 ---
 
@@ -93,7 +93,8 @@ apps/mobile/src/
 
 - [ ] Egzersiz eklendiğinde 1 sn sonra "Kaydediliyor..." gösterilir, ardından "Taslak kaydedildi"
 - [ ] Değişiklik olmadığında PATCH çağrılmaz (debounce)
-- [ ] "Kaydet" butonuna basılınca POST /programs/:id/publish çağrılır
+- [ ] Tüm günler boşken "Kaydet" basılınca "En az 1 egzersiz ekle" uyarısı gelir, publish çağrılmaz
+- [ ] En az 1 egzersiz varken "Kaydet" basılınca POST /programs/:id/publish çağrılır
 - [ ] Publish başarılı → "Program kaydedildi" toast gösterilir
 - [ ] "Programı kopyala..." → üye listesi açılır → üye seçilince POST /programs/:id/copy çağrılır
 - [ ] Auto-save hata → "Kaydetme hatası" gösterilir + retry çalışır

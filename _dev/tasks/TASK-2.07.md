@@ -88,7 +88,7 @@ apps/mobile/src/
 
 - **Bugünün günü hesabı:** JS `new Date().getDay()` Pazar=0, Pazartesi=1...Cumartesi=6. Alpfit'teki `dayOfWeek` Pazartesi=0 — dönüşüm gerekli: `(jsDay + 6) % 7`.
 - **"Program yaz" vs "Mevcut programı düzenle":** Mevcut aktif program varsa → builder mevcut programı yükler (POST değil, var olan programId ile navigate); yoksa → POST /programs çağrısı. Bu mantık `MemberDetailScreen`'de `useTrainerMemberProgram` sonucuna göre ayrışır.
-- **Navigation stack:** Faz 1'de kurulan React Navigation veya Expo Router yapısını boz. Stack navigator kullanılıyorsa `navigation.push('ProgramBuilder', { programId, memberId })` ile git.
+- **Navigation stack:** Faz 1'de kurulan React Navigation veya Expo Router yapısını bozma. Stack navigator kullanılıyorsa `navigation.push('ProgramBuilder', { programId, memberId })` ile git.
 - **ProgramBuilderScreen veri yüklemesi:** `programId` ile `GET /programs/:id` — TASK-2.03 sonrası aktif. Bu task'ta sadece programId'yi state'e al; tam veri yüklemesi TASK-2.08'de bağlanır.
 
 ---

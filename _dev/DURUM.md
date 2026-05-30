@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — plan-phase 2 ✅. 14 task dokümanı oluşturuldu (2.01–2.14); 4 backend + 10 mobile task. Verify-plan bekliyor.
+**Son Güncelleme:** 2026-05-30 — verify-plan 2 ✅. 14 task dokümanı review edildi; 2 mekanik + 4 yapısal düzeltme uygulandı. İlk task çalıştırmaya hazır.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 2 — Program akışı uçtan uca (M2)
 **Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** verify-plan
-**İlerleme:** plan-phase tamamlandı — 14 task dokümanı hazır; `/devflow:verify-plan 2` ile devam
+**Adım:** task
+**İlerleme:** verify-plan tamamlandı — 14 task dokümanı review edildi, düzeltmeler uygulandı; TASK-2.01 ile başlanacak
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** — (plan-phase tamamlandı; verify-plan sonrası TASK-2.01 ile başlayacak)
-**Durum:** Planlama tamamlandı — 14 task hazır
-**Sonraki Adım:** `/devflow:verify-plan 2` ile task dokümanlarını doğrula.
+**Task:** TASK-2.01 — DB Schema + Migration + Seeder + Shared Zod
+**Durum:** Bekliyor
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.01 başlat.
 
 ---
 
@@ -83,8 +83,8 @@ Faz 2 task'ları oluşturulunca burada gösterilecek.
 
 ## Hızlı Erişim
 
-**Aktif Task:** — (verify-plan sonrası TASK-2.01 ile başlayacak)
+**Aktif Task:** TASK-2.01
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:verify-plan 2`
+**Sıradaki:** `/devflow:run-task` (TASK-2.01)

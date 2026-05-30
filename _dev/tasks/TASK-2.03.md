@@ -18,7 +18,7 @@ Programs resource'un tüm endpoint'leri implement edilir: yeni program oluşturm
 
 PATCH endpoint'i auto-save için tasarlanmış: client 1 sn debounce sonra tüm program yapısını (days + exercises) gönderir, backend olduğu gibi upsert eder. Bu "tüm yapı gönder" yaklaşımı diff mantığı karmaşıklığını ortadan kaldırır — pilot ölçeğinde performans sorunu yok (küçük JSON).
 
-Program değişikliği bildirimi (publish + update) için M4 push yok; bunun yerine in-app banner event store'a yazılır. Backend publish endpoint'i response body'sinde `bannerEvent: "program_changed"` döner — mobile TASK-2.14'te bunu banner-store'a yazar.
+Program değişikliği bildirimi (publish + update) için M4 push yok; bunun yerine üye `GET /me/program` çektiğinde `hasUnreadUpdate: boolean` flag'i banner-store'u tetikler. Bu nedenle `GET /me/program` response'ına `hasUnreadUpdate` alanı eklenir (publish sonrası `true`, üye programı görüntülünce sıfırlanmaz — client-side dismiss ile yönetilir). TASK-2.14'te bu flag'e göre banner gösterilir.
 
 ---
 
@@ -42,11 +42,11 @@ Program değişikliği bildirimi (publish + update) için M4 push yok; bunun yer
   - `apps/backend/src/services/program.service.ts` oluştur:
     - `createProgram(trainerId, memberId)` — status: draft; trainer sadece kendi üyelerine program yazabilir (trainer-member relationship check Faz 1'den)
     - `patchProgram(trainerId, programId, body)` — tüm yapı upsert: `ProgramDay`'leri sil+yeniden oluştur (veya upsert by dayOfWeek+position); `ProgramDayExercise`'leri aynı şekilde; status: draft korunur
-    - `publishProgram(trainerId, programId)` — status: active, publishedAt: now; üye için in-app banner event döner
+    - `publishProgram(trainerId, programId)` — status: active, publishedAt: now
     - `copyProgram(trainerId, sourceProgramId, targetMemberId)` — kaynak program days+exercises deep copy; yeni program draft olarak oluşur
     - `getProgram(requesterId, programId)` — PT: kendi programı; Member: kendi aktif programı; tam yapı (days + exercises + exercise detayları)
     - `getMemberActiveProgram(trainerId, memberId)` — PT view: üyenin aktif programı
-    - `getMyActiveProgram(memberId)` — üye view: kendi aktif programı
+    - `getMyActiveProgram(memberId)` — üye view: kendi aktif programı; response'a `hasUnreadUpdate: boolean` ekle — son WorkoutCompletion.completedAt'ten sonra program publish edilmişse `true` (basit karşılaştırma: `program.publishedAt > lastCompletion?.completedAt ?? true`)
 
 - [ ] **2. Programs Route Handler**
   - `apps/backend/src/routes/programs.ts` oluştur:
@@ -56,7 +56,7 @@ Program değişikliği bildirimi (publish + update) için M4 push yok; bunun yer
     - `POST /programs/:id/copy` — body: `{ targetMemberId }` → `copyProgram()`; sadece Trainer
     - `GET /programs/:id` → `getProgram()`; Trainer veya üye kendi programı
     - `GET /members/:memberId/program` → `getMemberActiveProgram()`; sadece Trainer + kendi üyesi
-    - `GET /me/program` → `getMyActiveProgram()`; sadece Member
+    - `GET /me/program` → `getMyActiveProgram()`; sadece Member; response: tam program yapısı + `hasUnreadUpdate: boolean`
 
 - [ ] **3. Integration Testler**
   - `apps/backend/src/routes/programs.test.ts` oluştur:
@@ -98,8 +98,9 @@ apps/backend/src/
 
 - [ ] `POST /programs` → 201 draft program, trainerId + memberId doğru
 - [ ] `PATCH /programs/:id` iki kez → ikinci PATCH ilk içeriğin üzerine yazar, gereksiz duplicate yok
-- [ ] `POST /programs/:id/publish` → status "active", publishedAt doldu, response'da bannerEvent
-- [ ] `GET /me/program` (Member) → yayınlanmış programı tam yapıyla alır
+- [ ] `POST /programs/:id/publish` → status "active", publishedAt doldu
+- [ ] `GET /me/program` (Member) → yayınlanmış programı tam yapıyla alır; `hasUnreadUpdate: true` (hiç tamamlama yokken)
+- [ ] `GET /me/program` (Member, antrenman tamamlandıktan sonra) → `hasUnreadUpdate: false` (son completion publish'ten sonra)
 - [ ] `POST /programs/:id/copy` → yeni program oluştu, kaynak programın days/exercises kopyalandı
 - [ ] Üyenin birden fazla active programı olamaz: yeni publish eskiyi archived yapmalı
 - [ ] Backend typecheck + tüm test'ler geçer: `pnpm --filter backend test`

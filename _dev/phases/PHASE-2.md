@@ -240,5 +240,4 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 ---
 
 **Oluşturulma:** 2026-05-30 (discuss-phase 2)
-**Oluşturulma:** 2026-05-30 (discuss-phase 2)
 **Son Güncelleme:** 2026-05-30 — plan-phase 2: 14 task dokümanı oluşturuldu, Task Listesi tablosu dolduruldu.

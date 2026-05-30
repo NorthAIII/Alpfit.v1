@@ -48,10 +48,10 @@
 
 - [ ] **3. Satır Detay — Okuma Modu**
   - Satıra tıklanınca: o günün egzersizlerini okuma modunda gösteren ekran/modal
-  - `GET /me/workout-completions/:id` veya mevcut program verisinden ilgili `ProgramDay` çek
+  - Egzersiz listesi kaynağı: `GET /programs/:id` ile completion kaydındaki `programDayId`'ye ait program çekilir, `ProgramDay` içinden egzersizler filtrelenir. Program arşivlenmiş olsa bile endpoint okunabilir (archived programlar silinmez). Bu çağrı TanStack Query cache'de olabilir — miss durumunda fetch tetiklenir.
   - Egzersiz listesi: set×tekrar + notlar — salt okunur, tik kutusu yok, ↑↓ yok
   - Header: "[Antrenman Tipi] — 29 Mayıs 2026" + durum badge (Tamamlandı / Geç Tamamlandı)
-  - Implementasyon: ayrı ekran (`WorkoutDetailScreen`) veya bottom sheet — ekran daha temiz
+  - Implementasyon: ayrı ekran (`WorkoutDetailScreen`) — bottom sheet'ten daha temiz
 
 - [ ] **4. Alt Navigasyon Sekmesi**
   - "Geçmiş" tab'ını alt navigasyona bağla (Faz 1'den gelen tab navigator'da):
@@ -77,7 +77,7 @@ apps/mobile/src/
 - **Tarih formatı:** `dd MMM yyyy` — "29 Mayıs 2026". `@alpfit/shared` formatTrDate util'i varsa kullan; yoksa Intl.DateTimeFormat ile TR locale: `new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })`. Snapshot test için `jest.useFakeTimers().setSystemTime(...)` pin'le (memory: `feedback-snapshot-tarih-pin.md`).
 - **v1'de filtre/grafik yok:** Filtre chip'leri, takvim görünümü, aylık özet — hepsi kapsam dışı (PHASE-2.md §Kapsam Dışı). Sadece düz liste.
 - **Cursor-based pagination:** Offset kullanma. `nextCursor` null ise "Tüm geçmiş yüklendi" (pagination bitti).
-- **Detay ekranında program verisi:** WorkoutCompletion sadece `programDayId` tutar — egzersiz detayı için `ProgramDay`'i program endoint'inden çek. Arşivlenmiş programlarda bu mümkün olmalı (program `archived` durumunda bile GET /programs/:id çalışır).
+- **Detay ekranında program verisi:** WorkoutCompletion sadece `programDayId` tutar. WorkoutDetailScreen'e `programDayId` + `programId` route param olarak geçilir; `GET /programs/:id` ile program çekilir, `programDayId` ile egzersizler filtrelenir. Arşivlenmiş programlarda da bu endpoint çalışır (program silinmez, status=archived olur).
 
 ---
 

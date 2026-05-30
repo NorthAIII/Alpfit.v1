@@ -33,7 +33,7 @@
   - `apps/mobile/src/screens/WorkoutScreen.tsx` oluştur:
     - Route params: `programDayId`, `scheduledDate`, `isLate?` (telafi akışı için — M3 tam implement eder)
     - Header: antrenman tipi (ProgramDay.title veya "Antrenman") + tarih
-    - `GET /programs/:id` sonucundan ilgili günün egzersizleri — `useQuery` veya prop olarak geçilir (MemberHomeScreen'den)
+    - Egzersiz verisi: `useMyActiveProgram()` hook'undan (TanStack Query cache'de zaten var — `GET /me/program`), `programDayId` ile ilgili günü filtrele. Ekstra network request yok; program daha önce cache'lenmemişse otomatik fetch tetiklenir.
     - **Egzersiz satırı (her satır):**
       - Sol: tik kutusu (`Pressable` + checkbox UI)
       - Orta: egzersiz adı (bold üst satır) + `set×tekrar` + `dinlenme Xsn` + PT notu (muted, 2. satır)
@@ -88,6 +88,7 @@ apps/mobile/src/
 
 ## Dikkat Noktaları
 
+- **Egzersiz verisi kaynağı:** `useMyActiveProgram()` (TanStack Query cache) → `program.days.find(d => d.id === programDayId)?.exercises` ile filtrele. `programId` route param gerekmez — cache hit'i yeterli, miss durumunda hook otomatik fetch yapar.
 - **iOS inline video:** `allowsInlineMediaPlayback={true}` + `mediaPlaybackRequiresUserAction={false}` OLMADAN iOS'ta video tam ekrana geçer — bu davranış istenmiyor (PHASE-2.md Dikkat Edilecekler).
 - **YouTube embed URL dönüşümü:** `videoUrl` "watch?v=" veya "youtu.be/" formatında gelebilir — her ikisini de `embed/` URL'ine çeviren util fonksiyon yaz. Geçersiz format: VideoModal render edilmez (▶ butonu hidden).
 - **Tik state persistence (sayfa içi):** React Navigation stack'inde sayfa mount kaldığı sürece tik state kaybolmaz. Kullanıcı ana ekrana gitsin geri gelsin — `BackHandler` kullanımı yoksa sayfa stack'te kalır. Eğer sayfa pop edilirse tik state sıfırlanır (M2 spec: "Antrenmanı bitir basıldıktan sonra geri alınamaz" — ama tamamlanmadan çıkıp geri gelme için tik korunmalı).

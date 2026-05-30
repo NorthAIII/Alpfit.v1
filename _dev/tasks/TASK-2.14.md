@@ -47,15 +47,12 @@ M1 fazında davet kabul banner'ı için `banner-store` (Zustand veya AsyncStorag
     - `payload?: { programId: string }` (opsiyonel — gelecekte detay için)
     - Mevcut dismiss logic korunur (kullanıcı banneri kapattı → bir daha gösterilmez — programId bazında persist)
 
-- [ ] **3. Publish Response'ı Banner'a Bağla**
-  - `useProgramAutoSave.ts` veya `usePublishProgram` hook'undan:
-    - Publish başarısı → response body: `{ bannerEvent: 'program_changed' }`
-    - Bu field varsa: `bannerStore.addBanner({ type: 'program_changed', programId })` çağır
-  - **Üye tarafında tetikleme neden backend tarafına bağlı?**
-    - PT publish eder → backend response → PT'nin cihazı banner store'a yazar? Hayır — bu mantıklı değil.
-    - Doğru akış: Üye `GET /me/program` çektiğinde `program.updatedAt` veya `publishedAt` değişmişse → banner tetikle.
-    - Implementasyon: `useMyActiveProgram` hook'unda `onSuccess` callback — önceki cache'deki `publishedAt` ile yeni `publishedAt` karşılaştır; değiştiyse banner ekle.
-    - Alternatifte: backend `GET /me/program` response'ına `hasUnreadUpdate: boolean` flag eklenebilir — basit ve temiz. Tercih et.
+- [ ] **3. `hasUnreadUpdate` Flag'ini Banner'a Bağla**
+  - **Karar:** `GET /me/program` response'ında `hasUnreadUpdate: boolean` flag kullanılır (TASK-2.03'te implement edildi). PT publish sonrası üye programı çekince bu flag `true` gelir.
+  - `useMemberHome.ts` içindeki `useMyActiveProgram` hook'unun `onSuccess` callback'ine ekle:
+    - `data.hasUnreadUpdate === true` ise → `bannerStore.addBanner({ type: 'program_changed', programId: data.id })`
+    - Aynı programId için zaten banner dismiss edilmişse tekrar ekleme (banner-store dismiss kaydına bak)
+  - Banner programId bazında persist edilir — üye kapatsın, yeniden açtığında gelmesin; PT yeni publish ederse gelsin (yeni publish = yeni programId veya publishedAt değişimi trigger olabilir)
 
 - [ ] **4. Banner UI — MemberHomeScreen**
   - `MemberHomeScreen.tsx`'teki banner stack alanını aktif et (TASK-2.10'da placeholder bırakılmıştı):
@@ -63,13 +60,6 @@ M1 fazında davet kabul banner'ı için `banner-store` (Zustand veya AsyncStorag
     - Banner: solda info ikonu + metin; sağda ✕ kapat butonu
     - Kapatılınca: banner store'dan kaldır (o programId için dismiss set et) + bir daha gösterilmez
     - Renkler: nötr — mavi veya gri-mavi arka plan (M3'teki telafi banner'ı turuncu, comeback banner'ı farklı renkte olacak — bu nötr)
-
-- [ ] **5. Backend — `hasUnreadUpdate` Flag (tercih 3b'de karar verildiyse)**
-  - `GET /me/program` response'ına `hasUnreadUpdate: boolean` ekle:
-    - Program'ın `publishedAt` veya `updatedAt`'ini üyenin son görüntüleme zamanıyla karşılaştır
-    - Alternatif basit: son `publishedAt`'ten üyenin son `WorkoutCompletion.completedAt` tarihini çıkar — eğer son completion'dan sonra program güncellenmiş ise `true`
-    - Daha da basit: `program.publishedAt` client'ta localStorage'da saklanır; değişirse banner
-  - Bu alt görev implementasyon kararına göre değişir — en basit olanı seç, not bırak
 
 ---
 
