@@ -1,12 +1,25 @@
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { WeeklyBand } from '../../src/components/WeeklyBand';
-import { getTodayWorkout, todayAlpfitDay, useMyActiveProgram } from '../../src/hooks/useMemberHome';
+import {
+  getTodayWorkout,
+  todayAlpfitDay,
+  useMyActiveProgram,
+  useProgramChangedBanner,
+} from '../../src/hooks/useMemberHome';
 
 export default function MemberHomeScreen() {
   const router = useRouter();
   const { data: program, isLoading, isError, refetch } = useMyActiveProgram();
+  const { isShowing: showProgramChangedBanner, handleDismiss } = useProgramChangedBanner(program);
 
   const today = todayAlpfitDay();
   const todayWorkout = program ? getTodayWorkout(program, today) : null;
@@ -67,14 +80,30 @@ export default function MemberHomeScreen() {
     <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
       {/* TASK-M3: streak alanı buraya gelecek */}
 
-      {/* Banner stack — TASK-2.14'te bağlanacak */}
-      <View />
+      {/* Program değişikliği banner */}
+      {showProgramChangedBanner ? (
+        <View style={styles.programChangedBanner} testID="program-changed-banner">
+          <Text style={styles.bannerIcon}>ℹ️</Text>
+          <Text style={styles.bannerText}>Programında güncelleme var</Text>
+          <Pressable
+            style={styles.bannerClose}
+            onPress={() => void handleDismiss()}
+            accessibilityRole="button"
+            accessibilityLabel="Bildirimi kapat"
+            hitSlop={8}
+            testID="banner-dismiss-button"
+          >
+            <Text style={styles.bannerCloseLabel}>✕</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {/* BUGÜN kartı */}
       {todayWorkout ? (
         <View style={styles.todayCard} testID="today-workout-card">
           <Text style={styles.todayLabel}>Bugün</Text>
           <Text style={styles.todayTitle}>{todayWorkout.title ?? 'Antrenman'}</Text>
+          {/* TODO: TASK-M3+ yeni rozeti — değişen egzersizin yanında 'yeni' göstergesi */}
           <Pressable
             style={styles.ctaButton}
             onPress={() => router.push(`/workout/${todayWorkout.id}`)}
@@ -170,6 +199,37 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
+  },
+
+  // Program değişikliği banner — nötr (M3 streak/telafi banner'larından önce öncelik alt)
+  programChangedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1B2A40',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#1E3A5F',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  bannerIcon: {
+    fontSize: 16,
+  },
+  bannerText: {
+    flex: 1,
+    color: '#90CAF9',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  bannerClose: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  bannerCloseLabel: {
+    color: '#9AA3B2',
+    fontSize: 15,
+    fontWeight: '700',
   },
 
   // BUGÜN kartı — antrenman var

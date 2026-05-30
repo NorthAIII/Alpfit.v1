@@ -211,7 +211,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.11 | TASK-2.11 | ✅ Tamamlandı | Mobile: Antrenman Ekranı — egzersiz listesi + yerel tik state + VideoModal (react-native-webview + YouTube embed) |
 | 2.12 | TASK-2.12 | ✅ Tamamlandı | Mobile: Antrenman tamamlama + offline kuyruğu + senkron (POST /workout-completions, idempotent, optimistic UI) |
 | 2.13 | TASK-2.13 | ✅ Tamamlandı | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |
-| 2.14 | TASK-2.14 | ⬜ Bekliyor | Mobile: Program değişikliği banner — banner-store'a `program_changed` tipi + MemberHomeScreen banner stack |
+| 2.14 | TASK-2.14 | ✅ Tamamlandı | Mobile: Program değişikliği banner — banner-store'a `program_changed` tipi + MemberHomeScreen banner stack |
 
 ---
 

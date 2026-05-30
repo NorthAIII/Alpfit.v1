@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — TASK-2.13 ✅. useWorkoutHistory (infinite query) + WorkoutHistoryScreen (FlatList, boş durum, isLate ikon) + WorkoutDetailScreen (okuma modu) + üye tab layout. 237 mobile test 0 hata.
+**Son Güncelleme:** 2026-05-31 — TASK-2.14 ✅. memberBannerStore + useProgramChangedBanner (AsyncStorage dismiss persist) + MemberHomeScreen nötr banner UI. 251 mobile test 0 hata. Faz 2 tüm task'lar tamamlandı — verify-phase bekleniyor.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 2 — Program akışı uçtan uca (M2)
 **Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** task
-**İlerleme:** verify-plan tamamlandı — 14 task dokümanı review edildi, düzeltmeler uygulandı; TASK-2.01 ile başlanacak
+**Adım:** verify
+**İlerleme:** 14/14 task tamamlandı. Sıradaki: `/devflow:verify-phase 2`
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.14 — Mobile: Program Değişikliği Banner
-**Durum:** Bekliyor
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.14 başlat.
+**Task:** —
+**Durum:** Faz 2 tüm task'lar ✅ tamamlandı.
+**Sonraki Adım:** `/devflow:verify-phase 2` ile kullanıcı kabul testini başlat.
 
 ---
 
@@ -52,7 +52,7 @@
 | 2.11 | Mobile: Antrenman Ekranı + Video Modal | ✅ Tamamlandı |
 | 2.12 | Mobile: Tamamlama + Offline Senkron | ✅ Tamamlandı |
 | 2.13 | Mobile: Geçmiş Sekmesi | ✅ Tamamlandı |
-| 2.14 | Mobile: Program Değişikliği Banner | ⬜ Bekliyor |
+| 2.14 | Mobile: Program Değişikliği Banner | ✅ Tamamlandı |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -74,20 +74,20 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-2.12** (2026-05-31) — Mobile: Tamamlama + Offline Senkron ✅
-- `src/api/completions.ts` (YENİ): completeWorkout — POST /workout-completions, 409 sessizce return.
-- `src/hooks/useCompleteWorkout.ts` (YENİ): useMutation, networkMode:'online', invalidateQueries.
-- `app/workout/[programDayId].tsx`: finishState machine (idle/submitting/done/offline), success/offline toast, replace navigate, hasNavigated ref.
-- 7 yeni test. 220 mobile test 0 hata.
-
 **TASK-2.13** (2026-05-31) — Mobile: Geçmiş Sekmesi ✅
-- `src/api/completions.ts`: fetchMyWorkoutHistory (GET /me/workout-completions, cursor-based) + WorkoutCompletionItem tipi eklendi.
-- `src/api/programs.ts`: fetchProgramById (GET /programs/:id, 404 → null) eklendi.
+- `src/api/completions.ts`: fetchMyWorkoutHistory + WorkoutCompletionItem tipi eklendi.
 - `src/hooks/useWorkoutHistory.ts` (YENİ): useInfiniteQuery, 30/sayfa, gcTime 7 gün.
-- `app/home/_layout.tsx` (YENİ): Üye tab layout (Ana Sayfa + Geçmiş).
 - `app/home/history.tsx` (YENİ): WorkoutHistoryScreen — FlatList infinite scroll, boş durum, isLate ikon.
 - `app/workout-history/[programDayId].tsx` (YENİ): WorkoutDetailScreen — okuma modu, badge.
 - 17 yeni test. 237 mobile test 0 hata.
+
+**TASK-2.14** (2026-05-31) — Mobile: Program Değişikliği Banner ✅
+- `shared/src/schemas/program.ts`: `hasUnreadUpdate: z.boolean().optional()` eklendi.
+- `mobile/test/mocks/async-storage.ts` (YENİ): In-memory AsyncStorage test mock'u + jest config + setup reset.
+- `src/stores/memberBannerStore.ts` (YENİ): Zustand session banner state.
+- `src/hooks/useMemberHome.ts`: `useProgramChangedBanner` hook — AsyncStorage dismiss persist, yeni publish → banner tekrar.
+- `app/home/index.tsx`: Nötr mavi banner UI ("ℹ️ Programında güncelleme var") + ✕ dismiss.
+- 14 yeni test. 251 mobile test 0 hata.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -96,8 +96,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-2.14
+**Aktif Task:** —
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` (TASK-2.14)
+**Sıradaki:** `/devflow:verify-phase 2`

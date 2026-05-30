@@ -41,6 +41,8 @@ module.exports = {
     '^@alpfit/shared/(.*)$': '<rootDir>/../shared/src/$1',
     // expo-secure-store native modülü Jest'te yok → bellek-içi mock (TASK-1.33).
     '^expo-secure-store$': '<rootDir>/test/mocks/expo-secure-store.ts',
+    // @react-native-async-storage native modülü Jest'te yok → bellek-içi mock (TASK-2.14).
+    '^@react-native-async-storage/async-storage$': '<rootDir>/test/mocks/async-storage.ts',
   },
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',

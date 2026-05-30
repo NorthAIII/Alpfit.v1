@@ -39,6 +39,8 @@ export const programSchema = z.object({
   days: z.array(programDaySchema),
   publishedAt: z.string().datetime().nullable(),
   archivedAt: z.string().datetime().nullable(),
+  // Yalnızca GET /me/program (üye görünümü) döner — PT endpoint'inde undefined.
+  hasUnreadUpdate: z.boolean().optional(),
 });
 
 export const createProgramSchema = z.object({

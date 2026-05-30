@@ -19,6 +19,7 @@ jest.mock('../../src/hooks/useMemberHome', () => ({
   useMyActiveProgram: jest.fn(),
   getTodayWorkout: jest.fn(),
   todayAlpfitDay: jest.fn().mockReturnValue(0), // Pazartesi (Alpfit 0)
+  useProgramChangedBanner: jest.fn().mockReturnValue({ isShowing: false, handleDismiss: jest.fn() }),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -39,6 +40,7 @@ const ACTIVE_PROGRAM = {
   days: PROGRAM_DAYS,
   publishedAt: '2026-06-01T00:00:00.000Z',
   archivedAt: null,
+  hasUnreadUpdate: false,
 };
 
 const TODAY_WORKOUT = PROGRAM_DAYS[0]!;
@@ -49,6 +51,8 @@ function setupHooks(overrides: {
   data?: typeof ACTIVE_PROGRAM | null;
   todayWorkout?: typeof TODAY_WORKOUT | null;
   refetch?: jest.Mock;
+  bannerShowing?: boolean;
+  handleDismiss?: jest.Mock;
 }) {
   memberHomeHooks.useMyActiveProgram.mockReturnValue({
     data: overrides.data ?? null,
@@ -57,6 +61,10 @@ function setupHooks(overrides: {
     refetch: overrides.refetch ?? jest.fn(),
   });
   memberHomeHooks.getTodayWorkout.mockReturnValue(overrides.todayWorkout ?? null);
+  memberHomeHooks.useProgramChangedBanner.mockReturnValue({
+    isShowing: overrides.bannerShowing ?? false,
+    handleDismiss: overrides.handleDismiss ?? jest.fn(),
+  });
 }
 
 describe('MemberHomeScreen', () => {
@@ -128,5 +136,35 @@ describe('MemberHomeScreen', () => {
     setupHooks({ data: ACTIVE_PROGRAM, todayWorkout: null });
     const { getByText } = renderWithProviders(<MemberHomeScreen />);
     expect(getByText('Bugün dinlenme günün')).toBeOnTheScreen();
+  });
+
+  // ── Program değişikliği banner testleri ─────────────────────────────────
+
+  it('hasUnreadUpdate false ise banner gösterilmez', () => {
+    setupHooks({ data: ACTIVE_PROGRAM, bannerShowing: false });
+    const { queryByTestId } = renderWithProviders(<MemberHomeScreen />);
+    expect(queryByTestId('program-changed-banner')).toBeNull();
+  });
+
+  it('banner gösterilince "Programında güncelleme var" metni görünür', () => {
+    setupHooks({ data: ACTIVE_PROGRAM, todayWorkout: TODAY_WORKOUT, bannerShowing: true });
+    const { getByTestId, getByText } = renderWithProviders(<MemberHomeScreen />);
+    expect(getByTestId('program-changed-banner')).toBeOnTheScreen();
+    expect(getByText('Programında güncelleme var')).toBeOnTheScreen();
+  });
+
+  it('banner ✕ ile kapatılınca handleDismiss çağrılır', () => {
+    const handleDismiss = jest.fn().mockResolvedValue(undefined);
+    setupHooks({ data: ACTIVE_PROGRAM, todayWorkout: TODAY_WORKOUT, bannerShowing: true, handleDismiss });
+    const { getByTestId } = renderWithProviders(<MemberHomeScreen />);
+    fireEvent.press(getByTestId('banner-dismiss-button'));
+    expect(handleDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('banner kapatılınca BUGÜN kartı etkilenmez', () => {
+    setupHooks({ data: ACTIVE_PROGRAM, todayWorkout: TODAY_WORKOUT, bannerShowing: true });
+    const { getByTestId } = renderWithProviders(<MemberHomeScreen />);
+    expect(getByTestId('today-workout-card')).toBeOnTheScreen();
+    expect(getByTestId('program-changed-banner')).toBeOnTheScreen();
   });
 });
