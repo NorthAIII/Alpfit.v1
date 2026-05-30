@@ -430,6 +430,15 @@ describe('TASK-1.15 — POST /admin/internal/retention-purge — token configure
     expect(res.statusCode).toBe(401);
   });
 
+  it('401 — length-mismatch token does not throw (timingSafeEqual guard)', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/admin/internal/retention-purge',
+      headers: { authorization: `Bearer ${ADMIN_TOKEN.slice(0, -1)}` },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
   it('200 — geçerli token → boş purge report', async () => {
     const res = await app.inject({
       method: 'POST',

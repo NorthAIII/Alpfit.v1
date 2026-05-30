@@ -12,6 +12,8 @@
  * Cron kurulum rehberi: `_dev/docs/staging-retention-cron.md`.
  * Kararlar: `_dev/docs/DECISIONS.md` "2026-05-29 — TASK-1.15".
  */
+import { timingSafeEqual } from 'node:crypto';
+
 import { runRetentionPurge } from '../kvkk/retention-job.js';
 
 import { extractBearer } from './bearer.js';
@@ -36,7 +38,11 @@ export const adminInternalRoutes =
       }
 
       const provided = extractBearer(req.headers.authorization);
-      if (provided !== configured) {
+      if (
+        !provided ||
+        provided.length !== configured.length ||
+        !timingSafeEqual(Buffer.from(provided), Buffer.from(configured))
+      ) {
         return reply.code(401).send({ status: 'unauthorized' as const });
       }
 

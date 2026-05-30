@@ -106,6 +106,15 @@ describe('TASK-1.17 — dev OTP lookup (dev mode, token configured)', () => {
     });
     expect(res.statusCode).toBe(401);
   });
+
+  it('401 — length-mismatch token does not throw (timingSafeEqual guard)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: devOtpUrl(PHONE),
+      headers: { authorization: `Bearer ${ADMIN_TOKEN.slice(0, -1)}` },
+    });
+    expect(res.statusCode).toBe(401);
+  });
 });
 
 describe('TASK-1.17 — dev OTP lookup (production → 404)', () => {

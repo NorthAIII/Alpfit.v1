@@ -16,6 +16,8 @@
  * dev build'inde otomatik OTP girişi için kullanılır; production build'de bu UI
  * kapalıdır ve endpoint zaten 404 döner.
  */
+import { timingSafeEqual } from 'node:crypto';
+
 import { extractBearer } from './bearer.js';
 
 import type { Env } from '../config/env.js';
@@ -49,7 +51,11 @@ export const internalDevOtpRoutes =
 
       // 3) Bearer auth.
       const provided = extractBearer(req.headers.authorization);
-      if (provided !== configured) {
+      if (
+        !provided ||
+        provided.length !== configured.length ||
+        !timingSafeEqual(Buffer.from(provided), Buffer.from(configured))
+      ) {
         return reply.code(401).send({ status: 'unauthorized' as const });
       }
 

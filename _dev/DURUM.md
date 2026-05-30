@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — verify-phase 1 kısmen tamamlandı. Otomatik kontroller: backend 171 PASS + mobile 114 PASS + lint/typecheck temiz + staging healthz yeşil. Security review: 1 orta bulgu (admin-internal timingSafeEqual eksik) → TASK-1.35 açıldı. Manuel UAT (13 senaryo: cihaz + staging) kullanıcı follow-up bekliyor. TASK-1.35 tamamlandıktan sonra verify-phase yeniden çalıştırılacak.
+**Son Güncelleme:** 2026-05-30 — TASK-1.35 tamamlandı (timingSafeEqual fix; backend 173 PASS). Verify-phase 1 yeniden başladı: otomatik kontroller geçti, manuel UAT (13 senaryo) devam ediyor.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** verify
-**İlerleme:** 34/34 task tamam + TASK-1.35 (verify-phase security bulgusu) açıldı; otomatik UAT testleri geçti, manuel UAT (cihaz/staging) bekliyor
+**İlerleme:** 35/35 task tamam; otomatik kontroller geçti (backend 173 PASS + mobile 114 PASS + lint/typecheck + staging healthz); manuel UAT (13 senaryo) devam ediyor
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-1.35 — admin-internal timingSafeEqual düzeltmesi (verify-phase security review bulgusu)
-**Durum:** ⬜ Bekliyor
-**Sonraki Adım:** TASK-1.35 çalıştır (küçük fix, 2 dosya). Ardından manuel UAT: gerçek cihaz + staging ile `_dev/docs/staging-smoke-test.md` checklist'ini işaretle. Manuel UAT tamamlanınca verify-phase yeniden çalıştır.
+**Task:** Verify-phase 1 — manuel UAT (13 senaryo, cihaz + staging)
+**Durum:** 🔄 Devam ediyor
+**Sonraki Adım:** Manuel UAT: gerçek cihaz + staging ile senaryolar 8–20 test edilecek. TASK-1.35 tamamlandı (✅).
 
 ---
 
@@ -115,8 +115,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-1.35 — admin-internal timingSafeEqual (security review bulgusu)
+**Aktif Task:** Verify-phase 1 — manuel UAT (13 senaryo: cihaz + staging)
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:verify-phase 1` (kullanıcı kabul testi / UAT)
+**Sıradaki:** Manuel UAT tamamlanınca `/devflow:review-phase 1`

@@ -1,6 +1,6 @@
 # TASK-1.35: admin-internal token karşılaştırmasını timingSafeEqual ile yap
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M0 Çekirdek Altyapı
 **Feature:** —
 **Faz:** Phase 1 (phases/PHASE-1.md)
@@ -30,16 +30,16 @@ verify-phase 1 security review bulgusu (orta risk): Her iki dosyada `if (provide
 
 ## Alt Görevler
 
-- [ ] **1. admin-internal.ts düzeltmesi**
-  - `backend/src/routes/admin-internal.ts:39` — `if (provided !== configured)` satırını `timingSafeEqual` kullanacak şekilde değiştir
-  - `crypto` import'u ekle (Node built-in)
+- [x] **1. admin-internal.ts düzeltmesi**
+  - `backend/src/routes/admin-internal.ts` — `!==` → `timingSafeEqual` + uzunluk guard + `node:crypto` import
 
-- [ ] **2. internal-dev-otp.ts düzeltmesi**
-  - `backend/src/routes/internal-dev-otp.ts:52` — aynı pattern, aynı düzeltme
+- [x] **2. internal-dev-otp.ts düzeltmesi**
+  - `backend/src/routes/internal-dev-otp.ts` — aynı pattern uygulandı
 
-- [ ] **3. Test**
-  - Mevcut admin-internal ve internal-dev-otp testleri hâlâ geçiyor mu? (varsa)
-  - Yoksa: invalid token → 401 senaryosu için unit test ekle
+- [x] **3. Test**
+  - `retention-job.test.ts`: "length-mismatch token does not throw" senaryosu eklendi (+1)
+  - `internal-dev-otp.test.ts`: aynı senaryo eklendi (+1)
+  - Backend 173 PASS (was 171, +2); typecheck + lint temiz
 
 ---
 
@@ -72,12 +72,13 @@ backend/src/routes/
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi
+- [x] DURUM.md güncellendi
 
 ---
 
 **Oluşturulma:** 2026-05-30 — verify-phase 1 security review bulgusu
+**Tamamlanma:** 2026-05-30 — timingSafeEqual fix uygulandı (+2 test); backend 173 PASS
