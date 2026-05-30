@@ -24,7 +24,9 @@
   "invite": {
     "notFound": "Davet linki bulunamadı.",
     "expired": "Davet linkinin süresi dolmuş.",
-    "alreadyUsed": "Bu davet linki kullanılmış."
+    "alreadyUsed": "Bu davet linki kullanılmış.",
+    "forbidden": "Bu davet sana ait değil.",
+    "notCancellable": "Bu davet artık iptal edilemez."
   },
   "generic": {
     "internal": "Sunucu hatası. Lütfen daha sonra tekrar dene."

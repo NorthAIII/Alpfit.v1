@@ -11,3 +11,4 @@ vi.stubEnv('DATABASE_URL', 'postgres://dev:dev@postgres:5432/dev');
 vi.stubEnv('REDIS_URL', 'redis://redis:6379');
 vi.stubEnv('JWT_ACCESS_SECRET', 'test-access-secret-at-least-32-characters-long');
 vi.stubEnv('JWT_REFRESH_SECRET', 'test-refresh-secret-at-least-32-characters-long');
+vi.stubEnv('APP_BASE_URL', 'https://alpfit.app');

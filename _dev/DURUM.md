@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.22 ✅: Logout endpoint'leri. `POST /auth/logout` (access korumalı, body `{refreshToken}`) → hash lookup + userId match (cross-user **403**), idempotent (bilinmeyen/zaten-revoke **204**), gerçek revoke atomik compare-and-set (`revokedReason:'logout'`) + `user_logout` audit. `POST /auth/logout-all` → kullanıcının tüm aktif token'ları batch `updateMany` (`logout_all`), `user_logout_all` audit her zaman (metadata `count`). Access token 15dk TTL ile yaşar (stateless JWT, kabul). errors.json `logoutTokenForbidden`. backend 118 PASS, typecheck/lint/format temiz. Sıradaki lineer TASK-1.23 (M1 davet linki).
+**Son Güncelleme:** 2026-05-30 — TASK-1.23 ✅: PT davet linki endpoint'leri. `POST /invitations` (trainer-only, gövdesiz) → 6 char Crockford base32 kod (`code @unique`+P2002 retry max 3), 30 gün TTL, `pending`; audit `invitation_created` (metadata yalnızca `invitationId`); 201 `{id,code,url,expiresAt}` (`${APP_BASE_URL}/davet/{code}`). `GET /invitations` → trainer bekleyen davetler, lazy-expiry (`markIfExpired`, cron yok). `DELETE /invitations/:id` → yok 404 / başka PT 403 / non-pending 409 / atomik cancel 204. `Invitation` modeli + migration, `APP_BASE_URL` env. backend 131 PASS, typecheck/lint/format temiz. Sıradaki lineer TASK-1.24 (davet kabul).
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 23/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.23 PT davet linki üretim endpoint
+**İlerleme:** 24/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.24 davet kabul endpoint
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.22 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.23 (PT davet linki üretim endpoint) henüz başlatılmadı.
+**Task:** Yok — TASK-1.23 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.24 (davet kabul endpoint) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.23` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.24` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 23 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 24 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -63,7 +63,8 @@
 | 1.20 | JWT access token + auth middleware + profil create | ✅ Tamamlandı |
 | 1.21 | Refresh token rotation (opaque 30 gün + aile + replay detection) | ✅ Tamamlandı |
 | 1.22 | Logout + tüm cihazlardan çıkış endpoint'leri | ✅ Tamamlandı |
-| 1.23–1.25 | M1 Auth backend (davet linki, davet kabul, deep link) | ⬜ Bekliyor (3) |
+| 1.23 | PT davet linki üretim endpoint (+ liste + iptal) | ✅ Tamamlandı |
+| 1.24–1.25 | M1 Auth backend (davet kabul, deep link) | ⬜ Bekliyor (2) |
 | 1.26–1.27 | M1 Mobile UI (açılış ekranı, telefon girişi) | ⬜ Bekliyor (2) |
 | 1.28 | KVKK rıza ekranı (2 tickbox + placeholder metin) | ✅ Tamamlandı (sıra dışı) |
 | 1.29–1.34 | M1 Mobile UI + akış + smoke (OTP ekranı, profil, PT üyeler tab, banner, auto-login, e2e smoke) | ⬜ Bekliyor (6) |
@@ -88,19 +89,19 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.23 — PT davet linki üretim endpoint (+ liste + iptal) (2026-05-30) ✅
+
+- **`Invitation` modeli + migration (YENİ)** — `InvitationStatus` enum (pending/accepted/expired/cancelled), `code @unique` + `trainerId` FK + `acceptedByUserId?` + `expiresAt` + audit timestamp'leri; `@@index([trainerId,status])`/`([code])`/`([expiresAt])`. Helper'lar: `invitations/code.ts` (`generateInvitationCode` 6 char Crockford base32, modulo bias yok; `buildInvitationUrl`), `invitations/expiry.ts` (`markIfExpired` lazy, cron yok), `invitations/guard.ts` (`ensureTrainer` → 403).
+- **3 route (`server.ts`'e register)** — `POST /invitations` (trainer-only, gövdesiz, P2002 retry max 3, audit `invitation_created` metadata yalnız `invitationId`, 201 `{id,code,url,expiresAt}`); `GET /invitations` (pending + lazy-expire düşür, en yeni önce); `DELETE /invitations/:id` (yok 404 / başka PT 403 / non-pending 409 / atomik compare-and-set cancel 204).
+- **Env:** `APP_BASE_URL` (zod `.url()` default `https://alpfit.app`) → `env.ts` + `.env.example` + test stub. errors.json `invite.forbidden`/`invite.notCancellable`.
+- Test ✅ — backend **131 PASS** (118 + 13). typecheck/lint/format temiz.
+
 ### TASK-1.22 — Logout + tüm cihazlardan çıkış endpoint'leri (2026-05-30) ✅
 
 - **`POST /auth/logout` (`routes/auth-logout.ts` YENİ)** — access korumalı, body `{refreshToken}`. Hash lookup → `userId` match (başka kullanıcı → **403** `forbidden`, hedef token dokunulmaz). Idempotent: bilinmeyen/zaten-revoke → **204** (yeni audit yok). Gerçek revoke atomik compare-and-set (`updateMany WHERE id=? AND revokedAt IS NULL`, race'te çift audit önler) + `revokedReason:'logout'` + `user_logout` audit.
 - **`POST /auth/logout-all` (`routes/auth-logout-all.ts` YENİ)** — access korumalı, kullanıcının tüm `revokedAt IS NULL` token'ları tek `updateMany` (`logout_all`). `user_logout_all` audit **her zaman** (metadata `count`=revoke sayısı, PII yok). Access token 15dk TTL ile yaşar (stateless JWT; logout-all access revoke etmez — `me` 200 ile doğrulandı).
 - errors.json `auth.logoutTokenForbidden` eklendi; iki route `server.ts`'e kaydedildi.
 - Test ✅ — backend **118 PASS** (107 + 11: logout 6 / logout-all 5). typecheck/lint/format temiz.
-
-### TASK-1.21 — Refresh token rotation (opaque 30 gün + aile + replay detection) (2026-05-30) ✅
-
-- **`RefreshToken` modeli + migration (YENİ)** — opaque token, DB'de yalnızca `tokenHash @unique` (sha256); `familyId` (aile/device) + `previousId` (rotation chain) + `revokedAt`/`revokedReason` + `deviceInfo Json?`. `@@index([userId])`/`([familyId])`. `auth/refresh-token.ts`: `generateRefreshToken` (`randomBytes(32)` base64url), `hashRefreshToken`, `issueRefreshToken` (familyId yoksa yeni aile), `cleanupExpiredRefreshTokens` (helper-only, cron'a bağlı değil).
-- **`POST /auth/refresh` (`routes/auth-refresh.ts` YENİ)** — tek `$transaction`: lookup → revoke'lu token (replay) → aile bütünü `replay_detected` (401) / expired (401) / atomik `updateMany WHERE revokedAt IS NULL` compare-and-set rotate (count=0 → race kaybı = replay) → yeni refresh (aynı aile) + yeni access. audit refresh_rotated/replay/expired (`refreshTokenId` whitelist). 400/401 sızdırmaz.
-- **Entegrasyon** — `auth-otp-verify` (mevcut üye login) + `auth-profile` (yeni üye) artık refresh basar; profile token User create ile **aynı transaction'da** (rollback → orphan yok). errors.json `refreshInvalid`/`refreshExpired`/`refreshReplay`. Mevcut test beforeEach'lerine `refreshToken.deleteMany` (FK).
-- Test ✅ — backend **107 PASS** (99 + 8: rotation/replay+aile/expired/invalid/400/aile-izolasyonu/concurrent-race/soft-delete). typecheck/lint/format temiz.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -109,8 +110,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.22 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.23 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.23` (PT davet linki üretim endpoint)
+**Sıradaki:** `/devflow:run-task TASK-1.24` (davet kabul endpoint)

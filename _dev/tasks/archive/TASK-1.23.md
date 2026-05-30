@@ -1,6 +1,6 @@
 # TASK-1.23: PT davet linki üretim endpoint
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -177,8 +177,25 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Invitation modeli + enum + migration** (`schema.prisma`, `20260530001058_invitations`): `InvitationStatus` enum (pending/accepted/expired/cancelled), `Invitation` modeli (`code @unique`, `trainerId` FK, `acceptedByUserId?`, `expiresAt`, audit timestamp'leri), `@@index([trainerId,status])`/`([code])`/`([expiresAt])`. User'a `trainerInvitations` counter-relation.
+- **`invitations/code.ts`** — `generateInvitationCode()` 6 char Crockford base32 (alfabe `0123456789ABCDEFGHJKMNPQRSTVWXYZ`, I/L/O/U yok); modulo bias yok (256 = 8 × 32). `buildInvitationUrl(base, code)` → `${base}/davet/{code}` (trailing slash normalize). `INVITATION_CODE_ALPHABET`/`_LENGTH` export.
+- **`invitations/expiry.ts`** — `markIfExpired(client, inv)`: pending + `expiresAt < now` ise atomik `updateMany WHERE status='pending'` ile expired'a çeker (eşzamanlı accept'i ezmez). Cron yok (lazy-check).
+- **`invitations/guard.ts`** — `ensureTrainer(req, reply)`: `claims.role !== 'trainer'` → 403 `roleForbidden`, false döner; 3 route paylaşır.
+- **`POST /invitations`** (`invitations-create.ts`, env factory `APP_BASE_URL`) — trainer-only, gövdesiz, kod + 30 gün TTL + `pending`; `code @unique` çakışmasında (P2002) max 3 retry. Audit `invitation_created` (metadata yalnızca `invitationId`). 201 `{id,code,url,expiresAt}`.
+- **`GET /invitations`** (`invitations-list.ts`) — trainer-only, `status='pending'` çek, `markIfExpired` ile süresi dolanları düşür, en yeni önce. 200 liste.
+- **`DELETE /invitations/:id`** (`invitations-cancel.ts`) — trainer-only; yok→404, başka PT→403, pending değil→409, atomik compare-and-set cancel→204.
+- **Env:** `APP_BASE_URL` (zod `.url()`, default `https://alpfit.app`) → `env.ts` + `.env.example` + test `setup.ts` stub. server.ts 3 route register.
+- errors.json `invite.forbidden` + `invite.notCancellable` eklendi.
+
+**Test:** backend **131 PASS** (118 + 13 yeni: create 201/url/30gün, audit-PII, member 403, 401, list 5, izolasyon, lazy-expire, cancel 204/403/409/404, retry-collision, 1000-uniqueness). typecheck/lint/format temiz.
+
+**Belirsizlikler:** Yok.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-30 (run-task)

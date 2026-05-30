@@ -24,6 +24,10 @@ const baseSchema = z.object({
   // OTP'yi dev_otp_log tablosuna yazar; `live` Yakın 5'te gerçek provider'ı
   // devreye alır (o tarihe kadar factory `live`'da fail-fast eder).
   SMS_PROVIDER: z.enum(SMS_PROVIDERS).default('mock'),
+  // Davet linki base URL'i (TASK-1.23). PT davet kodu bu base ile birleşip
+  // `${APP_BASE_URL}/davet/{kod}` üretir. Prod: https://alpfit.app, staging:
+  // https://staging.alpfit.app. Trailing slash route helper'da normalize edilir.
+  APP_BASE_URL: z.string().url().default('https://alpfit.app'),
 });
 
 const envSchema = baseSchema.transform((env) => {

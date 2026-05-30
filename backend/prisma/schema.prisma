@@ -63,6 +63,8 @@ model User {
   consentRecords    ConsentRecord[]   @relation("user_consent_records")
   // TASK-1.21 — opaque refresh token aileleri (rotate-on-use + replay detection).
   refreshTokens     RefreshToken[]    @relation("user_refresh_tokens")
+  // TASK-1.23 — PT'nin ürettiği davet linkleri (trainer-only).
+  trainerInvitations Invitation[]     @relation("trainer_invitations")
 
   @@index([role])
 }
@@ -264,4 +266,46 @@ model RefreshToken {
 
   @@index([userId])
   @@index([familyId])
+}
+
+// =====================================================================
+// TASK-1.23 — PT davet linki (invitation)
+// =====================================================================
+// F1.1: PT benzersiz davet kodu içeren link üretir (`alpfit.app/davet/{kod}`),
+// üye linkten gelip PT'ye otomatik bağlanır. Kararlar (DECISIONS "TASK-1.23"):
+//   - **Kod:** 6 karakter Crockford base32 (I/O/U/L harfsiz — insan-okunur,
+//     PT kodu sözlü iletebilir). 32^6 ≈ 1 milyar → çakışma çok düşük; yine de
+//     `code @unique` + create retry (max 3) ile garanti altına alınır.
+//   - **30 gün TTL:** `expiresAt = now + 30 gün`. Süre dolması **lazy-check**'le
+//     ele alınır — cron YOK: liste sorgusunda / accept (TASK-1.24) anında
+//     `expiresAt < now` ise status `expired`'a çekilir (discuss-phase kararı).
+//   - **Tek kullanımlık:** accept (TASK-1.24) status'ü `accepted`'a çeker.
+//   - **Davet kodu PII DEĞİL** ama audit metadata'ya yazılmaz (yalnızca
+//     `invitationId` tutulur — log şişirmemek için; kod gerekirse DB'den okunur).
+
+enum InvitationStatus {
+  pending
+  accepted
+  expired
+  cancelled
+}
+
+model Invitation {
+  id               String           @id @default(cuid())
+  // 6 karakter Crockford base32; globally unique (create retry garantisi).
+  code             String           @unique
+  trainerId        String
+  // Daveti kabul eden üye (TASK-1.24 accept akışı set eder); pending'de null.
+  acceptedByUserId String?
+  status           InvitationStatus @default(pending)
+  expiresAt        DateTime
+  createdAt        DateTime         @default(now())
+  acceptedAt       DateTime?
+  cancelledAt      DateTime?
+
+  trainer          User             @relation("trainer_invitations", fields: [trainerId], references: [id])
+
+  @@index([trainerId, status])
+  @@index([code])
+  @@index([expiresAt])
 }

@@ -9,6 +9,22 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.23: Davet Linki — Crockford Base32 6-Char Kod + Lazy Expiry (Cron'suz)
+
+**Bağlam:** PT davet linki üretir (`alpfit.app/davet/{kod}`), üye linkten gelip PT'ye bağlanır (F1.1). İki tasarım sorusu: (1) davet kodu nasıl üretilir? (2) "30 gün içinde kullanılmazsa otomatik iptal" nasıl uygulanır?
+
+**Seçenekler:**
+1. **Kod formatı:** (a) UUID/cuid — uzun, sözlü iletilemez; (b) random hex 8 char — I/O/0 karışır; (c) **Crockford base32 6 char** (I/L/O/U harfsiz) — insan-okunur, PT kodu sözlü/QR'sız iletebilir, 32^6 ≈ 1 milyar kombinasyon.
+2. **30 gün iptal:** (a) cron job her gece expired'a çeker — ek altyapı, zamanlama riski; (b) **lazy-check** — davet yalnızca okunduğu anda (liste sorgusu / accept) `expiresAt < now` ise expired'a çekilir.
+
+**Karar:** Kod = Crockford base32 6 char (`generateInvitationCode`, modulo bias yok çünkü 256 = 8 × 32); benzersizlik `code @unique` + create retry (max 3) ile garanti. Expiry = lazy-check (`markIfExpired`), **cron YOK**.
+
+**Gerekçe:** 6-char okunur kod PT'nin daveti sözlü iletmesini sağlar (TR pazar, düşük teknik kitle). Çakışma olasılığı milyarda-bir; retry pratikte tetiklenmez ama garanti sağlar. Lazy expiry discuss-phase kararıdır: cron'suz, süresi dolan davet hiçbir zaman aktif davranmaz; v1 ölçeğinde (PT başına ~5 bekleyen davet) liste sorgusundaki ek update ihmal edilebilir. Audit `invitation_created` metadata'sına yalnızca `invitationId` yazılır (kod PII değil ama log şişirmemek için tutulmaz; trainer ID hash'li).
+
+**İlgili Task/Faz:** TASK-1.23 (Faz 1). Accept akışı (TASK-1.24) aynı `markIfExpired` helper'ını + tek-kullanımlık `accepted` geçişini kullanacak. URL path `/davet/` deep link TASK-1.25'te yakalanır.
+
+---
+
 ### 2026-05-30 — TASK-1.21: Refresh Token — Opaque + Aile + rotate-on-use + Replay Detection
 
 **Bağlam:** Access token (TASK-1.20) 15dk; "30 gün cihaz hatırlama" (F1.1 oturum yönetimi) için uzun ömürlü refresh token gerekiyor. Research §Dikkat #8: "Fastify refresh-token rotation resmi recipe yok — topluluk patternleri olgun ama bilinçli yazılıp test edilmeli." Bu task pattern'i bilinçli yazar + replay senaryosunu test eder.

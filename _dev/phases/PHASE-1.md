@@ -265,7 +265,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.20 | TASK-1.20 | ✅ Tamamlandı | JWT access token + auth middleware + profil create — @fastify/jwt HS256, access 15dk + kayıt jetonu 10dk (typ claim), app.authenticate (deletedAt:null), POST /auth/profile atomik $transaction, GET /auth/me |
 | 1.21 | TASK-1.21 | ✅ Tamamlandı | Refresh token rotation — opaque 30 gün DB-stored (sha256 hash), aile (familyId) + rotate-on-use + replay detection (aile iptal) + concurrent compare-and-set; POST /auth/refresh + verify/profile entegrasyonu |
 | 1.22 | TASK-1.22 | ✅ Tamamlandı | Logout + tüm cihazlardan çıkış endpoints — POST /auth/logout (access korumalı, body refreshToken, cross-user 403, idempotent 204, compare-and-set revoke) + POST /auth/logout-all (batch revoke, user_logout_all audit + count) |
-| 1.23 | TASK-1.23 | ⬜ Bekliyor | PT davet linki üretim endpoint |
+| 1.23 | TASK-1.23 | ✅ Tamamlandı | PT davet linki üretim endpoint — POST /invitations (trainer-only, 6 char Crockford base32 kod + P2002 retry, 30 gün TTL, audit invitation_created) + GET /invitations (lazy-expiry, cron yok) + DELETE /invitations/:id (404/403/409/204 atomik cancel); Invitation modeli + migration, APP_BASE_URL env |
 | 1.24 | TASK-1.24 | ⬜ Bekliyor | Davet kabul endpoint (lazy expiry + PT-Member ilişki) |
 | 1.25 | TASK-1.25 | ⬜ Bekliyor | Deep link (Universal/App Link + .well-known/) |
 | 1.26 | TASK-1.26 | ⬜ Bekliyor | Açılış ekranı (rol seçimi + manuel davet kodu + deep link) |
