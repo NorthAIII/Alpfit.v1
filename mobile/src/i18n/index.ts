@@ -4,6 +4,7 @@ import { initReactI18next } from 'react-i18next';
 
 import authTr from './locales/tr/auth.json';
 import commonTr from './locales/tr/common.json';
+import davetTr from './locales/tr/davet.json';
 import errorsTr from './locales/tr/errors.json';
 import kvkkTr from './locales/tr/kvkk.json';
 import profileTr from './locales/tr/profile.json';
@@ -11,13 +12,14 @@ import profileTr from './locales/tr/profile.json';
 const isDev = process.env['NODE_ENV'] !== 'production';
 
 export const defaultNS = 'common' as const;
-export const namespaces = ['common', 'auth', 'errors', 'kvkk', 'profile'] as const;
+export const namespaces = ['common', 'auth', 'davet', 'errors', 'kvkk', 'profile'] as const;
 export type Namespace = (typeof namespaces)[number];
 
 const resources = {
   tr: {
     common: commonTr,
     auth: authTr,
+    davet: davetTr,
     errors: errorsTr,
     kvkk: kvkkTr,
     profile: profileTr,

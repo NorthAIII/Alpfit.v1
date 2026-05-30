@@ -1,5 +1,11 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
+// Deep link domain'leri (TASK-1.25). Gerçek staging `alpfit-staging.kiwiailab.com`
+// (bunker-nginx + backend `.well-known/` servis ediyor); `alpfit.app` prod
+// placeholder (Yakın 5'te domain alınınca aktif). iOS associatedDomains +
+// Android intentFilters bu listeden türetilir — yeni domain eklemek tek satır.
+const DEEP_LINK_DOMAINS = ['alpfit-staging.kiwiailab.com', 'alpfit.app'] as const;
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: config.name ?? 'Alpfit',
@@ -8,6 +14,29 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   // pipeline ile aktive). Şu fazda plugin kayıtlı ama auth token olmadan no-op
   // — runtime/dev'de side-effect yok.
   plugins: [...(config.plugins ?? []), '@sentry/react-native/expo'],
+  // iOS Universal Link — apple-app-site-association domain'leri (applinks:).
+  // `...config.ios` ile app.json'daki bundleIdentifier/supportsTablet korunur.
+  ios: {
+    ...config.ios,
+    associatedDomains: DEEP_LINK_DOMAINS.map((domain) => `applinks:${domain}`),
+  },
+  // Android App Link — autoVerify intent filter (host başına /davet/* yakalar).
+  // `...config.android` ile app.json'daki package korunur.
+  android: {
+    ...config.android,
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: DEEP_LINK_DOMAINS.map((host) => ({
+          scheme: 'https',
+          host,
+          pathPrefix: '/davet',
+        })),
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+    ],
+  },
   extra: {
     ...config.extra,
     apiBaseUrl: process.env['EXPO_PUBLIC_API_BASE_URL'] ?? null,

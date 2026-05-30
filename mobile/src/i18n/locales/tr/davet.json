@@ -1,0 +1,32 @@
+{
+  "loading": "Davet kontrol ediliyor...",
+  "valid": {
+    "title": "Davetin hazır",
+    "subtitle": "{{trainer}} seni Alpfit'e davet ediyor.",
+    "expires": "Son geçerlilik: {{date}}",
+    "cta": "Devam et"
+  },
+  "error": {
+    "notFound": {
+      "title": "Davet bağlantısı geçersiz",
+      "body": "Bu davet bulunamadı. Yeni link için antrenörüne yaz."
+    },
+    "expired": {
+      "title": "Davetin süresi dolmuş",
+      "body": "Bu davetin süresi geçmiş. Antrenöründen yeni link iste."
+    },
+    "cancelled": {
+      "title": "Davet iptal edilmiş",
+      "body": "Bu daveti antrenörün iptal etmiş. Yeni link iste."
+    },
+    "used": {
+      "title": "Davet zaten kullanılmış",
+      "body": "Bu davet linki kullanılmış. Yeni link için antrenörüne yaz."
+    },
+    "network": {
+      "title": "Daveti kontrol edemedik",
+      "body": "İnternet bağlantını kontrol edip tekrar dene.",
+      "retry": "Tekrar dene"
+    }
+  }
+}

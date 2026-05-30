@@ -12,3 +12,8 @@ vi.stubEnv('REDIS_URL', 'redis://redis:6379');
 vi.stubEnv('JWT_ACCESS_SECRET', 'test-access-secret-at-least-32-characters-long');
 vi.stubEnv('JWT_REFRESH_SECRET', 'test-refresh-secret-at-least-32-characters-long');
 vi.stubEnv('APP_BASE_URL', 'https://alpfit.app');
+vi.stubEnv('APPLE_APP_ID', 'TESTTEAMID.app.alpfit.mobile');
+vi.stubEnv(
+  'ANDROID_SHA256_CERT_FINGERPRINTS',
+  'AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99',
+);

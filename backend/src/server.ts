@@ -16,6 +16,7 @@ import { authOtpSendRoutes } from './routes/auth-otp-send.js';
 import { authOtpVerifyRoutes } from './routes/auth-otp-verify.js';
 import { authProfileRoutes } from './routes/auth-profile.js';
 import { authRefreshRoutes } from './routes/auth-refresh.js';
+import { davetWebFallbackRoutes } from './routes/davet-web-fallback.js';
 import { healthzRoutes } from './routes/healthz.js';
 import { internalDevOtpRoutes } from './routes/internal-dev-otp.js';
 import { invitationsAcceptRoutes } from './routes/invitations-accept.js';
@@ -23,6 +24,7 @@ import { invitationsCancelRoutes } from './routes/invitations-cancel.js';
 import { invitationsCreateRoutes } from './routes/invitations-create.js';
 import { invitationsListRoutes } from './routes/invitations-list.js';
 import { invitationsPreviewRoutes } from './routes/invitations-preview.js';
+import { wellKnownRoutes } from './routes/well-known.js';
 
 import type { Env } from './config/env.js';
 import type { PrismaClient } from './db/prisma.js';
@@ -84,6 +86,10 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(invitationsCancelRoutes);
   await app.register(invitationsAcceptRoutes);
   await app.register(invitationsPreviewRoutes);
+  // Deep link altyapısı (TASK-1.25): iOS/Android `.well-known/` + masaüstü
+  // davet fallback sayfası (QR). bunker-nginx tüm path'leri backend'e proxy'ler.
+  await app.register(wellKnownRoutes({ env: opts.env }));
+  await app.register(davetWebFallbackRoutes({ env: opts.env }));
 
   return app;
 }

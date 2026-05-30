@@ -1,6 +1,6 @@
 # TASK-1.25: Deep link kurulumu (Universal Link + App Link + .well-known/)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -173,10 +173,33 @@ _dev/docs/
 
 ---
 
-## Oturum Kayıtları
+## Oturum Kaydı
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**İki karar noktası kullanıcıya soruldu (onaylandı):**
+- Masaüstü QR için backend'e `qrcode` paketi eklensin (harici QR servisi KVKK'ya aykırı) → **onaylandı**.
+- Deep link domain'leri: gerçek staging `alpfit-staging.kiwiailab.com` + `alpfit.app` prod placeholder → **onaylandı**.
+
+**Bayatlık adaptasyonu (task dokümanı vs gerçeklik):** Task "Coolify reverse proxy" + `staging.alpfit.app` varsayıyordu; gerçekte staging **docker-compose + bunker-nginx** (TASK-1.10 sapması) ve domain `alpfit-staging.kiwiailab.com`. bunker-nginx tüm path'leri backend'e proxy'lediği için `.well-known/` **backend route** ile servis edildi (nginx'e dokunulmadı).
+
+**Yapılanlar:**
+- **Backend `routes/well-known.ts` (YENİ)** — `GET /.well-known/apple-app-site-association` (uzantısız, `application/json`, `appID` + `paths:["/davet/*"]`) + `GET /.well-known/assetlinks.json` (`package_name` + virgül-parse SHA256 fingerprint listesi). Env factory inject.
+- **Backend `routes/davet-web-fallback.ts` (YENİ)** — `GET /davet/:code` masaüstü fallback HTML; davet linki + **sunucu-taraflı inline QR** (`qrcode` paketi, data-URI, harici servis yok) + "mobil cihazda aç" TR yönlendirme. PII'siz, DB hit yok.
+- **Env (`config/env.ts`)** — `APPLE_APP_ID` (default `STAGINGTEAMID.app.alpfit.mobile`) + `ANDROID_SHA256_CERT_FINGERPRINTS` (placeholder); `.env.example` + test stub güncellendi. `server.ts` iki route register.
+- **Mobile `app.config.ts` (GÜNCELLE)** — `DEEP_LINK_DOMAINS` → iOS `associatedDomains` (`applinks:`) + Android `intentFilters` (autoVerify, host başına `/davet` pathPrefix); `...config.ios`/`...config.android` ile app.json sabitleri korundu.
+- **Mobile `public/.well-known/*` (YENİ)** — AASA + assetlinks statik kopyalar (EAS Hosting Yakın 5 yolu) + README (drift uyarısı, backend authoritative).
+- **Mobile `app/davet/[code].tsx` (YENİ)** — deep link landing; route param'dan kod, `GET /invitations/:code` preview, TR durum mesajları (valid / notFound / expired / cancelled / used / network+retry), "Devam et" → `/` (kod param taşır). Auth-state dallanması TASK-1.26+'ya ertelendi (TODO).
+- **Mobile `src/api/invitations.ts` (YENİ)** — `fetchInvitationPreview` discriminated result + `getApiBaseUrl` (expo-constants extra). `davet` i18n namespace (json + index + i18next.d.ts).
+
+**Test ✅** — backend **152 PASS** (well-known 2 + web-fallback 2 yeni; QR data-URI + harici-servis-yok assertion). mobile **36 PASS** (davet ekranı 6 yeni: valid/navigate/404/expired/accepted/network-retry). typecheck + lint + format temiz.
+
+**Manuel (kullanıcı/Yakın 5):** Gerçek cihaz Universal/App Link testi imzalı build + gerçek Team ID/fingerprint gerektirir → `_dev/docs/deep-link-test.md` rehberi.
+
+**Kalan İşler (Yakın 5 — bu task kapsamı dışı):** Gerçek `APPLE_APP_ID` + EAS cert fingerprint + prod domain `alpfit.app` DNS/deploy + AASA cache penceresi testi.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-30 (run-task)

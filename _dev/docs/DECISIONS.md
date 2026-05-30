@@ -9,6 +9,23 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-30 — TASK-1.25: Deep Link — Backend `.well-known/` Servisi + Env Placeholder + Sunucu-Taraflı QR
+
+**Bağlam:** iOS Universal Link + Android App Link kurulumu (`https://<domain>/davet/{kod}` app yüklüyse app'i açsın). İşletim sistemleri domain'den `.well-known/apple-app-site-association` (iOS, uzantısız, MIME application/json) + `.well-known/assetlinks.json` (Android) dosyalarını çeker. Üç soru: (1) bu dosyaları nerede servis edelim? (2) Apple Team ID + Android cert fingerprint henüz yok (hesaplar Yakın 5'te açılıyor) — nasıl placeholder tutalım? (3) masaüstü fallback QR'ı nasıl üretelim?
+
+**Seçenekler:**
+1. **`.well-known/` servisi:** (a) EAS Hosting otomatik servis (task'ın ilk varsayımı) — ama staging Coolify değil, **docker-compose + bunker-nginx** (TASK-1.10 sapması); (b) bunker-nginx'e statik dosya/MIME kuralı ekle — Bunker'ın paylaşımlı nginx'ine dokunmak gerekir (dokunulmaz); (c) **backend Fastify route** — bunker-nginx zaten tüm path'leri `alpfit-backend:3000`'e proxy'liyor, nginx'e dokunmadan `Content-Type: application/json` ile servis.
+2. **Team ID / fingerprint placeholder:** (a) route'a hardcode + TODO; (b) **env değişkeni** (`APPLE_APP_ID` + `ANDROID_SHA256_CERT_FINGERPRINTS`) placeholder default'lu — Yakın 5'te tek string + redeploy.
+3. **Masaüstü QR:** (a) harici QR servisi (api.qrserver vb.) — davet kodunu 3. tarafa sızdırır, KVKK duruşuna aykırı; (b) **`qrcode` paketi** — sunucu tarafında inline PNG data-URI üretir, harici çağrı yok.
+
+**Karar:** (1c) backend route (`routes/well-known.ts` + `routes/davet-web-fallback.ts`), (2b) env placeholder default, (3b) `qrcode` paketi sunucu-taraflı inline QR. `mobile/public/.well-known/*` statik kopyaları **EAS Hosting'e geçilirse** diye tutulur (içerik backend ile aynı; README'de drift uyarısı). app.config.ts `DEEP_LINK_DOMAINS = [alpfit-staging.kiwiailab.com, alpfit.app]` (gerçek staging + prod placeholder) → iOS associatedDomains + Android autoVerify intentFilters.
+
+**Gerekçe:** Backend servis, bunker-nginx'in paylaşımlı/dokunulmaz olması + Coolify'ın olmaması karşısında nginx'e hiç dokunmadan doğru MIME'ı garanti eden tek yol; EAS Hosting Yakın 5'te değerlendirilir (statik dosyalar hazır). Env placeholder, Apple/Google hesaplarının Yakın 5'te açılması gerçeğiyle uyumlu — kod değişmeden tek string + redeploy ile prod'a geçer. Sunucu-taraflı QR (kullanıcı onayıyla `qrcode` eklendi) davet kodunu dışarı sızdırmaz. Davet ekranı (`app/davet/[code].tsx`) bu task'ta preview + TR durum mesajları + kod taşımayı yapar; auth-state dallanması (üye kabul / PT hata / rol seçimi) TASK-1.26+ auth context'ine bağlı, oraya ertelendi (kodda TODO + ekran "Devam et" ile `/`'a kod taşır).
+
+**İlgili Task/Faz:** TASK-1.25 (Faz 1). Preview endpoint `GET /invitations/:code` (TASK-1.24) tüketildi. Yakın 5: gerçek Team ID + EAS cert fingerprint + prod domain `alpfit.app` + AASA 24h cache penceresi. Elle test rehberi: `_dev/docs/deep-link-test.md`.
+
+---
+
 ### 2026-05-30 — TASK-1.23: Davet Linki — Crockford Base32 6-Char Kod + Lazy Expiry (Cron'suz)
 
 **Bağlam:** PT davet linki üretir (`alpfit.app/davet/{kod}`), üye linkten gelip PT'ye bağlanır (F1.1). İki tasarım sorusu: (1) davet kodu nasıl üretilir? (2) "30 gün içinde kullanılmazsa otomatik iptal" nasıl uygulanır?

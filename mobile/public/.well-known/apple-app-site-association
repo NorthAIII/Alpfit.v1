@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "STAGINGTEAMID.app.alpfit.mobile",
+        "paths": ["/davet/*"]
+      }
+    ]
+  }
+}

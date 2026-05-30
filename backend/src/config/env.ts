@@ -26,8 +26,23 @@ const baseSchema = z.object({
   SMS_PROVIDER: z.enum(SMS_PROVIDERS).default('mock'),
   // Davet linki base URL'i (TASK-1.23). PT davet kodu bu base ile birleşip
   // `${APP_BASE_URL}/davet/{kod}` üretir. Prod: https://alpfit.app, staging:
-  // https://staging.alpfit.app. Trailing slash route helper'da normalize edilir.
+  // https://alpfit-staging.kiwiailab.com. Trailing slash route helper'da normalize edilir.
   APP_BASE_URL: z.string().url().default('https://alpfit.app'),
+  // Deep link — iOS Apple App Site Association `appID` (TASK-1.25). Format:
+  // `<TeamID>.<bundleId>`. Apple Developer hesabı Yakın 5'te açılınca gerçek
+  // Team ID buraya girilir (tek string değişikliği); o ana kadar placeholder.
+  // bundleId mobile/app.json ile sabit: app.alpfit.mobile.
+  APPLE_APP_ID: z.string().min(1).default('STAGINGTEAMID.app.alpfit.mobile'),
+  // Deep link — Android App Link `sha256_cert_fingerprints` (TASK-1.25).
+  // Virgülle ayrılmış SHA256 fingerprint listesi. EAS Build imza sertifikası
+  // Yakın 5'te alınınca gerçek fingerprint girilir; o ana kadar placeholder
+  // (yanlış fingerprint → Android intent chooser çıkar, autoVerify başarısız).
+  ANDROID_SHA256_CERT_FINGERPRINTS: z
+    .string()
+    .min(1)
+    .default(
+      'FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF:FF',
+    ),
 });
 
 const envSchema = baseSchema.transform((env) => {
