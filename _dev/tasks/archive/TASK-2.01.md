@@ -1,6 +1,6 @@
 # TASK-2.01: DB Schema — M2 Tabloları + Prisma Migration + Seeder + Shared Zod Şemaları
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.1 + F2.2 — temel altyapı
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -37,7 +37,7 @@ WorkoutCompletion'daki `@@unique([memberId, programDayId, scheduledDate])` stand
 
 ## Alt Görevler
 
-- [ ] **1. Prisma Schema — 5 yeni tablo ekle**
+- [x] **1. Prisma Schema — 5 yeni tablo ekle**
   - `apps/backend/prisma/schema.prisma` dosyasına ekle:
     - `Exercise`: id, name (TR), muscleGroup?, videoUrl?, isCustom (bool), deletedAt? (soft-delete), createdById? (trainerId FK)
     - `Program`: id, trainerId (FK), memberId (FK), status (draft|active|archived), publishedAt?, archivedAt?
@@ -47,18 +47,18 @@ WorkoutCompletion'daki `@@unique([memberId, programDayId, scheduledDate])` stand
   - Index'leri ekle (PHASE-2.md schema'dan birebir al)
   - `@@unique([memberId, programDayId, scheduledDate])` — WorkoutCompletion'da
 
-- [ ] **2. Prisma Migration çalıştır**
+- [x] **2. Prisma Migration çalıştır**
   - `pnpm --filter backend prisma migrate dev --name m2_program_domain`
   - Migration temiz geçmeli, DB güncellenmiş olmalı
 
-- [ ] **3. Exercise Seeder — ~20 Placeholder Egzersiz**
+- [x] **3. Exercise Seeder — ~20 Placeholder Egzersiz**
   - `apps/backend/prisma/seed.ts` dosyasına ekle (mevcut seed korunarak)
   - 20 yaygın egzersiz: TR isimler + kas grubu + videoUrl: null (Yakın 5'e kadar placeholder)
   - Örnekler: Squat, Deadlift (Ölü Kaldırış), Bench Press (Göğüs Presi), Pull-up (Barfiks), Shoulder Press (Omuz Presi), Lat Pulldown (Lat Çekiş), vb.
   - `isCustom: false`, `createdById: null` — çekirdek kütüphane
   - `pnpm --filter backend prisma db seed` çalıştır ve egzersizlerin eklendiğini doğrula
 
-- [ ] **4. Shared Zod Şemaları — M2**
+- [x] **4. Shared Zod Şemaları — M2**
   - `packages/shared/src/schemas/exercise.ts` oluştur:
     - `exerciseSchema` (id, name, muscleGroup, videoUrl, isCustom)
     - `createExerciseSchema` (PT custom ekleme: name required, diğerleri optional)
@@ -76,7 +76,7 @@ WorkoutCompletion'daki `@@unique([memberId, programDayId, scheduledDate])` stand
   - Şemaları `packages/shared/src/index.ts`'ten export et
   - `packages/shared`'ı build et: `pnpm --filter @alpfit/shared build`
 
-- [ ] **5. PII Fields güncelle**
+- [x] **5. PII Fields güncelle**
   - `packages/shared/src/pii-fields.ts` PII_FIELDS listesine ekle:
     - `notes` (ProgramDayExercise — PT'nin PT notları kişisel veri sayılabilir, PT-spesifik)
     - WorkoutCompletion alanları (memberId zaten var — completedAt, scheduledDate eklenebilir)
@@ -116,29 +116,44 @@ packages/shared/src/
 
 ## Test Kriterleri
 
-- [ ] `pnpm --filter backend prisma migrate dev` — 0 hata, migration dosyası `prisma/migrations/` altında oluştu
-- [ ] `pnpm --filter backend prisma db seed` — 20 Exercise satırı DB'ye yazıldı; ikinci çalıştırmada duplicate yok (idempotent)
-- [ ] `pnpm --filter @alpfit/shared build` — 0 TypeScript hatası
-- [ ] Zod şemalarından `createExerciseSchema.parse({ name: "Squat" })` — başarılı
-- [ ] `programSchema.parse(...)` — eksik zorunlu alan varsa hata fırlatır
-- [ ] `createWorkoutCompletionSchema.parse({ programDayId: "uuid", scheduledDate: "2026-05-30T00:00:00Z" })` — başarılı parse
-- [ ] Backend TypeScript build: `pnpm --filter backend build` — 0 hata
+- [x] `pnpm --filter backend prisma migrate dev` — 0 hata, migration dosyası `prisma/migrations/` altında oluştu
+- [x] `pnpm --filter backend prisma db seed` — 20 Exercise satırı DB'ye yazıldı; ikinci çalıştırmada duplicate yok (idempotent)
+- [x] `pnpm --filter @alpfit/shared build` — 0 TypeScript hatası
+- [x] Zod şemalarından `createExerciseSchema.parse({ name: "Squat" })` — başarılı
+- [x] `programSchema.parse(...)` — eksik zorunlu alan varsa hata fırlatır
+- [x] `createWorkoutCompletionSchema.parse({ programDayId: "uuid", scheduledDate: "2026-05-30T00:00:00Z" })` — başarılı parse
+- [x] Backend TypeScript build: `pnpm --filter backend build` — 0 hata
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
 - [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
+- [x] Bu doküman güncellendi (oturum kaydı)
 - [ ] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `backend/prisma/schema.prisma`'ya `ProgramStatus` enum + 5 yeni model eklendi; User modeline M2 relation'ları eklendi.
+- `prisma migrate dev --name m2_program_domain` çalıştırıldı, migration temiz geçti.
+- `backend/prisma/seed.ts` oluşturuldu (20 TR-isimli placeholder egzersiz, idempotent).
+- `backend/prisma.config.ts`'e `migrations.seed` eklendi (Prisma 7 konfigürasyonu); Prisma 7'de seed `package.json`'da değil `prisma.config.ts`'te tanımlanıyor.
+- `backend/package.json`'a `db:seed` script'i eklendi.
+- `shared/package.json`'a `zod: ^4.4.3` eklendi; `pnpm install` ile kuruldu.
+- `shared/src/schemas/exercise.ts`, `program.ts`, `workout-completion.ts` oluşturuldu.
+- `shared/src/index.ts` yeni şemalar için güncellendi.
+- `shared/src/pii-fields.ts`'e `scheduledDate`, `scheduled_date`, `completedAt`, `completed_at` eklendi.
+- Tüm test kriterleri geçti: `prisma migrate dev` ✅, `prisma db seed` (20 egzersiz + idempotent) ✅, `shared build` 0 TS hatası ✅, backend build 0 TS hatası ✅, 173 backend testi 0 hata ✅.
+
+**Önemli Not:** Prisma 7'de seed komutu `prisma.config.ts` → `migrations.seed` alanında tanımlanır; `package.json` "prisma.seed" anahtarı Prisma 5/6 davranışıdır, Prisma 7'de çalışmaz. Bunu memory'e eklenecek (faz retrosunda).
 
 ---
 

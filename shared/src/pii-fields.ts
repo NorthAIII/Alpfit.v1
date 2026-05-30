@@ -77,11 +77,18 @@ export const PII_FIELDS = [
   'carbs',
   'fat',
 
-  // Notlar (PT'nin üye notu içerebilir)
+  // Notlar (PT'nin üye notu içerebilir; ProgramDayExercise.notes dahil — TASK-2.01)
   'note',
   'notes',
   'comment',
   'comments',
+
+  // Antrenman zamanlaması (WorkoutCompletion — TASK-2.01)
+  // Üye egzersiz zamanını açığa çıkardığı için log/Sentry yoluna sızmamalı.
+  'scheduledDate',
+  'scheduled_date',
+  'completedAt',
+  'completed_at',
 
   // KVKK rıza alanları (rıza durumu kendisi PII değil ama log'da bağlamla görünmesi sızıntı riski)
   'kvkkConsent',

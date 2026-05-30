@@ -232,6 +232,9 @@ importers:
       libphonenumber-js:
         specifier: ^1.11.20
         version: 1.13.3
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^4.1.7

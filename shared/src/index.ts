@@ -3,3 +3,7 @@ export * from './locale.js';
 export * from './phone.js';
 export * from './date.js';
 export * from './pii-fields.js';
+// TASK-2.01 — M2 Program Domain Zod şemaları
+export * from './schemas/exercise.js';
+export * from './schemas/program.js';
+export * from './schemas/workout-completion.js';

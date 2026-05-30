@@ -65,6 +65,11 @@ model User {
   refreshTokens     RefreshToken[]    @relation("user_refresh_tokens")
   // TASK-1.23 — PT'nin ürettiği davet linkleri (trainer-only).
   trainerInvitations Invitation[]     @relation("trainer_invitations")
+  // TASK-2.01 — M2 Program Domain ilişkileri.
+  trainerExercises    Exercise[]         @relation("trainer_exercises")
+  trainerPrograms     Program[]          @relation("trainer_programs")
+  memberPrograms      Program[]          @relation("member_programs")
+  workoutCompletions  WorkoutCompletion[] @relation("member_completions")
 
   @@index([role])
 }
@@ -308,4 +313,116 @@ model Invitation {
   @@index([trainerId, status])
   @@index([code])
   @@index([expiresAt])
+}
+
+// =====================================================================
+// TASK-2.01 — M2 Program Domain (Exercise, Program, ProgramDay,
+//             ProgramDayExercise, WorkoutCompletion)
+// =====================================================================
+
+enum ProgramStatus {
+  draft
+  active
+  archived
+}
+
+// PT tarafından tanımlanan egzersiz (çekirdek kütüphane veya custom).
+// deletedAt: soft-delete — API katmanında "WHERE deletedAt IS NULL" filtresi uygulanır.
+// isCustom=false çekirdek kütüphane; isCustom=true PT'ye özel (createdById zorunlu).
+model Exercise {
+  id          String    @id @default(cuid())
+  name        String
+  muscleGroup String?
+  videoUrl    String?
+  isCustom    Boolean   @default(false)
+  deletedAt   DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  createdBy           User?                @relation("trainer_exercises", fields: [createdById], references: [id])
+  programDayExercises ProgramDayExercise[]
+
+  @@index([isCustom])
+  @@index([createdById])
+}
+
+// Haftalık antrenman şablonu. Bir üyenin aynı anda tek aktif programı olabilir
+// (uygulama katmanında enforce edilir — DB'de unique constraint gerekmez).
+model Program {
+  id          String        @id @default(cuid())
+  trainerId   String
+  memberId    String
+  status      ProgramStatus @default(draft)
+  publishedAt DateTime?
+  archivedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  trainer User        @relation("trainer_programs", fields: [trainerId], references: [id])
+  member  User        @relation("member_programs", fields: [memberId], references: [id])
+  days    ProgramDay[]
+
+  @@index([memberId, status])
+  @@index([trainerId])
+}
+
+// Programın bir günü (haftalık şablonda Pazartesi/Salı vb. veya tek seferlik).
+// isOneOff=true ise dayOfWeek baz alınmaz, specificDate kullanılır.
+model ProgramDay {
+  id           String    @id @default(cuid())
+  programId    String
+  dayOfWeek    Int
+  title        String?
+  position     Int
+  isOneOff     Boolean   @default(false)
+  specificDate DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  program     Program              @relation(fields: [programId], references: [id])
+  exercises   ProgramDayExercise[]
+  completions WorkoutCompletion[]
+
+  @@index([programId, dayOfWeek])
+}
+
+// Günün içindeki egzersizler.
+// reps: "8" veya "8-12" aralığı için String — Int değil (araştırma kararı).
+// position: ↑↓ sıralama için.
+model ProgramDayExercise {
+  id           String   @id @default(cuid())
+  programDayId String
+  exerciseId   String
+  sets         Int
+  reps         String
+  restSeconds  Int?
+  notes        String?
+  position     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  programDay ProgramDay @relation(fields: [programDayId], references: [id])
+  exercise   Exercise   @relation(fields: [exerciseId], references: [id])
+
+  @@index([programDayId])
+}
+
+// "Antrenmanı bitir" kaydı — M3 streak motoruna veri sağlar.
+// @@unique garantisi: aynı gün için çift kayıt önlenir (client retry-safe, idempotent).
+// Standart composite unique — partial unique SQL gerekmiyor (soft-delete yok bu tabloda).
+model WorkoutCompletion {
+  id            String   @id @default(cuid())
+  memberId      String
+  programDayId  String
+  scheduledDate DateTime
+  completedAt   DateTime
+  isLate        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  member     User       @relation("member_completions", fields: [memberId], references: [id])
+  programDay ProgramDay @relation(fields: [programDayId], references: [id])
+
+  @@unique([memberId, programDayId, scheduledDate])
+  @@index([memberId, scheduledDate])
 }
