@@ -77,8 +77,7 @@ export default function MemberHomeScreen() {
           <Text style={styles.todayTitle}>{todayWorkout.title ?? 'Antrenman'}</Text>
           <Pressable
             style={styles.ctaButton}
-            // @ts-expect-error TASK-2.11: WorkoutScreen henüz yok, route tiplendirilmemiş
-      onPress={() => router.push(`/workout/${todayWorkout.id}`)}
+            onPress={() => router.push(`/workout/${todayWorkout.id}`)}
             accessibilityRole="button"
             accessibilityLabel="Antrenmana git"
             testID="go-to-workout-button"

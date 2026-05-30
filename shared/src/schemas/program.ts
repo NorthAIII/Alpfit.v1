@@ -2,6 +2,14 @@ import { z } from 'zod';
 
 const programStatusSchema = z.enum(['draft', 'active', 'archived']);
 
+const programDayExerciseInfoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  muscleGroup: z.string().nullable(),
+  videoUrl: z.string().nullable(),
+  isCustom: z.boolean(),
+});
+
 export const programDayExerciseSchema = z.object({
   id: z.string(),
   exerciseId: z.string(),
@@ -10,6 +18,7 @@ export const programDayExerciseSchema = z.object({
   restSeconds: z.number().int().nonnegative().nullable(),
   notes: z.string().nullable(),
   position: z.number().int().nonnegative(),
+  exercise: programDayExerciseInfoSchema,
 });
 
 export const programDaySchema = z.object({

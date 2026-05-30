@@ -1,6 +1,6 @@
 # TASK-2.11: Mobile — Antrenman Ekranı — Egzersiz Listesi + Tik State + Video Modal
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.2 — Üye Program Görüntüleme + Tamamlama
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -29,7 +29,7 @@
 
 ## Alt Görevler
 
-- [ ] **1. `WorkoutScreen` — Temel Layout ve Egzersiz Listesi**
+- [x] **1. `WorkoutScreen` — Temel Layout ve Egzersiz Listesi**
   - `apps/mobile/src/screens/WorkoutScreen.tsx` oluştur:
     - Route params: `programDayId`, `scheduledDate`, `isLate?` (telafi akışı için — M3 tam implement eder)
     - Header: antrenman tipi (ProgramDay.title veya "Antrenman") + tarih
@@ -40,7 +40,7 @@
       - Sağ: video butonu (▶ ikonu) — videoUrl yoksa hidden; videoUrl varsa `VideoModal`'ı açar
     - Sıra: PT'nin belirlediği position sırasına göre — üye değiştiremez
 
-- [ ] **2. Yerel Tik State**
+- [x] **2. Yerel Tik State**
   - `WorkoutScreen`'de:
     - `checkedExercises: Set<exerciseId>` local state
     - Tik kutusuna tap: toggle (ekle/çıkar) — serbest ✓/✗
@@ -48,7 +48,7 @@
     - Tamamlanmış egzersiz satırı: slightly muted (opacity 0.7 veya renk değişimi)
     - **Tüm egzersizler tiklendi mi?** → `checkedExercises.size === exercises.length`
 
-- [ ] **3. `VideoModal` Bileşeni (react-native-webview)**
+- [x] **3. `VideoModal` Bileşeni (react-native-webview)**
   - `apps/mobile/src/components/VideoModal.tsx` oluştur:
     - Props: `isVisible: bool`, `videoUrl: string`, `onClose: () => void`
     - YouTube videoUrl'ini embed URL'e dönüştür:
@@ -63,13 +63,13 @@
     - **Hata durumu:** Video yüklenemedi → "Video şu an oynamıyor — PT'ne bildir" metni; `onError` prop ile
     - videoUrl yoksa bu bileşen render edilmez (ebeveyn kontrol eder)
 
-- [ ] **4. "Antrenmanı Bitir" Butonu**
+- [x] **4. "Antrenmanı Bitir" Butonu**
   - WorkoutScreen footer'ında:
     - **Pasif (tüm tikler tamamlanmadı):** disabled görünüm + muted metin "Tüm egzersizleri işaretle"
     - **Aktif (tümü tiklendi):** primary buton rengi + "Antrenmanı Bitir 🎉"
     - Basıldığında: TASK-2.12'de tamamlama mantığı bağlanacak; şimdilik `console.log('workout done')` placeholder + `Alert.alert('Harika iş!')` (integration test için)
 
-- [ ] **5. Ekrana Dönme Koruması**
+- [x] **5. Ekrana Dönme Koruması**
   - Üye yarım bırakıp geri dönerse tik state local'de kalır (`useRef` veya `useState` persist ile — sayfa unmount olmadıkça)
   - Hard back / swipe close: tik durumu kaybolmaz (state navigation stack'te)
   - M2 modül edge case: "Üye antrenman ekranını açtı ama bitirmedi → tik durumu local'de saklanır"
@@ -99,32 +99,42 @@ apps/mobile/src/
 
 ## Test Kriterleri
 
-- [ ] WorkoutScreen egzersiz listesini doğru sırada gösterir
-- [ ] Tik kutusuna tap: exercise toggle olur (tekrar tap: undo)
-- [ ] Tümü tiklenmeden "Antrenmanı Bitir" butonu disabled
-- [ ] Tümü tiklendikten sonra buton aktif ve basılabilir
-- [ ] ▶ butonuna basılınca VideoModal açılır
-- [ ] VideoModal: webview doğru embed URL ile yüklenir
-- [ ] iOS flags set edilmiş (`allowsInlineMediaPlayback`, `mediaPlaybackRequiresUserAction`)
-- [ ] VideoUrl yoksa ▶ butonu görünmez
-- [ ] VideoModal "✕" ile kapanır; video durur
-- [ ] TypeScript typecheck: 0 hata
+- [x] WorkoutScreen egzersiz listesini doğru sırada gösterir
+- [x] Tik kutusuna tap: exercise toggle olur (tekrar tap: undo)
+- [x] Tümü tiklenmeden "Antrenmanı Bitir" butonu disabled
+- [x] Tümü tiklendikten sonra buton aktif ve basılabilir
+- [x] ▶ butonuna basılınca VideoModal açılır
+- [x] VideoModal: webview doğru embed URL ile yüklenir
+- [x] iOS flags set edilmiş (`allowsInlineMediaPlayback`, `mediaPlaybackRequiresUserAction`)
+- [x] VideoUrl yoksa ▶ butonu görünmez
+- [x] VideoModal "✕" ile kapanır; video durur
+- [x] TypeScript typecheck: 0 hata
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `shared/src/schemas/program.ts`: `programDayExerciseSchema`'ya `exercise` nested field (`programDayExerciseInfoSchema`) eklendi; shared rebuild edildi.
+- `mobile/src/components/VideoModal.tsx` (YENİ): `toEmbedUrl` util (watch?v= + youtu.be/ → embed URL dönüşümü), `WebView` iOS flags (`allowsInlineMediaPlayback`, `mediaPlaybackRequiresUserAction=false`), hata durumu.
+- `mobile/app/workout/[programDayId].tsx` (YENİ): `useMyActiveProgram` cache'den `programDayId` ile gün filtreleme, PDE id bazlı tik state (`Set<string>`), "Antrenmanı Bitir" placeholder (`Alert.alert`), VideoModal entegrasyonu.
+- `mobile/app/home/index.tsx`: `@ts-expect-error` yorumu kaldırıldı (route artık var).
+- `mobile/app/workout/[programDayId].test.tsx` (YENİ): 16 test — tik toggle, disabled/aktif buton, video butonu, modal aç/kapat.
+- `mobile/src/components/VideoModal.test.tsx` (YENİ): 10 test — toEmbedUrl (5) + VideoModal (5), iOS flags prop doğrulaması.
+- 213 mobile test 0 hata, TypeScript 0 hata.
 
 ---
 
