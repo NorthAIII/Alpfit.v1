@@ -1,6 +1,6 @@
 # TASK-2.08: Mobile — Program Builder — Gün İçi Egzersiz Listesi + ↑↓ Sıralama
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.1 — Program Builder (PT)
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -35,13 +35,13 @@ Araştırma bulgusunda DraggableFlatList reddedildi (Reanimated 4 uyumluluk risk
 
 ## Alt Görevler
 
-- [ ] **1. Egzersiz Listesi Local State (ProgramBuilderScreen)**
+- [x] **1. Egzersiz Listesi Local State (ProgramBuilderScreen)**
   - `ProgramBuilderScreen.tsx`'te 7 günlük local state yönetimi:
     - `programDays: Record<dayOfWeek, ProgramDayExercise[]>` — her gün için egzersiz dizisi
     - Başlangıç değeri: `GET /programs/:id` sonucundan beslenir (TASK-2.03 endpoint)
     - Her egzersiz için: `{ exerciseId, name, sets, reps, restSeconds?, notes?, position }`
 
-- [ ] **2. `ExerciseDayCard` Bileşeni**
+- [x] **2. `ExerciseDayCard` Bileşeni**
   - `apps/mobile/src/components/ExerciseDayCard.tsx` oluştur:
     - Props: `exercise`, `position`, `isFirst`, `isLast`, `onMoveUp`, `onMoveDown`, `onDelete`, `onChange`
     - UI:
@@ -52,7 +52,7 @@ Araştırma bulgusunda DraggableFlatList reddedildi (Reanimated 4 uyumluluk risk
       - Sağ üst: sil ikonu (trash)
     - Silme: onay dialog ("Bu egzersizi kaldır?") — `Alert.alert` ile
 
-- [ ] **3. Egzersiz Listesi Render + CRUD**
+- [x] **3. Egzersiz Listesi Render + CRUD**
   - `ProgramBuilderScreen.tsx`'te aktif günün egzersiz listesini `ExerciseDayCard` ile render et:
     - "+" butonu → `ExerciseSearchBottomSheet`'i aç; seçilen egzersiz listeye eklenir (default: sets=3, reps="10", position=son+1)
     - `onMoveUp(index)` → dizi içinde pozisyon değişimi (swap [i] ve [i-1])
@@ -60,10 +60,10 @@ Araştırma bulgusunda DraggableFlatList reddedildi (Reanimated 4 uyumluluk risk
     - `onDelete(index)` → diziden çıkar
     - `onChange(index, field, value)` → ilgili alanı güncelle
 
-- [ ] **4. Boş gün state**
+- [x] **4. Boş gün state**
   - Aktif günde egzersiz yokken: ortalanmış ikon + "Bu gün için egzersiz eklenmedi" + "+ Egzersiz Ekle" CTA butonu
 
-- [ ] **5. Temel bileşen testi**
+- [x] **5. Temel bileşen testi**
   - `ExerciseDayCard.test.tsx`:
     - Render: egzersiz adı, set/reps görünüyor
     - ↑ butonu ilk elemanken disabled
@@ -95,31 +95,42 @@ apps/mobile/src/
 
 ## Test Kriterleri
 
-- [ ] Aktif günde egzersiz yokken boş state gösterilir
-- [ ] "+" butonuna basılınca `ExerciseSearchBottomSheet` açılır
-- [ ] Egzersiz seçilince listeye eklenir (default set=3, reps="10")
-- [ ] ↑↓ butonlarla egzersiz sırası değişir
-- [ ] İlk egzersizde ↑ disabled; son egzersizde ↓ disabled
-- [ ] Sil → onay dialog → onaylayınca egzersiz listeden kalkar
-- [ ] Set/reps değerleri düzenlenebilir
-- [ ] Gün sekmeleri arasında geçince her günün egzersiz listesi bağımsız (A günü listelenirken B günü değişmez)
-- [ ] TypeScript typecheck: 0 hata
+- [x] Aktif günde egzersiz yokken boş state gösterilir
+- [x] "+" butonuna basılınca `ExerciseSearchBottomSheet` açılır
+- [x] Egzersiz seçilince listeye eklenir (default set=3, reps="10")
+- [x] ↑↓ butonlarla egzersiz sırası değişir
+- [x] İlk egzersizde ↑ disabled; son egzersizde ↓ disabled
+- [x] Sil → onay dialog → onaylayınca egzersiz listeden kalkar
+- [x] Set/reps değerleri düzenlenebilir
+- [x] Gün sekmeleri arasında geçince her günün egzersiz listesi bağımsız (A günü listelenirken B günü değişmez)
+- [x] TypeScript typecheck: 0 hata
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `mobile/src/components/ExerciseDayCard.tsx` oluşturuldu: `ProgramDayExercise` tipi, egzersiz adı + kas grubu, set/reps input'ları, ↑↓ sıralama butonları (disabled state doğru), `Alert.alert` ile silme onayı, "Detay ekle" toggle ile dinlenme/not alanları.
+- `mobile/app/program/[programId].tsx` güncellendi: `programDays` local state (7 gün), `handleAddExercise` / `handleMoveUp` / `handleMoveDown` / `handleDelete` / `handleChange` CRUD fonksiyonları, boş gün state (🏋️ ikon + CTA), `ExerciseSearchBottomSheet` entegrasyonu.
+- `mobile/src/components/ExerciseDayCard.test.tsx` oluşturuldu: 14 test — render, disabled/enabled state, onMoveUp/onMoveDown tetiklenme, Alert.alert onay akışı, detay toggle.
+- TypeScript `exactOptionalPropertyTypes` kısıtı nedeniyle `restSeconds` temizleme davranışı `return;` ile handle edildi (alan boş bırakılınca state değişmez).
+
+**Kalan İşler:** Yok
+
+**Sonuç:** 152 mobile test, 0 hata. TypeScript 0 hata.
 
 ---
 

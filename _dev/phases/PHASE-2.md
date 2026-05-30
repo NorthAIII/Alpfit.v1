@@ -205,7 +205,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.05 | TASK-2.05 | ✅ Tamamlandı | Mobile: TanStack Query v5 + AsyncStorage offline persist altyapısı + react-native-webview kurulumu |
 | 2.06 | TASK-2.06 | ✅ Tamamlandı | Mobile: `useExercises` hook + ExerciseSearchBottomSheet (arama + kas grubu filtresi + custom egzersiz formu) |
 | 2.07 | TASK-2.07 | ✅ Tamamlandı | Mobile: Program Builder giriş noktası — MemberDetailScreen + ProgramBuilderScreen çatısı + yatay gün sekmeleri |
-| 2.08 | TASK-2.08 | ⬜ Bekliyor | Mobile: Program Builder — gün içi egzersiz listesi + ExerciseDayCard + ↑↓ sıralama + egzersiz ekle/sil |
+| 2.08 | TASK-2.08 | ✅ Tamamlandı | Mobile: Program Builder — gün içi egzersiz listesi + ExerciseDayCard + ↑↓ sıralama + egzersiz ekle/sil |
 | 2.09 | TASK-2.09 | ⬜ Bekliyor | Mobile: Program Builder — `useProgramAutoSave` hook (1s debounce PATCH) + publish butonu + kopyalama CTA |
 | 2.10 | TASK-2.10 | ⬜ Bekliyor | Mobile: Üye Ana Ekranı temel layout — streak gizli, BUGÜN kartı, WeeklyBand, bekleme durumu |
 | 2.11 | TASK-2.11 | ⬜ Bekliyor | Mobile: Antrenman Ekranı — egzersiz listesi + yerel tik state + VideoModal (react-native-webview + YouTube embed) |
@@ -240,4 +240,4 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 ---
 
 **Oluşturulma:** 2026-05-30 (discuss-phase 2)
-**Son Güncelleme:** 2026-05-30 — TASK-2.07 ✅: MemberDetailScreen + ProgramBuilderScreen (7 gün sekme) + useProgram hook'ları + members navigasyon tamamlandı.
+**Son Güncelleme:** 2026-05-30 — TASK-2.08 ✅: ExerciseDayCard + ProgramBuilderScreen local state/CRUD + boş gün state + ExerciseSearchBottomSheet entegrasyonu. 152 test 0 hata.
