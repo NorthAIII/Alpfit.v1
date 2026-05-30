@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { fetchDevOtp, isDevOtpLookupEnabled, sendOtp, verifyOtp } from '../../src/api/auth';
+import { homePathForRole, persistLogin } from '../../src/auth/auth-actions';
 import { OtpInput } from '../../src/auth/otp-input';
 import { useOnboardingStore } from '../../src/onboarding/store';
 
@@ -78,9 +79,19 @@ export default function OtpEntryScreen() {
         return;
       }
       if (res.kind === 'logged_in') {
-        // TASK-1.33: access/refresh persist + auth-gate'li ana ekrana yönlendirme.
-        // Şimdilik köke dönülür (token saklanmaz — bu task kapsamı dışı).
-        router.replace('/');
+        // Mevcut kullanıcı girişi: jetonları kalıcılaştır (refresh → SecureStore,
+        // 30 gün cihaz hatırlama) + rolü `GET /auth/me` ile öğren, role göre ana
+        // ekrana git. Rol çözülemezse (ağ) jenerik hata göster, kutuları temizle.
+        const role = await persistLogin({
+          accessToken: res.accessToken,
+          refreshToken: res.refreshToken,
+        });
+        if (role === null) {
+          setCode('');
+          setError('network');
+          return;
+        }
+        router.replace(homePathForRole(role));
         return;
       }
       // Hata: kutuları temizle ki kullanıcı yeniden girebilsin.

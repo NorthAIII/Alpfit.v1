@@ -2,12 +2,15 @@
 // dönüşündeki access + refresh jetonunu ve rolü tutar; PT "Üyeler" sekmesi gibi
 // authenticated ekranlar buradan access token okur.
 //
-// Sınır: bu store şimdilik YALNIZCA bellekte tutar. Kalıcı saklama (SecureStore,
-// 30 gün cihaz hatırlama), auto-login ve auth-gate'li yönlendirme TASK-1.33'te
-// bu store'un ÜZERİNE eklenir — onboarding store'dan ayrıdır (o onboarding
-// SÜRECİNİN geçici verisini, bu kalıcı oturumu temsil eder).
+// TASK-1.33: bu bellek-içi store'un ÜZERİNE kalıcılık kuruldu. Refresh token + rol
+// ayrıca `storage.ts` (SecureStore) ile cihazda saklanır; app açılışta
+// `bootstrapSession` (auth-actions.ts) store'u geri doldurur (auto-login).
+// Onboarding store'dan ayrıdır — o onboarding SÜRECİNİN geçici verisini, bu
+// kalıcı oturumu temsil eder.
 
 import { create } from 'zustand';
+
+import { clearAuth } from './storage';
 
 export type SessionRole = 'member' | 'trainer';
 
@@ -36,3 +39,13 @@ export const useSessionStore = create<SessionState>((set) => ({
   setSession: ({ accessToken, refreshToken, role }) => set({ accessToken, refreshToken, role }),
   clear: () => set({ ...initialState }),
 }));
+
+/**
+ * Oturumu hem bellekten hem cihazdan (SecureStore) tamamen siler. Çıkış,
+ * refresh başarısızlığı (expired/replay) ve auto-login doğrulama hatasında
+ * çağrılır. React dışından da kullanılabilir (store.getState() pattern'i).
+ */
+export async function clearSession(): Promise<void> {
+  await clearAuth();
+  useSessionStore.getState().clear();
+}

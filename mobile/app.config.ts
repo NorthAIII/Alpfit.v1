@@ -13,7 +13,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   // Sentry RN Expo plugin: build-time source map upload (Yakın 5'te EAS Build
   // pipeline ile aktive). Şu fazda plugin kayıtlı ama auth token olmadan no-op
   // — runtime/dev'de side-effect yok.
-  plugins: [...(config.plugins ?? []), '@sentry/react-native/expo'],
+  // expo-secure-store (TASK-1.33): refresh token'ı iOS Keychain / Android
+  // Keystore'da şifreli saklar. Plugin yalnızca biometric (Face/Touch ID) için
+  // usage description ekler; v1'de biometric KAPALI (requireAuthentication:false)
+  // ama önerilen kurulum olarak plugin kayıtlı tutulur.
+  plugins: [...(config.plugins ?? []), '@sentry/react-native/expo', 'expo-secure-store'],
   // iOS Universal Link — apple-app-site-association domain'leri (applinks:).
   // `...config.ios` ile app.json'daki bundleIdentifier/supportsTablet korunur.
   ios: {

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { acceptInvitation, createProfile } from '../../src/api/auth';
+import { persistLogin } from '../../src/auth/auth-actions';
 import { validateName } from '../../src/auth/profile-schema';
 import { useOnboardingStore } from '../../src/onboarding/store';
 
@@ -66,9 +67,15 @@ export default function ProfileScreen() {
 
   const goHome = useCallback(
     (name: string) => {
-      router.replace({ pathname: '/home', params: { name } });
+      // Trainer "Üyeler" sekmesine (isim param'ı yok), member home placeholder'ına
+      // (karşılama için isim param'ı) gider.
+      if (role === 'trainer') {
+        router.replace('/members');
+      } else {
+        router.replace({ pathname: '/home', params: { name } });
+      }
     },
-    [router],
+    [router, role],
   );
 
   const runAccept = useCallback(async (code: string, accessToken: string) => {
@@ -117,6 +124,14 @@ export default function ProfileScreen() {
     }
 
     const createdName = result.user.firstName;
+
+    // Jetonları kalıcılaştır (refresh → SecureStore, 30 gün cihaz hatırlama) +
+    // bellek oturumunu doldur. Rol formdan biliniyor (member/trainer). Bundan
+    // sonra authenticated ekranlar (PT "Üyeler") oturum jetonuna erişir.
+    await persistLogin(
+      { accessToken: result.accessToken, refreshToken: result.refreshToken },
+      role,
+    );
 
     // Davet akışı: profil oluştu, şimdi PT'ye bağlan. Başarısızsa üye yine içeri
     // alınır (profil kalıcı) — sadece uyarı gösterilir, home'a manuel devam eder.

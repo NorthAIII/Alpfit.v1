@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.32 ✅: Davet kabul in-app banner + liste real-time. Backend `GET /trainers/me/events?since` (trainer-only, kaynak TrainerMember: startedAt>since + soft-delete hariç; `{type,memberId,memberFirstName,occurredAt}`; geçersiz since→400; AuditLog DEĞİL — DECISIONS). Mobile event katmanı: `src/api/trainers.ts` listPtEvents + `src/events/banner-store.ts` (zustand dedup+overflow) + `use-pt-events.ts` (foreground-only polling 20sn + backoff). UI: `in-app-banner.tsx` (slide-down + 4sn auto-dismiss) + `banner-stack.tsx`; `members.tsx` entegrasyon (refresh + yeni üye 1sn highlight). Yeni mobile i18n namespace `notifications`. Backend 167 PASS + mobile 89 PASS; typecheck/lint/format temiz. Lineer sıradaki TASK-1.33 (30 gün cihaz hatırlama + auto-login).
+**Son Güncelleme:** 2026-05-30 — TASK-1.33 ✅: 30 gün cihaz hatırlama + auto-login. `expo-secure-store ~56.0.4`; `src/auth/storage.ts` (refresh token+rol Keychain/Keystore, access saklanmaz), `src/api/client.ts` (refresh TEK-uçuş singleton + `authedFetch` 401-interceptor + `fetchMe`), `src/auth/auth-actions.ts` (`persistLogin`/`bootstrapSession`/`homePathForRole`), `session.ts` `clearSession`; logout/logout-all api; login persisti bağlandı (otp+profile artık session store'a YAZIYOR); `_layout.tsx` boot gate (in-app overlay); `(tabs)/settings.tsx` Ayarlar sekmesi (çıkış 2-adım onay); i18n `settings`. Reuse: `GET /auth/me` (yeni backend yok), session.ts extend. Mobile 110 PASS (+21); backend dokunulmadı (167); typecheck/lint/format temiz. Lineer sıradaki TASK-1.34 (uçtan uca smoke).
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** task
-**İlerleme:** 32/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.33 (30 gün cihaz hatırlama + auto-login)
+**İlerleme:** 33/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.34 (uçtan uca smoke testi)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.32 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.33 (30 gün cihaz hatırlama + secure storage + auto-login) henüz başlatılmadı.
+**Task:** Yok — TASK-1.33 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.34 (uçtan uca smoke testi: Mock SMS → OTP → profil → bağlanma) henüz başlatılmadı.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.33` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.34` ile başla.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 32 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 33 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -73,7 +73,8 @@
 | 1.30 | Profil oluşturma ekranı (üye + PT) | ✅ Tamamlandı |
 | 1.31 | PT "Üyeler" sekmesi UI (Bekleyen + Aktif + Linki kopyala + QR) | ✅ Tamamlandı |
 | 1.32 | Davet kabul banner + liste real-time (in-app polling) | ✅ Tamamlandı |
-| 1.33–1.34 | M1 Mobile UI + akış + smoke (auto-login, e2e smoke) | ⬜ Bekliyor (2) |
+| 1.33 | 30 gün cihaz hatırlama (secure storage + auto-login) | ✅ Tamamlandı |
+| 1.34 | Uçtan uca smoke testi (Mock SMS → OTP → profil → bağlanma) | ⬜ Bekliyor |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -95,17 +96,17 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.33 — 30 gün cihaz hatırlama (secure storage + auto-login) (2026-05-30) ✅
+
+- **Kalıcılık + client katmanı** — `expo-secure-store ~56.0.4` (app.config plugin). `src/auth/storage.ts` (YENİ): refresh token + rol Keychain/Keystore'da; **access token saklanmaz** (kısa ömürlü, her boot'ta refresh). `src/api/client.ts` (YENİ): `refreshAccessToken` **TEK-uçuş singleton** (eşzamanlı 401'ler tek refresh paylaşır → backend replay tetiklenmez), `authedFetch` (401→bir kez refresh+retry), `fetchMe`/`requestMe`. `src/auth/auth-actions.ts` (YENİ): `persistLogin` (rol biliniyorsa direkt, OTP login'de `/auth/me` ile çözer), `bootstrapSession` (refresh→/me→role), `homePathForRole`. `session.ts` `clearSession`; `api/auth.ts` logout/logout-all.
+- **UI + bağlama** — login persisti **bağlandı**: otp.tsx (logged_in) + profile.tsx (created) artık session store'a YAZIYOR (önceden hiç yazılmıyordu — members tab token boştu). `_layout.tsx` boot gate (in-app "Yükleniyor" overlay; `expo-splash-screen` EKLENMEDİ). `(tabs)/settings.tsx` (YENİ) + Ayarlar sekmesi: çıkış + tüm cihazlardan çıkış, 2-adım satır-içi onay. i18n `settings` namespace.
+- **Reuse + test** — `GET /auth/me` (TASK-1.20) yeniden kullanıldı (yeni backend yok); `auth-store.ts` yerine `session.ts` extend; client.ts interceptor kuruldu ama mevcut trainer/invitation çağrıları henüz authedFetch'e taşınmadı (sonraki faz). `test/mocks/expo-secure-store.ts` (bellek-içi). Mobile **110 PASS** (+21: storage 5 + client 7 + auth-actions 6 + settings 3); backend dokunulmadı (167); typecheck/lint/format temiz.
+
 ### TASK-1.32 — Davet kabul banner + liste real-time (in-app polling) (2026-05-30) ✅
 
 - **Backend (`trainers-events.ts` YENİ + `server.ts`)** — `GET /trainers/me/events?since=<ISO>` trainer-only; kaynak **`TrainerMember`** (`startedAt > since`, `endedAt:null`, soft-delete hariç), `{ type:'invitation_accepted', memberId, memberFirstName, occurredAt }` newest-first. `since` opsiyonel; geçersizse 400. **Kaynak kararı:** AuditLog DEĞİL — kabul eden üyenin hash'ini tutar (PT'nin değil) + trainerId/isim yok → PT-scoped sorgu yapılamaz (DECISIONS.md TASK-1.32). `trainers-events.test.ts` 8 PASS.
 - **Mobile event katmanı** — `src/api/trainers.ts` `listPtEvents`; `src/events/banner-store.ts` (zustand: dedup `memberId:occurredAt` + MAX_VISIBLE 5 + overflow); `src/events/use-pt-events.ts` (`useFocusEffect` foreground-only polling 20sn + baseline=focus + 1s→5s→30s backoff). UI: `in-app-banner.tsx` (Animated slide-down + 4sn auto-dismiss, `useNativeDriver:false`) + `banner-stack.tsx` ("+N daha" rozeti). `members.tsx` entegrasyon: yeni event → `load('refresh')` + yeni üye 1sn highlight.
 - **i18n + test** — mobile yeni `notifications` namespace (overflow `{{n}}` çoğul-tuzak kaçışı [[tr-locale]]). Mobile **89 PASS** (banner-store 4 + use-pt-events 4 + in-app-banner 3 + members +1) + backend **167 PASS**; typecheck/lint/format temiz.
-
-### TASK-1.31 — PT "Üyeler" sekmesi UI (Bekleyen + Aktif + Linki kopyala + QR) (2026-05-30) ✅
-
-- **Backend (`backend/src/routes/trainers-members.ts` YENİ + `server.ts`)** — `GET /trainers/me/members` trainer-only (`ensureTrainer`); `TrainerMember where trainerId + endedAt:null + member.deletedAt:null`, `startedAt desc`. Response sadece `{ id, firstName, lastName, joinedAt }` — telefon/sağlık verisi DÖNMEZ (KVKK; test sızıntı assert'i). `trainers-members.test.ts` 7 PASS (newest-first/boş/ended hariç/soft-deleted hariç/cross-trainer yok/member 403/token yok 401).
-- **Mobile UI + modal'lar** — `app/(tabs)/members.tsx` + `_layout.tsx` (YENİ): tek scrollable liste — üstte Bekleyen davetler (kod + "X gün kaldı" + Paylaş + İptal), altta Aktif üyeler; boş → "İlk üyeni davet et" CTA. `useFocusEffect` + pull-to-refresh ile `Promise.all([listInvitations, listMembers])`. `src/components/members/InviteModal.tsx` (Clipboard kopyala + "Kopyalandı") + `QrModal.tsx` (`react-native-qrcode-svg`, `<QRCode value={url}>`). Gün-kalan i18next çoğul tuzağı için `{{days}}` ile geçirildi.
-- **API + store + paket + i18n** — `src/api/trainers.ts` (YENİ `listMembers`) + `invitations.ts` (create/list/cancel GÜNCELLE) + `src/auth/session.ts` (YENİ in-memory zustand store). Paketler: expo-clipboard ~56.0.3, react-native-qrcode-svg ^6.3.21, react-native-svg 15.15.4. members.json i18n + namespace + `i18next.d.ts` augmentation. Test ✅ mobile **77 PASS** (members.test.tsx 6) + backend 7; typecheck/lint/format temiz. **Otonom karar:** session.ts in-memory; kalıcılık + role-guard TASK-1.33'e ertelendi (kullanıcıya bildirildi).
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -114,8 +115,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.32 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.33 ✅ tamamlandı
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.33` (30 gün cihaz hatırlama + auto-login)
+**Sıradaki:** `/devflow:run-task TASK-1.34` (uçtan uca smoke testi)

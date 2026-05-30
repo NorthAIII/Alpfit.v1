@@ -16,6 +16,13 @@ jest.mock('../../src/api/auth', () => ({
   isDevOtpLookupEnabled: jest.fn(),
 }));
 
+// auth-actions mock'lanır: persistLogin (jeton kalıcılaştırma + rol çözümü) ağ
+// yapmadan rol döndürür; homePathForRole gerçek davranışı taklit eder.
+jest.mock('../../src/auth/auth-actions', () => ({
+  persistLogin: jest.fn(() => Promise.resolve('member')),
+  homePathForRole: (role: 'member' | 'trainer') => (role === 'trainer' ? '/members' : '/home'),
+}));
+
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
@@ -23,6 +30,9 @@ jest.mock('expo-router', () => ({
 }));
 
 const api = jest.mocked(authApi);
+const { persistLogin } = jest.mocked(
+  jest.requireMock('../../src/auth/auth-actions') as typeof import('../../src/auth/auth-actions'),
+);
 
 const PHONE = '+905551234567';
 const boxLabel = (oneBased: number) => i18n.t('auth:otp.boxLabel', { index: oneBased });
@@ -50,17 +60,24 @@ describe('OtpEntryScreen', () => {
     expect(useOnboardingStore.getState().registrationToken).toBe('reg-xyz');
   });
 
-  it('mevcut kullanıcı (logged_in) → köke replace ile yönlendirir', async () => {
+  it('mevcut kullanıcı (logged_in) → jeton persist + role göre ana ekrana replace', async () => {
     api.verifyOtp.mockResolvedValue({
       kind: 'logged_in',
       accessToken: 'a',
       refreshToken: 'r',
       expiresAt: '2026-07-01T00:00:00.000Z',
     });
+    persistLogin.mockResolvedValue('member');
     const { getByLabelText } = renderWithProviders(<OtpEntryScreen />);
     fireEvent.changeText(getByLabelText(boxLabel(1)), '123456');
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    await waitFor(() =>
+      expect(persistLogin).toHaveBeenCalledWith({
+        accessToken: 'a',
+        refreshToken: 'r',
+      }),
+    );
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/home'));
     expect(mockPush).not.toHaveBeenCalled();
   });
 

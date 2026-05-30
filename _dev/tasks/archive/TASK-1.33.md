@@ -1,6 +1,6 @@
 # TASK-1.33: 30 gün cihaz hatırlama (secure storage refresh token)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -160,7 +160,31 @@ backend/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **expo-secure-store ~56.0.4** kuruldu (`expo install`); app.config.ts `plugins`'e `expo-secure-store` eklendi (biometric KAPALI — yalnızca önerilen kurulum).
+- **`src/auth/storage.ts` (YENİ)** — SecureStore wrapper: `saveAuth`/`loadAuth`/`clearAuth`. SAKLANAN yalnızca **refresh token + rol** (`auth.refresh_token`, `auth.role`); access token saklanmaz (kısa ömürlü, her boot'ta refresh ile alınır — Karar Noktaları). Kısmi/bozuk kayıt → `null`.
+- **`src/api/client.ts` (YENİ)** — `refreshAccessToken` (TEK-uçuş singleton: eşzamanlı 401'ler aynı refresh'i paylaşır, rotate edilen token tekrar gönderilmez → backend replay tetiklenmez), `authedFetch` (401'de bir kez refresh+retry), `fetchMe`/`requestMe` (`GET /auth/me`). Refresh 401 → `clearSession`; ağ hatası → token korunur.
+- **`src/auth/auth-actions.ts` (YENİ)** — `persistLogin` (rol biliniyorsa direkt, bilinmiyorsa OTP login'de `/auth/me` ile çözer; refresh+rol SecureStore'a + store'a yazar), `bootstrapSession` (refresh → /auth/me → role-bazlı yönlendirme kararı), `homePathForRole` (trainer→`/members`, member→`/home`).
+- **`src/auth/session.ts` (GÜNCELLE)** — `clearSession()` helper (bellek store + SecureStore birlikte temizler).
+- **`src/api/auth.ts` (GÜNCELLE)** — `logout`/`logoutAll` endpoint caller'ları (best-effort; UI her durumda yerel temizler).
+- **Giriş persisti bağlandı:** `app/auth/otp.tsx` (logged_in → persistLogin + role'e göre replace) + `app/auth/profile.tsx` (created → persistLogin(role) + role'e göre goHome). **Önemli düzeltme:** önceki halde login akışı session store'a hiç yazmıyordu (members tab token okuyor ama yazan yoktu) — artık yazılıyor.
+- **`app/_layout.tsx` (GÜNCELLE)** — boot gate: `bootstrapSession` çözülene kadar in-app "Yükleniyor" örtüsü, authenticated ise role'e göre replace. (`expo-splash-screen` paketi EKLENMEDİ — ek bağımlılıktan kaçınmak için in-app overlay.)
+- **`app/(tabs)/settings.tsx` (YENİ)** + tabs `_layout` "Ayarlar" sekmesi — "Çıkış yap" + "Tüm cihazlardan çıkış", iki adımlı satır-içi onay (Alert yerine, test edilebilir).
+- **i18n** — yeni `settings` namespace (+ index + i18next.d.ts).
+- **Test altyapısı** — `test/mocks/expo-secure-store.ts` (bellek-içi mock) + jest moduleNameMapper + setup afterEach reset.
+
+**Testler:** `storage.test.ts` (5), `client.test.ts` (7: refresh/interceptor/concurrency/fetchMe), `auth-actions.test.ts` (6: persistLogin/bootstrap), `settings.test.tsx` (3: logout/logout-all/cancel) + `otp.test.tsx` logged_in testi yeni akışa güncellendi. Mobile **110 PASS** (89→110, +21). Backend dokunulmadı (167 PASS). typecheck + lint + format temiz.
+
+**Plandan Sapmalar (otonom, dokümante):**
+- **Backend `me.ts` YAZILMADI** — `GET /auth/me` (TASK-1.20) zaten istenen alanları döndürüyor; yeniden kullanıldı. Yeni backend kodu/testi yok.
+- **`auth-store.ts` YERİNE `session.ts`** — TASK-1.31'de oluşan session store "TASK-1.33 bunun üzerine kurulur" diyordu; duplikasyon yerine extend edildi.
+- **`client.ts` 401 interceptor kuruldu + test edildi AMA** mevcut trainer/invitation api çağrıları henüz `authedFetch`'e taşınMADI (kapsam + risk; sonraki fazda rewire). Yeni authed yol (settings/bootstrap/login) interceptor primitifini kullanıyor.
+- **Settings sekmesi `(tabs)` grubunda → yalnızca PT erişir.** Member `/home` placeholder'da; member-side ayar/sekme yapısı sonraki faz (member dashboard henüz yok).
+
+**Belirsizlikler:** Yok.
 
 ---
 

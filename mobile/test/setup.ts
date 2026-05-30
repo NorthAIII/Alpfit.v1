@@ -3,6 +3,7 @@
 
 import * as matchers from '@testing-library/react-native/matchers';
 
+import { __resetSecureStore } from './mocks/expo-secure-store';
 import { server } from './msw/server';
 
 expect.extend(matchers);
@@ -18,6 +19,7 @@ beforeAll(() => {
 
 afterEach(() => {
   server.resetHandlers();
+  __resetSecureStore();
 });
 
 afterAll(() => {

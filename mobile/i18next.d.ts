@@ -12,6 +12,7 @@ declare module 'i18next' {
       members: typeof import('./src/i18n/locales/tr/members.json');
       notifications: typeof import('./src/i18n/locales/tr/notifications.json');
       profile: typeof import('./src/i18n/locales/tr/profile.json');
+      settings: typeof import('./src/i18n/locales/tr/settings.json');
     };
   }
 }

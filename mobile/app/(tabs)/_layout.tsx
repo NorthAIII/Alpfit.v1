@@ -1,12 +1,13 @@
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-// PT ana sekme iskeleti (TASK-1.31). Şu an tek sekme: "Üyeler". "Profil" sekmesi
-// sonraki fazlarda eklenir. Role guard (trainer dışı erişim engeli) + auth-gate'li
-// yönlendirme TASK-1.33'te kurulur — bu fazda sekme yapısı + Üyeler ekranı.
+// PT ana sekme iskeleti (TASK-1.31, TASK-1.33). Sekmeler: "Üyeler" + "Ayarlar".
+// Role guard (trainer dışı erişim engeli) sonraki fazlarda; bu fazda auto-login
+// (TASK-1.33) trainer'ı bu gruba, member'ı /home'a yönlendirir.
 
 export default function TabsLayout() {
   const { t } = useTranslation('members');
+  const { t: tSettings } = useTranslation('settings');
 
   return (
     <Tabs
@@ -18,6 +19,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="members" options={{ title: t('tab.members') }} />
+      <Tabs.Screen name="settings" options={{ title: tSettings('title') }} />
     </Tabs>
   );
 }

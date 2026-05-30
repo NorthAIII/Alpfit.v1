@@ -1,0 +1,15 @@
+{
+  "title": "Ayarlar",
+  "session": {
+    "heading": "Oturum",
+    "logout": "Çıkış yap",
+    "logoutAll": "Tüm cihazlardan çıkış",
+    "logoutHint": "Bu cihazda oturumun kapanır.",
+    "logoutAllHint": "Tüm cihazlarda oturumun kapanır.",
+    "confirmLogout": "Bu cihazdan çıkmak istediğine emin misin?",
+    "confirmLogoutAll": "Tüm cihazlardan çıkmak istediğine emin misin?",
+    "confirm": "Evet, çık",
+    "cancel": "Vazgeç",
+    "loggingOut": "Çıkış yapılıyor..."
+  }
+}

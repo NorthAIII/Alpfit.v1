@@ -10,6 +10,7 @@ import kvkkTr from './locales/tr/kvkk.json';
 import membersTr from './locales/tr/members.json';
 import notificationsTr from './locales/tr/notifications.json';
 import profileTr from './locales/tr/profile.json';
+import settingsTr from './locales/tr/settings.json';
 
 const isDev = process.env['NODE_ENV'] !== 'production';
 
@@ -23,6 +24,7 @@ export const namespaces = [
   'members',
   'notifications',
   'profile',
+  'settings',
 ] as const;
 export type Namespace = (typeof namespaces)[number];
 
@@ -36,6 +38,7 @@ const resources = {
     members: membersTr,
     notifications: notificationsTr,
     profile: profileTr,
+    settings: settingsTr,
   },
 } as const;
 

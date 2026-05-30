@@ -311,6 +311,50 @@ export async function acceptInvitation(
   return { kind: 'failed' };
 }
 
+/**
+ * Çıkış sonucu (TASK-1.33). Sunucuya ulaşıldıysa (başarı ya da hata kodu) `ok`;
+ * yalnızca ağ hatası `network`. UI her iki durumda da yerel oturumu temizler —
+ * `network` sadece "sunucudaki token revoke edilemedi" sinyalidir (bilgi amaçlı).
+ */
+export type LogoutResult = { kind: 'ok' } | { kind: 'network' };
+
+/**
+ * `POST /auth/logout` (TASK-1.22) — bu cihazdan çıkış (current refresh token'ı
+ * revoke eder). Access token Authorization header'da, refresh token gövdede.
+ * 204 başarı; 400/401/403 dahi `ok` sayılır (yerel temizlik yine yapılır).
+ */
+export async function logout(accessToken: string, refreshToken: string): Promise<LogoutResult> {
+  try {
+    await fetch(`${getApiBaseUrl()}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+    return { kind: 'ok' };
+  } catch {
+    return { kind: 'network' };
+  }
+}
+
+/**
+ * `POST /auth/logout-all` (TASK-1.22) — tüm cihazlardan çıkış (kullanıcının tüm
+ * aktif refresh token'larını revoke eder). Access token Authorization header'da.
+ */
+export async function logoutAll(accessToken: string): Promise<LogoutResult> {
+  try {
+    await fetch(`${getApiBaseUrl()}/auth/logout-all`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return { kind: 'ok' };
+  } catch {
+    return { kind: 'network' };
+  }
+}
+
 /** Dev OTP lookup sonucu — başarısız her durum tek `unavailable`'a indirgenir. */
 export type DevOtpResult = { kind: 'ok'; code: string } | { kind: 'unavailable' };
 
