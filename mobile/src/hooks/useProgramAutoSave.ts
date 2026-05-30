@@ -2,9 +2,8 @@
 // programDays değiştiğinde 1sn debounce → PATCH /programs/:id.
 // cancelPendingAutoSave() publish butonuna basıldığında timer'ı iptal eder.
 
-import { useEffect, useRef, useState } from 'react';
-
 import { useMutation } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 
 import { patchProgram } from '../api/programs';
 
@@ -89,9 +88,8 @@ export function useProgramAutoSave(
         timerRef.current = null;
       }
     };
-  // programDays referansı her setProgramDays çağrısında değişir (yeni obje) → doğru davranış.
-  // mutate TanStack Query'nin stable ref'i — ESLint dep uyarısı false-positive.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // programDays referansı her setProgramDays çağrısında değişir (yeni obje) → doğru davranış.
+    // mutate TanStack Query'nin stable ref'i.
   }, [programDays]);
 
   return { saveState, cancelPendingAutoSave };

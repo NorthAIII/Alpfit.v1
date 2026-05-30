@@ -22,7 +22,7 @@ jest.mock('react-native-webview', () => ({
 }));
 
 describe('toEmbedUrl', () => {
-  it('watch?v= formatını embed URL\'e dönüştürür', () => {
+  it("watch?v= formatını embed URL'e dönüştürür", () => {
     expect(toEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
       'https://www.youtube.com/embed/dQw4w9WgXcQ',
     );
@@ -34,7 +34,7 @@ describe('toEmbedUrl', () => {
     );
   });
 
-  it('youtu.be/ kısa URL formatını embed URL\'e dönüştürür', () => {
+  it("youtu.be/ kısa URL formatını embed URL'e dönüştürür", () => {
     expect(toEmbedUrl('https://youtu.be/dQw4w9WgXcQ')).toBe(
       'https://www.youtube.com/embed/dQw4w9WgXcQ',
     );
@@ -73,7 +73,7 @@ describe('VideoModal', () => {
       <VideoModal isVisible={true} videoUrl="https://vimeo.com/12345" onClose={onClose} />,
     );
     expect(getByTestId('video-error')).toBeOnTheScreen();
-    expect(getByText('Video şu an oynamıyor — PT\'ne bildir')).toBeOnTheScreen();
+    expect(getByText("Video şu an oynamıyor — PT'ne bildir")).toBeOnTheScreen();
     expect(queryByTestId('video-webview')).toBeNull();
   });
 
@@ -85,9 +85,13 @@ describe('VideoModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('iOS inline flags: allowsInlineMediaPlayback + mediaPlaybackRequiresUserAction=false WebView\'e iletilir', () => {
+  it("iOS inline flags: allowsInlineMediaPlayback + mediaPlaybackRequiresUserAction=false WebView'e iletilir", () => {
     renderWithProviders(
-      <VideoModal isVisible={true} videoUrl="https://youtu.be/dQw4w9WgXcQ" onClose={() => undefined} />,
+      <VideoModal
+        isVisible={true}
+        videoUrl="https://youtu.be/dQw4w9WgXcQ"
+        onClose={() => undefined}
+      />,
     );
     expect(lastWebViewProps['allowsInlineMediaPlayback']).toBe(true);
     expect(lastWebViewProps['mediaPlaybackRequiresUserAction']).toBe(false);

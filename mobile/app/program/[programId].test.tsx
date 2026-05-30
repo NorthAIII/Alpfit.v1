@@ -3,8 +3,8 @@
 // jest.useFakeTimers ile bugünün günü sabitlenir (MEMORY: "Snapshot testleri tarih-bağımsız olmalı").
 // 2026-06-01 = Pazartesi → JS getDay()=1 → Alpfit day=(1+6)%7=0 → "Pzt" aktif.
 
-import { Alert } from 'react-native';
 import { fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 
 import { renderWithProviders } from '../../test/render-with-providers';
 
@@ -158,7 +158,9 @@ describe('ProgramBuilderScreen', () => {
 
     const { getByTestId } = renderWithProviders(<ProgramBuilderScreen />);
     // React Native Pressable: disabled prop → accessibilityState.disabled
-    expect(getByTestId('publish-button').props['accessibilityState']).toMatchObject({ disabled: true });
+    expect(getByTestId('publish-button').props['accessibilityState']).toMatchObject({
+      disabled: true,
+    });
   });
 
   it('auto-save indicator idle iken görünmez', () => {
@@ -225,7 +227,9 @@ describe('ProgramBuilderScreen', () => {
 
     const { getByTestId } = renderWithProviders(<ProgramBuilderScreen />);
     fireEvent.press(getByTestId('copy-cta-button'));
-    await waitFor(() => { getByTestId('copy-member-m-2'); });
+    await waitFor(() => {
+      getByTestId('copy-member-m-2');
+    });
 
     fireEvent.press(getByTestId('copy-member-m-2'));
     expect(doCopy).toHaveBeenCalledWith(
@@ -237,7 +241,9 @@ describe('ProgramBuilderScreen', () => {
   it('copy modal kapat butonu çalışır', async () => {
     const { getByTestId, queryByTestId } = renderWithProviders(<ProgramBuilderScreen />);
     fireEvent.press(getByTestId('copy-cta-button'));
-    await waitFor(() => { getByTestId('copy-modal-close'); });
+    await waitFor(() => {
+      getByTestId('copy-modal-close');
+    });
     fireEvent.press(getByTestId('copy-modal-close'));
     await waitFor(() => {
       expect(queryByTestId('copy-member-list')).toBeNull();

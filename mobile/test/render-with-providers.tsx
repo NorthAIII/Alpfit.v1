@@ -4,8 +4,8 @@
 //   - I18nextProvider: TR namespace bundle'ları + missing-key warn
 // Sonraki task'lar tema/auth provider ekledikçe buraya wrap eklenir.
 
-import { render, type RenderOptions, type RenderResult } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, type RenderOptions, type RenderResult } from '@testing-library/react-native';
 import { I18nextProvider } from 'react-i18next';
 
 import i18n from '../src/i18n/index';

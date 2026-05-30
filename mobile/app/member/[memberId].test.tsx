@@ -106,10 +106,12 @@ describe('MemberDetailScreen', () => {
 
   it('onSuccess çağrılınca builder ekranına push yapılır', () => {
     let capturedOnSuccess: ((id: string) => void) | undefined;
-    hooks.useCreateProgram.mockImplementation(({ onSuccess }: { onSuccess: (id: string) => void }) => {
-      capturedOnSuccess = onSuccess;
-      return defaultCreateProgram;
-    });
+    hooks.useCreateProgram.mockImplementation(
+      ({ onSuccess }: { onSuccess: (id: string) => void }) => {
+        capturedOnSuccess = onSuccess;
+        return defaultCreateProgram;
+      },
+    );
 
     setup({ program: null });
 

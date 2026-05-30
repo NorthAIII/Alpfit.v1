@@ -42,12 +42,7 @@ function renderSheet(props?: Partial<Parameters<typeof ExerciseSearchBottomSheet
   const onClose = jest.fn();
   const onSelect = jest.fn();
   const result = renderWithProviders(
-    <ExerciseSearchBottomSheet
-      isVisible={true}
-      onClose={onClose}
-      onSelect={onSelect}
-      {...props}
-    />,
+    <ExerciseSearchBottomSheet isVisible={true} onClose={onClose} onSelect={onSelect} {...props} />,
   );
   return { ...result, onClose, onSelect };
 }
@@ -95,9 +90,7 @@ describe('ExerciseSearchBottomSheet', () => {
 
     // useExercises en son search=bench ile çağrılmış olmalı
     // (Hook mock'landığından debounce bypass edilir — debounce hook testinde ayrıca test edilir)
-    expect(hooks.useExercises).toHaveBeenCalledWith(
-      expect.objectContaining({ search: 'bench' }),
-    );
+    expect(hooks.useExercises).toHaveBeenCalledWith(expect.objectContaining({ search: 'bench' }));
   });
 
   it('kas grubu chip seçilince useExercises muscleGroup ile çağrılır', () => {

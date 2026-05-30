@@ -42,9 +42,7 @@ export const programsRoutes: FastifyPluginAsync = async (app) => {
     const result = await createProgram(app.prisma, claims.sub, parsed.data.memberId);
 
     if (result.kind === 'no_relation') {
-      return reply
-        .code(403)
-        .send({ status: 'forbidden', message: t('programs.memberNoRelation') });
+      return reply.code(403).send({ status: 'forbidden', message: t('programs.memberNoRelation') });
     }
 
     return reply.code(201).send(result.program);
@@ -73,9 +71,7 @@ export const programsRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(403).send({ status: 'forbidden', message: t('programs.forbidden') });
       }
       if (result.kind === 'not_draft') {
-        return reply
-          .code(422)
-          .send({ status: 'not_draft', message: t('programs.notDraft') });
+        return reply.code(422).send({ status: 'not_draft', message: t('programs.notDraft') });
       }
 
       return reply.code(200).send(result.program);
@@ -117,9 +113,7 @@ export const programsRoutes: FastifyPluginAsync = async (app) => {
       const body = req.body as { targetMemberId?: unknown };
 
       if (typeof body.targetMemberId !== 'string' || !body.targetMemberId) {
-        return reply
-          .code(400)
-          .send({ status: 'bad_request', message: 'targetMemberId gerekli.' });
+        return reply.code(400).send({ status: 'bad_request', message: 'targetMemberId gerekli.' });
       }
 
       const result = await copyProgram(app.prisma, claims.sub, id, body.targetMemberId);
@@ -152,7 +146,12 @@ export const programsRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(403).send({ status: 'forbidden', message: t('auth.roleForbidden') });
       }
 
-      const result = await getProgram(app.prisma, claims.sub, id, claims.role as 'trainer' | 'member');
+      const result = await getProgram(
+        app.prisma,
+        claims.sub,
+        id,
+        claims.role as 'trainer' | 'member',
+      );
 
       if (result.kind === 'not_found') {
         return reply.code(404).send({ status: 'not_found', message: t('programs.notFound') });

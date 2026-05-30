@@ -34,7 +34,7 @@ function makeItem(overrides?: { id?: string; isLate?: boolean; title?: string | 
     programDay: {
       dayOfWeek: 3,
       // 'title' in overrides ile null'ı explicitly geçilmiş null ile varsayılan farkını ayırt et
-      title: overrides && 'title' in overrides ? overrides.title ?? null : 'Üst Vücut',
+      title: overrides && 'title' in overrides ? (overrides.title ?? null) : 'Üst Vücut',
       programId: 'prog-1',
     },
   };

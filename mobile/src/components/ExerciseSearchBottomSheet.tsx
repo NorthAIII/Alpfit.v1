@@ -19,8 +19,7 @@ import type { Exercise } from '../hooks/useExercises';
 const MUSCLE_GROUPS = ['Tümü', 'Göğüs', 'Sırt', 'Omuz', 'Bacak', 'Kol', 'Karın'];
 
 // YouTube veya Vimeo URL formatı
-const VIDEO_URL_REGEX =
-  /^https:\/\/(www\.youtube\.com\/watch\?v=|youtu\.be\/|vimeo\.com\/).+/;
+const VIDEO_URL_REGEX = /^https:\/\/(www\.youtube\.com\/watch\?v=|youtu\.be\/|vimeo\.com\/).+/;
 
 interface Props {
   isVisible: boolean;
@@ -38,7 +37,12 @@ export function ExerciseSearchBottomSheet({ isVisible, onClose, onSelect }: Prop
   const [customVideoUrl, setCustomVideoUrl] = useState('');
   const [videoUrlError, setVideoUrlError] = useState('');
 
-  const { data: exercises, isLoading, isError, refetch } = useExercises({
+  const {
+    data: exercises,
+    isLoading,
+    isError,
+    refetch,
+  } = useExercises({
     search,
     ...(selectedMuscleGroup !== undefined ? { muscleGroup: selectedMuscleGroup } : {}),
   });
@@ -109,7 +113,12 @@ export function ExerciseSearchBottomSheet({ isVisible, onClose, onSelect }: Prop
         {/* Başlık */}
         <View style={styles.header}>
           <Text style={styles.title}>Egzersiz Seç</Text>
-          <Pressable onPress={handleClose} accessibilityRole="button" accessibilityLabel="Kapat" hitSlop={8}>
+          <Pressable
+            onPress={handleClose}
+            accessibilityRole="button"
+            accessibilityLabel="Kapat"
+            hitSlop={8}
+          >
             <Text style={styles.closeIcon}>✕</Text>
           </Pressable>
         </View>
@@ -137,7 +146,9 @@ export function ExerciseSearchBottomSheet({ isVisible, onClose, onSelect }: Prop
             >
               {MUSCLE_GROUPS.map((group) => {
                 const isActive =
-                  group === 'Tümü' ? selectedMuscleGroup === undefined : selectedMuscleGroup === group;
+                  group === 'Tümü'
+                    ? selectedMuscleGroup === undefined
+                    : selectedMuscleGroup === group;
                 return (
                   <TouchableOpacity
                     key={group}
@@ -147,7 +158,9 @@ export function ExerciseSearchBottomSheet({ isVisible, onClose, onSelect }: Prop
                     accessibilityLabel={`${group} filtresi`}
                     accessibilityState={{ selected: isActive }}
                   >
-                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{group}</Text>
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                      {group}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}

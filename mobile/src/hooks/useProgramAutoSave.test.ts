@@ -2,8 +2,8 @@
 // patchProgram mock'lanır — gerçek ağ çağrısı yapılmaz.
 // jest.useFakeTimers ile debounce zamanlaması test edilir.
 
-import { renderHook, act } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, act } from '@testing-library/react-native';
 import { createElement } from 'react';
 
 import { useProgramAutoSave, buildPatchPayload } from './useProgramAutoSave';
@@ -67,7 +67,9 @@ describe('buildPatchPayload', () => {
   it('restSeconds tanımlıysa patch objesine dahil edilir', () => {
     const days: Record<DayOfWeek, ProgramDayExercise[]> = {
       ...emptyDays(),
-      0: [{ exerciseId: 'ex-2', name: 'DL', muscleGroup: null, sets: 4, reps: '5', restSeconds: 90 }],
+      0: [
+        { exerciseId: 'ex-2', name: 'DL', muscleGroup: null, sets: 4, reps: '5', restSeconds: 90 },
+      ],
     };
     const result = buildPatchPayload(days);
     expect(result[0]?.exercises[0]?.restSeconds).toBe(90);
@@ -86,11 +88,12 @@ describe('useProgramAutoSave', () => {
   });
 
   it('mount anında PATCH çağrılmaz', () => {
-    const { unmount } = renderHook(
-      () => useProgramAutoSave('prog-1', emptyDays()),
-      { wrapper: createWrapper() },
-    );
-    act(() => { jest.runAllTimers(); });
+    const { unmount } = renderHook(() => useProgramAutoSave('prog-1', emptyDays()), {
+      wrapper: createWrapper(),
+    });
+    act(() => {
+      jest.runAllTimers();
+    });
     expect(patchProgram).not.toHaveBeenCalled();
     unmount();
   });
@@ -108,11 +111,15 @@ describe('useProgramAutoSave', () => {
     rerender({ days: updated });
 
     // 1sn geçmeden PATCH tetiklenmez
-    act(() => { jest.advanceTimersByTime(500); });
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
     expect(patchProgram).not.toHaveBeenCalled();
 
     // 1sn geçince PATCH çağrılır
-    await act(async () => { jest.advanceTimersByTime(500); });
+    await act(async () => {
+      jest.advanceTimersByTime(500);
+    });
     expect(patchProgram).toHaveBeenCalledWith('prog-1', expect.any(Array));
   });
 
@@ -129,7 +136,9 @@ describe('useProgramAutoSave', () => {
 
     rerender({ days: updated });
 
-    await act(async () => { jest.advanceTimersByTime(1000); });
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
 
     // mutate çağrıldı → onMutate → saving
     // mock resolved → onSuccess → saved
@@ -148,7 +157,9 @@ describe('useProgramAutoSave', () => {
     );
 
     rerender({ days: updated });
-    await act(async () => { jest.advanceTimersByTime(1000); });
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
 
     expect(result.current.saveState).toBe('error');
   });
@@ -165,13 +176,19 @@ describe('useProgramAutoSave', () => {
     rerender({ days: updated });
 
     // Timer başladı ama henüz tetiklenmedi
-    act(() => { jest.advanceTimersByTime(400); });
+    act(() => {
+      jest.advanceTimersByTime(400);
+    });
 
     // Publish simülasyonu: timer iptal et
-    act(() => { result.current.cancelPendingAutoSave(); });
+    act(() => {
+      result.current.cancelPendingAutoSave();
+    });
 
     // 1sn daha geçse bile PATCH çağrılmaz
-    await act(async () => { jest.advanceTimersByTime(1000); });
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
     expect(patchProgram).not.toHaveBeenCalled();
   });
 });

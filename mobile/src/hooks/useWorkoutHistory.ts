@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { fetchMyWorkoutHistory } from '../api/completions';
+
 import type { WorkoutHistoryPage } from '../api/completions';
 
 export type { WorkoutCompletionItem, WorkoutHistoryPage } from '../api/completions';

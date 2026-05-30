@@ -13,8 +13,8 @@ import {
 
 import { ExerciseDayCard } from '../../src/components/ExerciseDayCard';
 import { ExerciseSearchBottomSheet } from '../../src/components/ExerciseSearchBottomSheet';
-import { useProgramAutoSave } from '../../src/hooks/useProgramAutoSave';
 import { useCopyProgram, usePublishProgram, useTrainerMembers } from '../../src/hooks/useProgram';
+import { useProgramAutoSave } from '../../src/hooks/useProgramAutoSave';
 
 import type { ProgramDayExercise } from '../../src/components/ExerciseDayCard';
 import type { Exercise } from '../../src/hooks/useExercises';
@@ -85,9 +85,8 @@ export default function ProgramBuilderScreen() {
     (params.programStatus as ProgramStatus | undefined) ?? 'draft',
   );
   const [activeDay, setActiveDay] = useState<DayOfWeek>(todayAlpfitDay);
-  const [programDays, setProgramDays] = useState<Record<DayOfWeek, ProgramDayExercise[]>>(
-    emptyProgramDays,
-  );
+  const [programDays, setProgramDays] =
+    useState<Record<DayOfWeek, ProgramDayExercise[]>>(emptyProgramDays);
   const [showBottomSheet, setShowBottomSheet] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
 
@@ -247,9 +246,7 @@ export default function ProgramBuilderScreen() {
               accessibilityState={{ selected: isActive }}
               testID={`day-tab-${index}`}
             >
-              <Text style={[styles.dayLabel, isActive ? styles.dayLabelActive : null]}>
-                {item}
-              </Text>
+              <Text style={[styles.dayLabel, isActive ? styles.dayLabelActive : null]}>{item}</Text>
             </Pressable>
           );
         }}

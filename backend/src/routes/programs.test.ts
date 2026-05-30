@@ -104,16 +104,21 @@ describe('TASK-2.03 — Programs API', () => {
           title: 'Pus Gunu',
           position: 0,
           exercises: [
-            { exerciseId, sets: 3, reps: '8-12', restSeconds: 60, notes: 'Yavash ekzantrik', position: 0 },
+            {
+              exerciseId,
+              sets: 3,
+              reps: '8-12',
+              restSeconds: 60,
+              notes: 'Yavash ekzantrik',
+              position: 0,
+            },
           ],
         },
         {
           dayOfWeek: 2,
           title: 'Cek Gunu',
           position: 1,
-          exercises: [
-            { exerciseId, sets: 4, reps: '6', position: 0 },
-          ],
+          exercises: [{ exerciseId, sets: 4, reps: '6', position: 0 }],
         },
       ],
     };
@@ -297,7 +302,12 @@ describe('TASK-2.03 — Programs API', () => {
       const exercise = await seedExercise();
 
       const prog = await server.prisma.program.create({
-        data: { trainerId: trainer.id, memberId: member.id, status: 'active', publishedAt: new Date() },
+        data: {
+          trainerId: trainer.id,
+          memberId: member.id,
+          status: 'active',
+          publishedAt: new Date(),
+        },
       });
 
       const res = await server.app.inject({
@@ -330,7 +340,10 @@ describe('TASK-2.03 — Programs API', () => {
       });
 
       expect(res.statusCode).toBe(200);
-      const body = res.json<{ program: { status: string; publishedAt: string }; bannerEvent: string }>();
+      const body = res.json<{
+        program: { status: string; publishedAt: string };
+        bannerEvent: string;
+      }>();
       expect(body.program.status).toBe('active');
       expect(body.program.publishedAt).toBeTruthy();
       expect(body.bannerEvent).toBe('program_changed');
@@ -343,7 +356,12 @@ describe('TASK-2.03 — Programs API', () => {
 
       // Eski aktif program
       const oldProg = await server.prisma.program.create({
-        data: { trainerId: trainer.id, memberId: member.id, status: 'active', publishedAt: new Date() },
+        data: {
+          trainerId: trainer.id,
+          memberId: member.id,
+          status: 'active',
+          publishedAt: new Date(),
+        },
       });
       // Yeni draft
       const newProg = await server.prisma.program.create({
@@ -494,19 +512,27 @@ describe('TASK-2.03 — Programs API', () => {
       });
 
       expect(res.statusCode).toBe(200);
-      const body = res.json<{ id: string; days: { exercises: { exercise: { name: string } }[] }[] }>();
+      const body = res.json<{
+        id: string;
+        days: { exercises: { exercise: { name: string } }[] }[];
+      }>();
       expect(body.id).toBe(prog.id);
       expect(body.days).toHaveLength(2);
       expect(body.days[0].exercises[0].exercise.name).toBe('Bench Press');
     });
 
     it('200 — uye kendi programini alir', async () => {
-      const { trainer, auth: trainerToken } = await trainerAuth();
+      const { trainer } = await trainerAuth();
       const { member, auth: memberToken } = await memberAuth();
       await linkTrainerMember(trainer.id, member.id);
 
       const prog = await server.prisma.program.create({
-        data: { trainerId: trainer.id, memberId: member.id, status: 'active', publishedAt: new Date() },
+        data: {
+          trainerId: trainer.id,
+          memberId: member.id,
+          status: 'active',
+          publishedAt: new Date(),
+        },
       });
 
       const res = await server.app.inject({
@@ -546,7 +572,12 @@ describe('TASK-2.03 — Programs API', () => {
       await linkTrainerMember(trainer.id, memberA.id);
 
       const prog = await server.prisma.program.create({
-        data: { trainerId: trainer.id, memberId: memberA.id, status: 'active', publishedAt: new Date() },
+        data: {
+          trainerId: trainer.id,
+          memberId: memberA.id,
+          status: 'active',
+          publishedAt: new Date(),
+        },
       });
 
       const res = await server.app.inject({
@@ -569,7 +600,12 @@ describe('TASK-2.03 — Programs API', () => {
       const exercise = await seedExercise('Deadlift');
 
       const prog = await server.prisma.program.create({
-        data: { trainerId: trainer.id, memberId: member.id, status: 'active', publishedAt: new Date() },
+        data: {
+          trainerId: trainer.id,
+          memberId: member.id,
+          status: 'active',
+          publishedAt: new Date(),
+        },
       });
       const day = await server.prisma.programDay.create({
         data: { programId: prog.id, dayOfWeek: 0, position: 0 },
@@ -608,7 +644,7 @@ describe('TASK-2.03 — Programs API', () => {
       const day = await server.prisma.programDay.create({
         data: { programId: prog.id, dayOfWeek: 0, position: 0 },
       });
-      const exercise = await seedExercise();
+      await seedExercise();
 
       // Publish'ten SONRA tamamlama
       const completedAt = new Date('2026-05-30T12:00:00Z');
@@ -633,7 +669,7 @@ describe('TASK-2.03 — Programs API', () => {
     });
 
     it('404 — aktif program yokken', async () => {
-      const { member, auth } = await memberAuth();
+      const { auth } = await memberAuth();
       // Program yok
 
       const res = await server.app.inject({
@@ -668,11 +704,18 @@ describe('TASK-2.03 — Programs API', () => {
       const exercise = await seedExercise();
 
       const prog = await server.prisma.program.create({
-        data: { trainerId: trainer.id, memberId: member.id, status: 'active', publishedAt: new Date() },
+        data: {
+          trainerId: trainer.id,
+          memberId: member.id,
+          status: 'active',
+          publishedAt: new Date(),
+        },
       });
       await server.prisma.programDay.create({
         data: {
-          programId: prog.id, dayOfWeek: 0, position: 0,
+          programId: prog.id,
+          dayOfWeek: 0,
+          position: 0,
           exercises: { create: [{ exerciseId: exercise.id, sets: 3, reps: '10', position: 0 }] },
         },
       });
@@ -694,7 +737,7 @@ describe('TASK-2.03 — Programs API', () => {
       const { member } = await memberAuth();
       await linkTrainerMember(trainerA.id, member.id);
 
-      const prog = await server.prisma.program.create({
+      await server.prisma.program.create({
         data: {
           trainerId: trainerA.id,
           memberId: member.id,

@@ -33,7 +33,7 @@ export const workoutCompletionsRoutes: FastifyPluginAsync = async (app) => {
     const row = await completeWorkout(app.prisma, claims.sub, {
       programDayId,
       scheduledDate: new Date(scheduledDate),
-      isLate,
+      ...(typeof isLate === 'boolean' && { isLate }),
     });
 
     return reply.code(200).send(row);

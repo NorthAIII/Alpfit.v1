@@ -42,7 +42,11 @@ export const exercisesRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(400).send({ status: 'bad_request', message: parsed.error.message });
     }
 
-    const exercise = await createExercise(app.prisma, claims.sub, parsed.data);
+    const exercise = await createExercise(app.prisma, claims.sub, {
+      name: parsed.data.name,
+      ...(parsed.data.muscleGroup !== undefined && { muscleGroup: parsed.data.muscleGroup }),
+      ...(parsed.data.videoUrl !== undefined && { videoUrl: parsed.data.videoUrl }),
+    });
     return reply.code(201).send(exercise);
   });
 
@@ -56,7 +60,11 @@ export const exercisesRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(400).send({ status: 'bad_request', message: parsed.error.message });
     }
 
-    const result = await updateExercise(app.prisma, claims.sub, id, parsed.data);
+    const result = await updateExercise(app.prisma, claims.sub, id, {
+      ...(parsed.data.name !== undefined && { name: parsed.data.name }),
+      ...(parsed.data.muscleGroup !== undefined && { muscleGroup: parsed.data.muscleGroup }),
+      ...(parsed.data.videoUrl !== undefined && { videoUrl: parsed.data.videoUrl }),
+    });
 
     if (result.kind === 'not_found') {
       return reply.code(404).send({ status: 'not_found', message: t('exercises.notFound') });

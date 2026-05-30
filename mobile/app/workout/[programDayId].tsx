@@ -269,7 +269,9 @@ export default function WorkoutScreen() {
       {/* Offline toast */}
       {finishState === 'offline' ? (
         <View style={[styles.toast, styles.toastOffline]} testID="offline-toast">
-          <Text style={styles.toastText}>Bağlantı yok — internet gelince otomatik kaydedilecek.</Text>
+          <Text style={styles.toastText}>
+            Bağlantı yok — internet gelince otomatik kaydedilecek.
+          </Text>
         </View>
       ) : null}
 

@@ -19,7 +19,9 @@ jest.mock('../../src/hooks/useMemberHome', () => ({
   useMyActiveProgram: jest.fn(),
   getTodayWorkout: jest.fn(),
   todayAlpfitDay: jest.fn().mockReturnValue(0), // Pazartesi (Alpfit 0)
-  useProgramChangedBanner: jest.fn().mockReturnValue({ isShowing: false, handleDismiss: jest.fn() }),
+  useProgramChangedBanner: jest
+    .fn()
+    .mockReturnValue({ isShowing: false, handleDismiss: jest.fn() }),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -30,7 +32,17 @@ jest.mock('../../src/components/WeeklyBand', () => ({
   WeeklyBand: () => null,
 }));
 
-const PROGRAM_DAYS = [{ id: 'day-0', dayOfWeek: 0, title: 'Üst Vücut', position: 0, isOneOff: false, specificDate: null, exercises: [] }];
+const PROGRAM_DAYS = [
+  {
+    id: 'day-0',
+    dayOfWeek: 0,
+    title: 'Üst Vücut',
+    position: 0,
+    isOneOff: false,
+    specificDate: null,
+    exercises: [],
+  },
+];
 
 const ACTIVE_PROGRAM = {
   id: 'prog-1',
@@ -155,7 +167,12 @@ describe('MemberHomeScreen', () => {
 
   it('banner ✕ ile kapatılınca handleDismiss çağrılır', () => {
     const handleDismiss = jest.fn().mockResolvedValue(undefined);
-    setupHooks({ data: ACTIVE_PROGRAM, todayWorkout: TODAY_WORKOUT, bannerShowing: true, handleDismiss });
+    setupHooks({
+      data: ACTIVE_PROGRAM,
+      todayWorkout: TODAY_WORKOUT,
+      bannerShowing: true,
+      handleDismiss,
+    });
     const { getByTestId } = renderWithProviders(<MemberHomeScreen />);
     fireEvent.press(getByTestId('banner-dismiss-button'));
     expect(handleDismiss).toHaveBeenCalledTimes(1);

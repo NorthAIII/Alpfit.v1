@@ -1,13 +1,6 @@
 import { formatTrDate } from '@alpfit/shared';
 import { useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useWorkoutHistory } from '../../src/hooks/useWorkoutHistory';
 
@@ -19,13 +12,7 @@ function formatWeekday(isoDate: string): string {
   return TR_WEEKDAY_FMT.format(new Date(isoDate));
 }
 
-function HistoryItem({
-  item,
-  onPress,
-}: {
-  item: WorkoutCompletionItem;
-  onPress: () => void;
-}) {
+function HistoryItem({ item, onPress }: { item: WorkoutCompletionItem; onPress: () => void }) {
   const dateStr = formatTrDate(new Date(item.scheduledDate));
   const weekday = formatWeekday(item.scheduledDate);
 
@@ -69,15 +56,8 @@ function ListFooter({ isFetchingNextPage }: { isFetchingNextPage: boolean }) {
 
 export default function WorkoutHistoryScreen() {
   const router = useRouter();
-  const {
-    data,
-    isLoading,
-    isError,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
-  } = useWorkoutHistory();
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+    useWorkoutHistory();
 
   const items = data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -136,9 +116,7 @@ export default function WorkoutHistoryScreen() {
           <View style={styles.emptyBlock} testID="history-empty">
             <Text style={styles.emptyEmoji}>📋</Text>
             <Text style={styles.emptyTitle}>Henüz tamamlanmış antrenmanın yok.</Text>
-            <Text style={styles.emptySubtitle}>
-              İlk antrenmanını yapınca burada görünür.
-            </Text>
+            <Text style={styles.emptySubtitle}>İlk antrenmanını yapınca burada görünür.</Text>
           </View>
         }
         ListFooterComponent={<ListFooter isFetchingNextPage={isFetchingNextPage} />}

@@ -212,7 +212,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.12 | TASK-2.12 | ✅ Tamamlandı | Mobile: Antrenman tamamlama + offline kuyruğu + senkron (POST /workout-completions, idempotent, optimistic UI) |
 | 2.13 | TASK-2.13 | ✅ Tamamlandı | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |
 | 2.14 | TASK-2.14 | ✅ Tamamlandı | Mobile: Program değişikliği banner — banner-store'a `program_changed` tipi + MemberHomeScreen banner stack |
-| 2.15 | TASK-2.15 | ⬜ Bekliyor | CI Kalite: Lint + Format + Backend Typecheck düzeltmesi (verify-phase 2 bulgusu) |
+| 2.15 | TASK-2.15 | ✅ Tamamlandı | CI Kalite: Lint + Format + Backend Typecheck düzeltmesi (verify-phase 2 bulgusu) |
 
 ---
 
@@ -220,7 +220,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 
 > verify-phase 2 başlatıldı: 2026-05-31. UAT senaryoları hazırlandı; CI bulguları giderilince yeniden çalıştırılacak.
 
-**Durum:** ⏸️ Bekliyor — TASK-2.15 (CI düzeltmesi) tamamlanınca UAT tekrar başlatılır.
+**Durum:** ⏸️ Bekliyor — TASK-2.15 ✅ tamamlandı; UAT yeniden başlatılacak (`/devflow:verify-phase 2`).
 **Toplam Senaryo:** 19
 
 | # | Senaryo | Sonuç | Not |
@@ -253,9 +253,9 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | Backend test (227) | ✅ Geçti | — |
 | Shared test (41) | ✅ Geçti | — |
 | Mobile typecheck | ✅ Geçti | — |
-| Backend typecheck | ❌ 2 hata | exercises.ts + workout-completions.ts TS strict → TASK-2.15 |
-| Lint | ❌ 35 hata | import/order, trLower, unused vars, require() → TASK-2.15 |
-| Format | ❌ 25 dosya | Prettier uyumsuzluğu → TASK-2.15 |
+| Backend typecheck | ✅ Geçti | exercises.ts + workout-completions.ts — TASK-2.15'te düzeltildi |
+| Lint | ✅ Geçti | import/order, trLower, unused vars, require() — TASK-2.15'te düzeltildi |
+| Format | ✅ Geçti | 25 dosya Prettier — TASK-2.15'te düzeltildi |
 | Güvenlik | ✅ Temiz | Tüm endpoint'ler auth'lu, ownership kontrolü mevcut |
 
 ---

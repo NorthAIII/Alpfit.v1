@@ -1,8 +1,7 @@
-import type { z } from 'zod';
+import { authedFetch } from './client';
 
 import type { programSchema } from '@alpfit/shared';
-
-import { authedFetch } from './client';
+import type { z } from 'zod';
 
 export type Program = z.infer<typeof programSchema>;
 

@@ -24,7 +24,7 @@ export interface WorkoutCompletionItem {
   memberId: string;
   programDayId: string;
   scheduledDate: string; // ISO 8601 (JSON'dan string gelir)
-  completedAt: string;   // ISO 8601
+  completedAt: string; // ISO 8601
   isLate: boolean;
   programDay: {
     dayOfWeek: number;

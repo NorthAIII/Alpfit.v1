@@ -56,11 +56,7 @@ export default function MemberDetailScreen() {
       <Text style={styles.joinedDate}>Üye oldu: {joinedDate}</Text>
 
       {isLoading ? (
-        <ActivityIndicator
-          color="#3B82F6"
-          style={styles.loader}
-          testID="member-detail-loading"
-        />
+        <ActivityIndicator color="#3B82F6" style={styles.loader} testID="member-detail-loading" />
       ) : (
         <View style={styles.actions}>
           {program ? (

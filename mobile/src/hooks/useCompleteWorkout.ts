@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { completeWorkout } from '../api/completions';
+
 import type { CompletionInput } from '../api/completions';
 
 export type { CompletionInput };

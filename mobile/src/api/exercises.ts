@@ -1,8 +1,7 @@
-import type { z } from 'zod';
+import { authedFetch } from './client';
 
 import type { exerciseSchema } from '@alpfit/shared';
-
-import { authedFetch } from './client';
+import type { z } from 'zod';
 
 export type Exercise = z.infer<typeof exerciseSchema>;
 

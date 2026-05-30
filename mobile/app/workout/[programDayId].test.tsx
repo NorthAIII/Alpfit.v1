@@ -2,8 +2,9 @@
 // useMyActiveProgram, useCompleteWorkout ve VideoModal mock'lanır.
 // expo-router useLocalSearchParams ile programDayId inject edilir.
 
-import { Alert } from 'react-native';
 import { act, fireEvent, waitFor } from '@testing-library/react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Alert } from 'react-native';
 
 import { renderWithProviders } from '../../test/render-with-providers';
 
@@ -110,10 +111,12 @@ function setupHooks(overrides: {
   });
 }
 
-function setupComplete(overrides: {
-  mutate?: jest.Mock;
-  isPaused?: boolean;
-} = {}) {
+function setupComplete(
+  overrides: {
+    mutate?: jest.Mock;
+    isPaused?: boolean;
+  } = {},
+) {
   completeWorkoutHooks.useCompleteWorkout.mockReturnValue({
     mutate: overrides.mutate ?? jest.fn(),
     isPaused: overrides.isPaused ?? false,
@@ -160,13 +163,13 @@ describe('WorkoutScreen', () => {
 
   it('programDayId eşleşmezse not-found durumu gösterilir', () => {
     setupHooks({ data: PROGRAM });
-    jest.mocked(require('expo-router').useLocalSearchParams).mockReturnValue({
+    jest.mocked(useLocalSearchParams).mockReturnValue({
       programDayId: 'unknown-day',
     });
     const { getByTestId } = renderWithProviders(<WorkoutScreen />);
     expect(getByTestId('workout-not-found')).toBeOnTheScreen();
     // Restore
-    jest.mocked(require('expo-router').useLocalSearchParams).mockReturnValue({
+    jest.mocked(useLocalSearchParams).mockReturnValue({
       programDayId: 'day-mon',
     });
   });
@@ -235,14 +238,16 @@ describe('WorkoutScreen', () => {
     fireEvent.press(getByTestId('finish-button'));
 
     expect(mockMutate).toHaveBeenCalledTimes(1);
-    const [variables] = mockMutate.mock.calls[0] as [{ programDayId: string; scheduledDate: string; isLate: boolean }];
+    const [variables] = mockMutate.mock.calls[0] as [
+      { programDayId: string; scheduledDate: string; isLate: boolean },
+    ];
     expect(variables.programDayId).toBe('day-mon');
     expect(variables.scheduledDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(variables.isLate).toBe(false);
   });
 
   it('scheduledDate URL param varsa onu kullanır', () => {
-    jest.mocked(require('expo-router').useLocalSearchParams).mockReturnValue({
+    jest.mocked(useLocalSearchParams).mockReturnValue({
       programDayId: 'day-mon',
       scheduledDate: '2026-06-15',
     });
@@ -258,7 +263,7 @@ describe('WorkoutScreen', () => {
     expect(variables.scheduledDate).toBe('2026-06-15');
 
     // Restore
-    jest.mocked(require('expo-router').useLocalSearchParams).mockReturnValue({
+    jest.mocked(useLocalSearchParams).mockReturnValue({
       programDayId: 'day-mon',
     });
   });
@@ -374,7 +379,9 @@ describe('WorkoutScreen', () => {
     checkAll(getByTestId);
     fireEvent.press(getByTestId('finish-button'));
 
-    await waitFor(() => expect(alertSpy).toHaveBeenCalledWith('Hata', expect.stringContaining('Kaydedilemedi')));
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith('Hata', expect.stringContaining('Kaydedilemedi')),
+    );
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
@@ -407,7 +414,7 @@ describe('WorkoutScreen', () => {
     expect(queryByTestId('video-modal-mock')).toBeNull();
   });
 
-  it('3 videoUrl\'li egzersiz: tüm ▶ butonları doğru görünür', () => {
+  it("3 videoUrl'li egzersiz: tüm ▶ butonları doğru görünür", () => {
     const programWithVideo = {
       ...PROGRAM,
       days: [

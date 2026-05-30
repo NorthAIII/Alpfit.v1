@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { authedFetch } from '../api/client';
 import {
   copyProgramToMember,
   createProgram,
   fetchMemberActiveProgram,
   publishProgram,
 } from '../api/programs';
-import { authedFetch } from '../api/client';
 
 export type { Program } from '../api/programs';
 
@@ -84,12 +84,7 @@ export function usePublishProgram({ programId, memberId, onSuccess }: UsePublish
 /** POST /programs/:id/copy — başka üyeye yeni draft oluşturur. */
 export function useCopyProgram() {
   return useMutation({
-    mutationFn: ({
-      programId,
-      targetMemberId,
-    }: {
-      programId: string;
-      targetMemberId: string;
-    }) => copyProgramToMember(programId, targetMemberId),
+    mutationFn: ({ programId, targetMemberId }: { programId: string; targetMemberId: string }) =>
+      copyProgramToMember(programId, targetMemberId),
   });
 }

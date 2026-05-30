@@ -1,8 +1,8 @@
 // ExerciseDayCard bileşen testi.
 // Alert.alert mock'lanır — jest ortamında native dialog çalışmaz.
 
-import { Alert } from 'react-native';
 import { fireEvent } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 
 import { renderWithProviders } from '../../test/render-with-providers';
 
@@ -92,7 +92,9 @@ describe('ExerciseDayCard', () => {
 
   it('↓ butonu ortadaki elemanda enabled (accessibilityState)', () => {
     const { getByTestId } = renderCard({}, { isFirst: false, isLast: false });
-    expect(getByTestId('move-down-button').props['accessibilityState']).toEqual({ disabled: false });
+    expect(getByTestId('move-down-button').props['accessibilityState']).toEqual({
+      disabled: false,
+    });
   });
 
   it('↑ butonuna basılınca onMoveUp çağrılır', () => {

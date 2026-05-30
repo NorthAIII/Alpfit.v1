@@ -99,7 +99,10 @@ export interface FullProgram {
 
 // ─── Private helpers ──────────────────────────────────────────────────────────
 
-async function fetchFullProgram(prisma: PrismaClient, programId: string): Promise<FullProgram | null> {
+async function fetchFullProgram(
+  prisma: PrismaClient,
+  programId: string,
+): Promise<FullProgram | null> {
   const row = await prisma.program.findUnique({
     where: { id: programId },
     select: {

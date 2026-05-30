@@ -26,6 +26,7 @@
  *     - 403 baska trainerin customu silinemez
  *     - 404 egzersiz bulunamadi
  */
+import { trLower } from '@alpfit/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildTestServer, type TestServer } from '../../test/build-test-server.js';
@@ -122,7 +123,7 @@ describe('TASK-2.02 — Exercises API', () => {
       expect(res.statusCode).toBe(200);
       const body = res.json<ExerciseItem[]>();
       expect(body.length).toBeGreaterThanOrEqual(1);
-      expect(body.every((ex) => ex.name.toLowerCase().includes('gogus'))).toBe(true);
+      expect(body.every((ex) => trLower(ex.name).includes('gogus'))).toBe(true);
     });
 
     it('200 — muscleGroup filtresi calisir (case-insensitive)', async () => {
@@ -138,7 +139,9 @@ describe('TASK-2.02 — Exercises API', () => {
       expect(res.statusCode).toBe(200);
       const body = res.json<ExerciseItem[]>();
       expect(body.length).toBeGreaterThanOrEqual(2); // Squat + Leg Press
-      expect(body.every((ex) => ex.muscleGroup?.toLowerCase() === 'bacak')).toBe(true);
+      expect(
+        body.every((ex) => ex.muscleGroup != null && trLower(ex.muscleGroup) === 'bacak'),
+      ).toBe(true);
     });
 
     it('200 — trainer kendi custom egzersizini gorur', async () => {

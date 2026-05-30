@@ -1,6 +1,6 @@
 import { formatTrDate } from '@alpfit/shared';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { fetchProgramById } from '../../src/api/programs';
@@ -19,7 +19,11 @@ export default function WorkoutDetailScreen() {
     title?: string;
   }>();
 
-  const { data: program, isLoading, isError } = useQuery({
+  const {
+    data: program,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['program', programId],
     queryFn: () => fetchProgramById(programId!),
     enabled: Boolean(programId),

@@ -1,8 +1,8 @@
 // Jest global setup. Test framework yüklendikten SONRA, her test dosyasından
 // önce 1 kez çalışır. RTL custom matcher'ları ve MSW lifecycle hook'ları burada.
 
-import * as matchers from '@testing-library/react-native/matchers';
 import { notifyManager } from '@tanstack/react-query';
+import * as matchers from '@testing-library/react-native/matchers';
 
 import { __resetAsyncStorage } from './mocks/async-storage';
 import { __resetSecureStore } from './mocks/expo-secure-store';

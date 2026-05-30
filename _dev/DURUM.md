@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — verify-phase 2 başlatıldı. 519 test ✅, güvenlik ✅; lint (35 hata) + format (25 dosya) + backend typecheck (2 hata) CI fail. TASK-2.15 açıldı — düzeltme sonrası UAT tekrar.
+**Son Güncelleme:** 2026-05-31 — TASK-2.15 ✅. Lint 0 hata, format 0 uyumsuz, backend+mobile typecheck 0 hata, 519 test ✅. Faz 2 tüm task'lar tamamlandı → verify-phase 2 yeniden başlatılacak.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 2 — Program akışı uçtan uca (M2)
 **Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** task (CI düzeltme)
-**İlerleme:** 14/15 task tamamlandı. TASK-2.15 CI kalite düzeltmesi → ardından verify-phase 2 yeniden.
+**Adım:** verify
+**İlerleme:** 15/15 task tamamlandı. CI kalite düzeltmeleri tamamlandı → verify-phase 2 yeniden başlatılacak.
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.15 — CI Kalite: Lint + Format + Backend Typecheck
-**Durum:** ⬜ Bekliyor
-**Sonraki Adım:** `/devflow:run-task TASK-2.15` → düzeltme sonrası `/devflow:verify-phase 2` yeniden.
+**Task:** (tamamlandı — tüm faz task'ları bitti)
+**Durum:** ✅ Faz 2 tüm task'lar tamamlandı
+**Sonraki Adım:** `/devflow:verify-phase 2` — UAT'ı yeniden çalıştır (CI engeli kalktı).
 
 ---
 
@@ -53,7 +53,7 @@
 | 2.12 | Mobile: Tamamlama + Offline Senkron | ✅ Tamamlandı |
 | 2.13 | Mobile: Geçmiş Sekmesi | ✅ Tamamlandı |
 | 2.14 | Mobile: Program Değişikliği Banner | ✅ Tamamlandı |
-| 2.15 | CI Kalite: Lint + Format + Backend Typecheck | ⬜ Bekliyor |
+| 2.15 | CI Kalite: Lint + Format + Backend Typecheck | ✅ Tamamlandı |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -75,17 +75,15 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-2.14** (2026-05-31) — Mobile: Program Değişikliği Banner ✅
-- `shared/src/schemas/program.ts`: `hasUnreadUpdate: z.boolean().optional()` eklendi.
-- `mobile/test/mocks/async-storage.ts` (YENİ): In-memory AsyncStorage test mock'u + jest config + setup reset.
-- `src/stores/memberBannerStore.ts` (YENİ): Zustand session banner state.
-- `src/hooks/useMemberHome.ts`: `useProgramChangedBanner` hook — AsyncStorage dismiss persist, yeni publish → banner tekrar.
-- `app/home/index.tsx`: Nötr mavi banner UI ("ℹ️ Programında güncelleme var") + ✕ dismiss.
-- 14 yeni test. 251 mobile test 0 hata.
-
 **verify-phase 2** (2026-05-31) — Otomatik kontroller ⚠️ kısmi
 - 519 test ✅, güvenlik ✅. Lint 35 hata + format 25 dosya + backend typecheck 2 hata → TASK-2.15.
 - 19 UAT senaryosu hazırlandı (faz dokümanında). TASK-2.15 sonrası UAT tekrar.
+
+**TASK-2.15** (2026-05-31) — CI Kalite: Lint + Format + Backend Typecheck ✅
+- `exercises.test.ts`: `trLower` import, `toLowerCase` → `trLower` (2 satır). `useProgramAutoSave.ts`: geçersiz eslint-disable yorumu kaldırıldı.
+- `programs.test.ts`: 4 unused var kaldırıldı. `[programDayId].test.tsx`: 4 `require()` → `import { useLocalSearchParams }`.
+- `exercises.ts`: createExercise + updateExercise exactOptionalPropertyTypes spread fix. `workout-completions.ts`: isLate spread fix.
+- Lint 0 hata, format 0 uyumsuz, backend+mobile typecheck 0 hata, 519 test ✅.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -94,8 +92,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-2.15 — CI kalite düzeltmesi
+**Aktif Task:** (yok — tüm task'lar tamamlandı)
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-2.15` → ardından `/devflow:verify-phase 2`
+**Sıradaki:** `/devflow:verify-phase 2` — UAT yeniden (CI engeli kalktı)

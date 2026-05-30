@@ -19,7 +19,6 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('@tanstack/react-query', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const actual = jest.requireActual('@tanstack/react-query') as object;
   return {
     ...actual,
@@ -60,7 +59,11 @@ const PROGRAM = {
   ],
 };
 
-function setupQuery(overrides?: { isLoading?: boolean; isError?: boolean; data?: typeof PROGRAM | null }) {
+function setupQuery(overrides?: {
+  isLoading?: boolean;
+  isError?: boolean;
+  data?: typeof PROGRAM | null;
+}) {
   reactQuery.useQuery.mockReturnValue({
     data: overrides?.data ?? PROGRAM,
     isLoading: overrides?.isLoading ?? false,
@@ -115,7 +118,9 @@ describe('WorkoutDetailScreen', () => {
   it('Geri butonuna basılınca router.back çağrılır', () => {
     setupQuery();
     const { getByTestId } = renderWithProviders(<WorkoutDetailScreen />);
-    const { fireEvent } = jest.requireActual('@testing-library/react-native') as typeof import('@testing-library/react-native');
+    const { fireEvent } = jest.requireActual(
+      '@testing-library/react-native',
+    ) as typeof import('@testing-library/react-native');
     fireEvent.press(getByTestId('detail-back'));
     expect(mockBack).toHaveBeenCalledTimes(1);
   });

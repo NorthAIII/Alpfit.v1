@@ -95,17 +95,24 @@ describe('TASK-2.04 — WorkoutCompletions API', () => {
       });
 
       expect(res.statusCode).toBe(200);
-      const body = res.json<{ id: string; memberId: string; programDayId: string; isLate: boolean }>();
+      const body = res.json<{
+        id: string;
+        memberId: string;
+        programDayId: string;
+        isLate: boolean;
+      }>();
       expect(body.memberId).toBe(member.id);
       expect(body.programDayId).toBe(day.id);
       expect(body.isLate).toBe(false);
       expect(body.id).toBeTruthy();
 
-      const dbCount = await server.prisma.workoutCompletion.count({ where: { memberId: member.id } });
+      const dbCount = await server.prisma.workoutCompletion.count({
+        where: { memberId: member.id },
+      });
       expect(dbCount).toBe(1);
     });
 
-    it('200 — ayni data tekrar gonderilirse DB\'de tek kayit kalir (idempotent)', async () => {
+    it("200 — ayni data tekrar gonderilirse DB'de tek kayit kalir (idempotent)", async () => {
       const { trainer } = await trainerAuth();
       const { member, auth } = await memberAuth();
       const { day } = await seedProgramWithDay(trainer.id, member.id);
@@ -139,7 +146,9 @@ describe('TASK-2.04 — WorkoutCompletions API', () => {
       expect(body2.id).toBe(body1.id);
 
       // DB'de tek kayit olmali
-      const dbCount = await server.prisma.workoutCompletion.count({ where: { memberId: member.id } });
+      const dbCount = await server.prisma.workoutCompletion.count({
+        where: { memberId: member.id },
+      });
       expect(dbCount).toBe(1);
     });
 
@@ -208,7 +217,10 @@ describe('TASK-2.04 — WorkoutCompletions API', () => {
       });
 
       expect(res.statusCode).toBe(200);
-      const body = res.json<{ items: Array<{ scheduledDate: string }>; nextCursor: string | null }>();
+      const body = res.json<{
+        items: Array<{ scheduledDate: string }>;
+        nextCursor: string | null;
+      }>();
       expect(body.items).toHaveLength(2);
       // En yeni uste — 29 Mayıs
       expect(new Date(body.items[0]!.scheduledDate).getTime()).toBeGreaterThan(

@@ -1,12 +1,5 @@
 import { useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { WeeklyBand } from '../../src/components/WeeklyBand';
 import {
@@ -30,11 +23,7 @@ export default function MemberHomeScreen() {
       <View style={styles.container}>
         {/* TASK-M3: streak alanı buraya gelecek */}
         <View style={styles.skeletonCard} testID="loading-skeleton" />
-        <ActivityIndicator
-          color="#3B82F6"
-          style={styles.loader}
-          testID="home-loading-indicator"
-        />
+        <ActivityIndicator color="#3B82F6" style={styles.loader} testID="home-loading-indicator" />
       </View>
     );
   }
