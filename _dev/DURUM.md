@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.35 tamamlandı (timingSafeEqual fix; backend 173 PASS). Verify-phase 1 yeniden başladı: otomatik kontroller geçti, manuel UAT (13 senaryo) devam ediyor.
+**Son Güncelleme:** 2026-05-30 — verify-phase 1 kısmen tamamlandı. TASK-1.35 ✅ (timingSafeEqual). Kritik bulgu: CI son 5+ commit'te kırık (Redis eksik) → staging eski sürümde → TASK-1.36 açıldı. 10 manuel UAT TASK-1.36 sonrasına ertelendi.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** verify
-**İlerleme:** 35/35 task tamam; otomatik kontroller geçti (backend 173 PASS + mobile 114 PASS + lint/typecheck + staging healthz); manuel UAT (13 senaryo) devam ediyor
+**İlerleme:** 35/36 task tamam (TASK-1.36 bekliyor); otomatik UAT geçti; CI bulgusu (Redis eksik) nedeniyle 10 manuel UAT ertelendi
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** Verify-phase 1 — manuel UAT (13 senaryo, cihaz + staging)
-**Durum:** 🔄 Devam ediyor
-**Sonraki Adım:** Manuel UAT: gerçek cihaz + staging ile senaryolar 8–20 test edilecek. TASK-1.35 tamamlandı (✅).
+**Task:** TASK-1.36 — CI kırık: Redis servisi eksik + mobile typecheck shared build
+**Durum:** ⬜ Bekliyor
+**Sonraki Adım:** TASK-1.36 çalıştır (ci.yml'e Redis service + mobile shared build adımı). CI yeşillenince staging otomatik güncellenir. Sonra Expo Go kurulumu + verify-phase yeniden çalıştır.
 
 ---
 
@@ -75,6 +75,8 @@
 | 1.32 | Davet kabul banner + liste real-time (in-app polling) | ✅ Tamamlandı |
 | 1.33 | 30 gün cihaz hatırlama (secure storage + auto-login) | ✅ Tamamlandı |
 | 1.34 | Uçtan uca smoke testi (Mock SMS → OTP → profil → bağlanma) | ✅ Tamamlandı |
+| 1.35 | admin-internal timingSafeEqual düzeltmesi (security review bulgusu) | ✅ Tamamlandı |
+| 1.36 | CI kırık: Redis eksik + mobile shared build (verify-phase bulgusu) | ⬜ Bekliyor |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -115,8 +117,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Verify-phase 1 — manuel UAT (13 senaryo: cihaz + staging)
+**Aktif Task:** TASK-1.36 — CI Redis eksik + mobile shared build
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** Manuel UAT tamamlanınca `/devflow:review-phase 1`
+**Sıradaki:** `/devflow:run-task` → TASK-1.36 → CI yeşil → staging güncellenir → `/devflow:verify-phase 1` yeniden çalıştır

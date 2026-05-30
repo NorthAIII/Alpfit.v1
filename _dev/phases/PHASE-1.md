@@ -278,6 +278,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.33 | TASK-1.33 | ✅ Tamamlandı | 30 gün cihaz hatırlama (secure storage + auto-login) — `expo-secure-store ~56.0.4`; `src/auth/storage.ts` (refresh+rol Keychain/Keystore, access saklanmaz), `src/api/client.ts` (refresh TEK-uçuş singleton + `authedFetch` 401-interceptor + `fetchMe`), `src/auth/auth-actions.ts` (`persistLogin`/`bootstrapSession`/`homePathForRole`), `session.ts` `clearSession`; `api/auth.ts` logout/logout-all; login persisti bağlandı (otp+profile → session store'a artık YAZIYOR); `_layout.tsx` boot gate (in-app overlay, expo-splash-screen EKLENMEDİ); `(tabs)/settings.tsx` + Ayarlar sekmesi (çıkış 2-adım onay); i18n `settings`. **Reuse:** `GET /auth/me` (TASK-1.20) — yeni backend yok; session.ts extend (auth-store.ts değil). Mobile 110 PASS (+21); backend dokunulmadı |
 | 1.34 | TASK-1.34 | ✅ Tamamlandı | Uçtan uca onboarding smoke — backend `test/smoke/onboarding-flow.test.ts` (4 senaryo, gerçek HTTP zinciri: PT akışı+audit, üye+davet kabul, replay, brute-force lockout; her senaryo ayrı telefon → Redis send-slot izolasyonu) + mobile `test/smoke/onboarding-flow.test.tsx` (4 senaryo: Landing→telefon→OTP→KVKK→profil→home, deep-link davet+auto-accept, PT davet üret+kopyala, auto-login boot) MSW backend mock (`test/msw/handlers.ts` reusable builder'lar) + ekran-zinciri (mockRouter+onboarding store). Sentry modülü smoke'da stub'lanır (AsyncExpiringMap interval leak). `_dev/docs/staging-smoke-test.md` manuel checklist (kullanıcı). Backend 171 PASS (+4), mobile 114 PASS (+4); yeni kaynak kod YOK — sadece test |
 | 1.35 | TASK-1.35 | ✅ Tamamlandı | admin-internal timingSafeEqual: `admin-internal.ts` + `internal-dev-otp.ts` `!==` → `timingSafeEqual` + uzunluk guard; `retention-job.test.ts` + `internal-dev-otp.test.ts` length-mismatch senaryosu eklendi (+2 test). Backend 173 PASS; typecheck + lint temiz. |
+| 1.36 | TASK-1.36 | ⬜ Bekliyor | CI kırık (Redis eksik + mobile shared build): Son 5+ commit CI:failure → staging hiç güncellenmedi. ci.yml'e Redis service + mobile typecheck'e shared build adımı eklenmeli. |
 
 **Durum simgeleri:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -287,26 +288,43 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 
 | # | Senaryo | Tür | Sonuç | Not |
 |---|---------|-----|-------|-----|
-| 1 | Backend testleri yeşil (171/171 PASS) | Otomatik | ✅ Geçti | Doğrulandı |
+| 1 | Backend testleri yeşil (173/173 PASS) | Otomatik | ✅ Geçti | Doğrulandı (TASK-1.35 +2 test) |
 | 2 | Mobile testleri yeşil (114/114 PASS) | Otomatik | ✅ Geçti | Doğrulandı |
 | 3 | Lint + typecheck temiz | Otomatik | ✅ Geçti | Doğrulandı |
 | 4 | Staging healthz: db:up, timestamp güncel | Otomatik | ✅ Geçti | `alpfit-staging.kiwiailab.com/healthz` 200 OK |
 | 5 | Security: admin-internal timingSafeEqual eksik (dev-only endpoint) | Otomatik | ✅ Geçti | TASK-1.35 uygulandı — timingSafeEqual + uzunluk guard |
 | 6 | Brute force lockout: 5 hatalı OTP → 423 kilit (smoke ✅) | Otomatik | ✅ Geçti | Backend smoke TASK-1.34 |
 | 7 | Replay detection: rotate sonrası eski refresh token → 401 (smoke ✅) | Otomatik | ✅ Geçti | Backend smoke TASK-1.34 |
-| 8 | PT akışı: Açılış → Antrenörüm → Telefon → Dev OTP → KVKK → Profil → Üyeler sekmesi | Manuel | ⬜ | — |
-| 9 | Davet linki: üretildi, link panoya kopyalandı | Manuel | ⬜ | — |
-| 10 | QR modal: PT davet modalında QR kodu görünür | Manuel | ⬜ | — |
-| 11 | Üye akışı: Davet linki → Deep link → Telefon → OTP → KVKK → Profil → PT'ye bağlandı | Manuel | ⬜ | — |
-| 12 | In-app banner: PT "Üyeler" sekmesi açıkken üye kabul banner'ı gelir | Manuel | ⬜ | — |
-| 13 | 30 gün cihaz hatırlama: app kapanıp açılınca OTP istenmez (auto-login) | Manuel | ⬜ | — |
-| 14 | Çıkış yap: Ayarlar → çıkış → landing; sonraki açılışta OTP istenir | Manuel | ⬜ | — |
-| 15 | Sentry PII: test event'te telefon alanı [REDACTED] görünür | Manuel | ⬜ | — |
-| 16 | Backblaze B2: son 24 saatte alınmış staging dump mevcut | Manuel | ⬜ | — |
-| 17 | Geçersiz/kullanılmış davet linki → "Bu davet süresi geçmiş..." mesajı | Manuel | ⬜ | — |
-| 18 | TR telefon inline validation: yanlış format girince anında hata | Manuel | ⬜ | — |
-| 19 | Manuel davet kodu ("Davetim var") akışı: 6 haneli kod elle girilip kabul edilir | Manuel | ⬜ | — |
-| 20 | Aynı telefon iki kez kayıt → "Bu telefon zaten kayıtlı" yönlendirmesi | Manuel | ⬜ | — |
+| — | **CI kırık: son 5+ commit CI:failure → staging eski** | Otomatik | ❌ Bulgu | Redis CI'da yok + mobile shared build eksik → deploy hiç tetiklenmedi → TASK-1.36 açıldı |
+| 8 | PT akışı: Açılış → Antrenörüm → Telefon → Dev OTP → KVKK → Profil → Üyeler sekmesi | Manuel | ⬜ | Bekliyor — TASK-1.36 + Expo Go kurulumu sonrası |
+| 9 | Davet linki: üretildi, link panoya kopyalandı | Manuel | ⬜ | Bekliyor |
+| 10 | QR modal: PT davet modalında QR kodu görünür | Manuel | ⬜ | Bekliyor |
+| 11 | Üye akışı: Davet linki → Deep link → Telefon → OTP → KVKK → Profil → PT'ye bağlandı | Manuel | ⬜ | Bekliyor |
+| 12 | In-app banner: PT "Üyeler" sekmesi açıkken üye kabul banner'ı gelir | Manuel | ⬜ | Bekliyor |
+| 13 | 30 gün cihaz hatırlama: app kapanıp açılınca OTP istenmez (auto-login) | Manuel | ⬜ | Bekliyor |
+| 14 | Çıkış yap: Ayarlar → çıkış → landing; sonraki açılışta OTP istenir | Manuel | ⬜ | Bekliyor |
+| 15 | Sentry PII: test event'te telefon alanı [REDACTED] görünür | Manuel | ⬜ | Bekliyor — staging gerektirir |
+| 16 | Backblaze B2: son 24 saatte alınmış staging dump mevcut | Manuel | ⬜ | Bekliyor — staging gerektirir |
+| 17 | Geçersiz/kullanılmış davet linki → "Davet bağlantısı geçersiz." mesajı | API | ✅ Geçti | Local backend API: `GET /invitations/ZZZZZZ` → `{"status":"not_found"}` |
+| 18 | TR telefon inline validation: yanlış format girince hata | API | ✅ Geçti | Local backend API: `+9012345` → `{"status":"invalid_phone"}`; `05XXX` geçerli kabul (TR lib) |
+| 19 | Manuel davet kodu ("Davetim var") akışı: 6 haneli kod elle girilip kabul edilir | Manuel | ⬜ | Bekliyor — Expo Go kurulumu sonrası |
+| 20 | Aynı telefon iki kez kayıt → "Bu telefon zaten kayıtlı" yönlendirmesi | Manuel | ⬜ | Bekliyor — Expo Go kurulumu sonrası |
+
+---
+
+## UAT Sonuçları
+
+**Tarih:** 2026-05-30
+**Toplam Senaryo:** 20 (7 otomatik + 1 CI bulgu + 2 API + 10 manuel bekliyor)
+**Geçen:** 9 (otomatik 7 + API 2)
+**Bulunan:** 1 (CI kırık → TASK-1.36)
+**Bekliyor:** 10 (manuel, Expo Go + TASK-1.36 sonrası)
+
+**Otomatik kontrol özeti:** Backend 173 PASS, mobile 114 PASS, lint/typecheck temiz, staging healthz yeşil, security review clean.
+
+**Kritik bulgu:** CI son 5+ commit'te kırık (Redis eksik + mobile shared build). Staging auth/invitation route'ları 404 — yalnızca healthz yanıt veriyor. TASK-1.36 açıldı.
+
+**Manuel UAT durumu:** 10 senaryo TASK-1.36 tamamlanıp staging güncellenince ve Expo Go kurulunca verify-phase yeniden çalıştırılacak.
 
 ---
 
@@ -325,8 +343,8 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ## Sonuç
 
 - **Tamamlanma Tarihi:** —
-- **Toplam Task:** — (plan-phase'de belirlenecek)
-- **Notlar:** —
+- **Toplam Task:** 36 (34 içerik + TASK-1.35 security fix + TASK-1.36 CI fix)
+- **Notlar:** Verify-phase kısmen tamamlandı. CI kırık bulgusu (TASK-1.36) + 10 manuel UAT bekliyor. TASK-1.36 kapatılınca verify-phase yeniden çalıştırılacak.
 
 ---
 
