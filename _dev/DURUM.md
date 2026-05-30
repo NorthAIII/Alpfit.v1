@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-2.02 ✅. Exercises API (GET liste/search/filtre + POST custom + PUT + DELETE soft-delete) tamamlandı. 193 backend testi 0 hata.
+**Son Güncelleme:** 2026-05-30 — TASK-2.03 ✅. Programs API (POST draft/publish/copy + PATCH auto-save + GET PT/üye view + GET /me/program hasUnreadUpdate) tamamlandı. 219 backend testi 0 hata.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.03 — Programs API
+**Task:** TASK-2.04 — WorkoutCompletions API
 **Durum:** Bekliyor
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.03 başlat.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.04 başlat.
 
 ---
 
@@ -41,7 +41,7 @@
 |---|------|-------|
 | 2.01 | DB Schema + Migration + Seeder + Shared Zod | ✅ Tamamlandı |
 | 2.02 | Exercises API | ✅ Tamamlandı |
-| 2.03 | Programs API | ⬜ Bekliyor |
+| 2.03 | Programs API | ✅ Tamamlandı |
 | 2.04 | WorkoutCompletions API | ⬜ Bekliyor |
 | 2.05 | Mobile: TanStack Query + Offline Persist | ⬜ Bekliyor |
 | 2.06 | Mobile: Exercises Hook + Bottom Sheet | ⬜ Bekliyor |
@@ -78,10 +78,10 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 - Prisma schema: 5 yeni M2 tablosu + User relation'ları eklendi.
 - 20 TR-isimli placeholder egzersiz seed edildi (idempotent). 173 backend testi yeşil.
 
-**TASK-2.02** (2026-05-30) — Exercises API ✅
-- `exercise.service.ts`: `listExercises` / `createExercise` / `updateExercise` / `deleteExercise`.
-- `exercises.ts` route: GET liste+search+filtre, POST custom, PUT, DELETE soft-delete; trainer guard + ownership.
-- 20 integration testi eklendi. 193 backend testi 0 hata.
+**TASK-2.03** (2026-05-30) — Programs API ✅
+- `program.service.ts`: 7 fonksiyon (create/patch/publish/copy/get/getMemberActive/getMyActive + hasUnreadUpdate).
+- `programs.ts` route: 7 endpoint; trainer guard + ownership; PATCH sadece draft; publish eski aktifi arşivler.
+- 26 integration testi eklendi. 219 backend testi 0 hata.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->

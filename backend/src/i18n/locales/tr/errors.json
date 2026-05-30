@@ -39,6 +39,12 @@
     "notFound": "Egzersiz bulunamadı.",
     "coreForbidden": "Çekirdek egzersizler düzenlenemez."
   },
+  "programs": {
+    "notFound": "Program bulunamadı.",
+    "forbidden": "Bu programa erişim yetkin yok.",
+    "memberNoRelation": "Bu üye sana bağlı değil.",
+    "notDraft": "Yalnızca taslak programlar düzenlenebilir."
+  },
   "generic": {
     "internal": "Sunucu hatası. Lütfen daha sonra tekrar dene."
   }

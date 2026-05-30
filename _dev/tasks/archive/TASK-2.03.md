@@ -1,6 +1,6 @@
 # TASK-2.03: Programs API — Tüm Program Endpoint'leri
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.1 Program Builder + F2.2 Üye Program Görüntüleme
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -38,7 +38,7 @@ Program değişikliği bildirimi (publish + update) için M4 push yok; bunun yer
 
 ## Alt Görevler
 
-- [ ] **1. Program Service katmanı**
+- [x] **1. Program Service katmanı**
   - `apps/backend/src/services/program.service.ts` oluştur:
     - `createProgram(trainerId, memberId)` — status: draft; trainer sadece kendi üyelerine program yazabilir (trainer-member relationship check Faz 1'den)
     - `patchProgram(trainerId, programId, body)` — tüm yapı upsert: `ProgramDay`'leri sil+yeniden oluştur (veya upsert by dayOfWeek+position); `ProgramDayExercise`'leri aynı şekilde; status: draft korunur
@@ -48,7 +48,7 @@ Program değişikliği bildirimi (publish + update) için M4 push yok; bunun yer
     - `getMemberActiveProgram(trainerId, memberId)` — PT view: üyenin aktif programı
     - `getMyActiveProgram(memberId)` — üye view: kendi aktif programı; response'a `hasUnreadUpdate: boolean` ekle — son WorkoutCompletion.completedAt'ten sonra program publish edilmişse `true` (basit karşılaştırma: `program.publishedAt > lastCompletion?.completedAt ?? true`)
 
-- [ ] **2. Programs Route Handler**
+- [x] **2. Programs Route Handler**
   - `apps/backend/src/routes/programs.ts` oluştur:
     - `POST /programs` — body: `{ memberId }` → `createProgram()`; sadece Trainer
     - `PATCH /programs/:id` — body: `patchProgramSchema` → `patchProgram()`; sadece Trainer + ownership
@@ -58,7 +58,7 @@ Program değişikliği bildirimi (publish + update) için M4 push yok; bunun yer
     - `GET /members/:memberId/program` → `getMemberActiveProgram()`; sadece Trainer + kendi üyesi
     - `GET /me/program` → `getMyActiveProgram()`; sadece Member; response: tam program yapısı + `hasUnreadUpdate: boolean`
 
-- [ ] **3. Integration Testler**
+- [x] **3. Integration Testler**
   - `apps/backend/src/routes/programs.test.ts` oluştur:
     - `POST /programs` — draft program oluşur
     - `POST /programs` (başka trainer'ın üyesi için) → 403
@@ -96,30 +96,46 @@ apps/backend/src/
 
 ## Test Kriterleri
 
-- [ ] `POST /programs` → 201 draft program, trainerId + memberId doğru
-- [ ] `PATCH /programs/:id` iki kez → ikinci PATCH ilk içeriğin üzerine yazar, gereksiz duplicate yok
-- [ ] `POST /programs/:id/publish` → status "active", publishedAt doldu
-- [ ] `GET /me/program` (Member) → yayınlanmış programı tam yapıyla alır; `hasUnreadUpdate: true` (hiç tamamlama yokken)
-- [ ] `GET /me/program` (Member, antrenman tamamlandıktan sonra) → `hasUnreadUpdate: false` (son completion publish'ten sonra)
-- [ ] `POST /programs/:id/copy` → yeni program oluştu, kaynak programın days/exercises kopyalandı
-- [ ] Üyenin birden fazla active programı olamaz: yeni publish eskiyi archived yapmalı
-- [ ] Backend typecheck + tüm test'ler geçer: `pnpm --filter backend test`
+- [x] `POST /programs` → 201 draft program, trainerId + memberId doğru
+- [x] `PATCH /programs/:id` iki kez → ikinci PATCH ilk içeriğin üzerine yazar, gereksiz duplicate yok
+- [x] `POST /programs/:id/publish` → status "active", publishedAt doldu
+- [x] `GET /me/program` (Member) → yayınlanmış programı tam yapıyla alır; `hasUnreadUpdate: true` (hiç tamamlama yokken)
+- [x] `GET /me/program` (Member, antrenman tamamlandıktan sonra) → `hasUnreadUpdate: false` (son completion publish'ten sonra)
+- [x] `POST /programs/:id/copy` → yeni program oluştu, kaynak programın days/exercises kopyalandı
+- [x] Üyenin birden fazla active programı olamaz: yeni publish eskiyi archived yapmalı
+- [x] Backend typecheck + tüm test'ler geçer: `pnpm --filter backend test`
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `backend/src/services/program.service.ts` oluşturuldu: `createProgram`, `patchProgram`, `publishProgram`, `copyProgram`, `getProgram`, `getMemberActiveProgram`, `getMyActiveProgram` (hasUnreadUpdate dahil).
+- `backend/src/routes/programs.ts` oluşturuldu: 7 endpoint tam implement edildi.
+- `backend/src/routes/programs.test.ts` oluşturuldu: 26 integration test, tümü yeşil.
+- `backend/src/server.ts` güncellendi: `programsRoutes` kaydedildi.
+- `backend/src/i18n/locales/tr/errors.json` güncellendi: `programs.*` hata mesajları eklendi.
+- Toplam test: 219 (önceki 193 + 26 yeni), 0 hata.
+
+**İmplementasyon Notları:**
+- PATCH sadece draft program için çalışır (422 Not Draft — FK constraint riski ve UX tutarlılığı).
+- publishProgram: `NOT { id: programId }` filtresiyle self-archive bug'ı önlendi.
+- hasUnreadUpdate: `publishedAt > lastCompletion.completedAt` — completion yoksa `true` (member hiç antrenman yapmamış = program yeni).
+- patchProgram transaction: önce `ProgramDayExercise` sil, sonra `ProgramDay` sil, sonra yeniden oluştur (no cascade FK).
+- `apps/` yerine `backend/` yolunda — proje yapısına göre düzeltildi.
 
 ---
 
