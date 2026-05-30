@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.34 ✅: Uçtan uca onboarding smoke (faz son task'ı). Backend `test/smoke/onboarding-flow.test.ts` (4 senaryo, gerçek HTTP zinciri: PT+audit / üye+davet kabul / replay / brute-force; her senaryo ayrı telefon → Redis send-slot izolasyonu). Mobile `test/smoke/onboarding-flow.test.tsx` (4 senaryo: Landing→telefon→OTP→KVKK→profil→home / deep-link+auto-accept / PT davet üret+kopyala / auto-login boot) MSW backend mock (`test/msw/handlers.ts` reusable builder'lar) + ekran-zinciri (mockRouter + onboarding store). Sentry smoke'da stub (AsyncExpiringMap interval leak). `_dev/docs/staging-smoke-test.md` manuel checklist (kullanıcı). Backend 171 PASS (+4), mobile 114 PASS (+4); yeni kaynak kod YOK. Faz 1 tüm task'ları tamam → sıradaki adım verify-phase (UAT).
+**Son Güncelleme:** 2026-05-30 — verify-phase 1 kısmen tamamlandı. Otomatik kontroller: backend 171 PASS + mobile 114 PASS + lint/typecheck temiz + staging healthz yeşil. Security review: 1 orta bulgu (admin-internal timingSafeEqual eksik) → TASK-1.35 açıldı. Manuel UAT (13 senaryo: cihaz + staging) kullanıcı follow-up bekliyor. TASK-1.35 tamamlandıktan sonra verify-phase yeniden çalıştırılacak.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -11,7 +11,7 @@
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
 **Adım:** verify
-**İlerleme:** 34/34 task tamam; faz milestone'u otomatik smoke ile doğrulandı, sıradaki adım verify-phase (UAT) + manuel staging smoke checklist
+**İlerleme:** 34/34 task tamam + TASK-1.35 (verify-phase security bulgusu) açıldı; otomatik UAT testleri geçti, manuel UAT (cihaz/staging) bekliyor
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.34 ✅ tamamlandı (commit edildi). Faz 1'in tüm task'ları tamam.
-**Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:verify-phase 1` ile kullanıcı kabul testini (UAT) başlat. Ayrıca `_dev/docs/staging-smoke-test.md` manuel checklist gerçek staging + cihazla işaretlenmeli.
+**Task:** TASK-1.35 — admin-internal timingSafeEqual düzeltmesi (verify-phase security review bulgusu)
+**Durum:** ⬜ Bekliyor
+**Sonraki Adım:** TASK-1.35 çalıştır (küçük fix, 2 dosya). Ardından manuel UAT: gerçek cihaz + staging ile `_dev/docs/staging-smoke-test.md` checklist'ini işaretle. Manuel UAT tamamlanınca verify-phase yeniden çalıştır.
 
 ---
 
@@ -115,7 +115,7 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.34 ✅ tamamlandı (Faz 1 tüm task'ları tamam)
+**Aktif Task:** TASK-1.35 — admin-internal timingSafeEqual (security review bulgusu)
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`

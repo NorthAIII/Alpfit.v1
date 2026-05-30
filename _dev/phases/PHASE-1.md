@@ -239,7 +239,7 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 
 ## Task Listesi
 
-> Bu bölüm `/devflow:plan-phase 1` oturumunda (2026-05-29) dolduruldu — 34 task. Bağımlılık sırasıyla M0 altyapı → M1 Auth backend → M1 Mobile UI + akış → uçtan uca smoke.
+> Bu bölüm `/devflow:plan-phase 1` oturumunda (2026-05-29) dolduruldu — 34 task + 1 verify-phase düzeltme task'ı. Bağımlılık sırasıyla M0 altyapı → M1 Auth backend → M1 Mobile UI + akış → uçtan uca smoke.
 
 | # | Task | Durum | Açıklama |
 |---|------|-------|----------|
@@ -277,14 +277,36 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 | 1.32 | TASK-1.32 | ✅ Tamamlandı | Davet kabul in-app banner + liste real-time — backend `GET /trainers/me/events?since` (trainer-only, kaynak TrainerMember: startedAt>since + soft-delete hariç; `{type,memberId,memberFirstName,occurredAt}`; geçersiz since→400; AuditLog DEĞİL — DECISIONS; 8 test) + mobile event katmanı (`listPtEvents`, `banner-store` zustand dedup+overflow, `use-pt-events` foreground polling 20sn+backoff) + UI (`in-app-banner` slide-down+4sn auto-dismiss, `banner-stack`, `members.tsx` refresh+1sn highlight) + yeni i18n `notifications` ns; backend 167 + mobile 89 PASS |
 | 1.33 | TASK-1.33 | ✅ Tamamlandı | 30 gün cihaz hatırlama (secure storage + auto-login) — `expo-secure-store ~56.0.4`; `src/auth/storage.ts` (refresh+rol Keychain/Keystore, access saklanmaz), `src/api/client.ts` (refresh TEK-uçuş singleton + `authedFetch` 401-interceptor + `fetchMe`), `src/auth/auth-actions.ts` (`persistLogin`/`bootstrapSession`/`homePathForRole`), `session.ts` `clearSession`; `api/auth.ts` logout/logout-all; login persisti bağlandı (otp+profile → session store'a artık YAZIYOR); `_layout.tsx` boot gate (in-app overlay, expo-splash-screen EKLENMEDİ); `(tabs)/settings.tsx` + Ayarlar sekmesi (çıkış 2-adım onay); i18n `settings`. **Reuse:** `GET /auth/me` (TASK-1.20) — yeni backend yok; session.ts extend (auth-store.ts değil). Mobile 110 PASS (+21); backend dokunulmadı |
 | 1.34 | TASK-1.34 | ✅ Tamamlandı | Uçtan uca onboarding smoke — backend `test/smoke/onboarding-flow.test.ts` (4 senaryo, gerçek HTTP zinciri: PT akışı+audit, üye+davet kabul, replay, brute-force lockout; her senaryo ayrı telefon → Redis send-slot izolasyonu) + mobile `test/smoke/onboarding-flow.test.tsx` (4 senaryo: Landing→telefon→OTP→KVKK→profil→home, deep-link davet+auto-accept, PT davet üret+kopyala, auto-login boot) MSW backend mock (`test/msw/handlers.ts` reusable builder'lar) + ekran-zinciri (mockRouter+onboarding store). Sentry modülü smoke'da stub'lanır (AsyncExpiringMap interval leak). `_dev/docs/staging-smoke-test.md` manuel checklist (kullanıcı). Backend 171 PASS (+4), mobile 114 PASS (+4); yeni kaynak kod YOK — sadece test |
+| 1.35 | TASK-1.35 | ⬜ Bekliyor | admin-internal timingSafeEqual: token karşılaştırması `!==` → `timingSafeEqual` (security review bulgusu, 2 dosya) | — backend `test/smoke/onboarding-flow.test.ts` (4 senaryo, gerçek HTTP zinciri: PT akışı+audit, üye+davet kabul, replay, brute-force lockout; her senaryo ayrı telefon → Redis send-slot izolasyonu) + mobile `test/smoke/onboarding-flow.test.tsx` (4 senaryo: Landing→telefon→OTP→KVKK→profil→home, deep-link davet+auto-accept, PT davet üret+kopyala, auto-login boot) MSW backend mock (`test/msw/handlers.ts` reusable builder'lar) + ekran-zinciri (mockRouter+onboarding store). Sentry modülü smoke'da stub'lanır (AsyncExpiringMap interval leak). `_dev/docs/staging-smoke-test.md` manuel checklist (kullanıcı). Backend 171 PASS (+4), mobile 114 PASS (+4); yeni kaynak kod YOK — sadece test |
 
 **Durum simgeleri:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
 ---
 
-## UAT Sonuçları
+## UAT Senaryoları
 
-> Bu bölüm `/devflow:verify-phase 1` oturumunda doldurulacak.
+| # | Senaryo | Tür | Sonuç | Not |
+|---|---------|-----|-------|-----|
+| 1 | Backend testleri yeşil (171/171 PASS) | Otomatik | ✅ Geçti | Doğrulandı |
+| 2 | Mobile testleri yeşil (114/114 PASS) | Otomatik | ✅ Geçti | Doğrulandı |
+| 3 | Lint + typecheck temiz | Otomatik | ✅ Geçti | Doğrulandı |
+| 4 | Staging healthz: db:up, timestamp güncel | Otomatik | ✅ Geçti | `alpfit-staging.kiwiailab.com/healthz` 200 OK |
+| 5 | Security: admin-internal timingSafeEqual eksik (dev-only endpoint) | Otomatik | 🟡 Bulgu | orta risk — düzeltme task'ı |
+| 6 | Brute force lockout: 5 hatalı OTP → 423 kilit (smoke ✅) | Otomatik | ✅ Geçti | Backend smoke TASK-1.34 |
+| 7 | Replay detection: rotate sonrası eski refresh token → 401 (smoke ✅) | Otomatik | ✅ Geçti | Backend smoke TASK-1.34 |
+| 8 | PT akışı: Açılış → Antrenörüm → Telefon → Dev OTP → KVKK → Profil → Üyeler sekmesi | Manuel | ⬜ | — |
+| 9 | Davet linki: üretildi, link panoya kopyalandı | Manuel | ⬜ | — |
+| 10 | QR modal: PT davet modalında QR kodu görünür | Manuel | ⬜ | — |
+| 11 | Üye akışı: Davet linki → Deep link → Telefon → OTP → KVKK → Profil → PT'ye bağlandı | Manuel | ⬜ | — |
+| 12 | In-app banner: PT "Üyeler" sekmesi açıkken üye kabul banner'ı gelir | Manuel | ⬜ | — |
+| 13 | 30 gün cihaz hatırlama: app kapanıp açılınca OTP istenmez (auto-login) | Manuel | ⬜ | — |
+| 14 | Çıkış yap: Ayarlar → çıkış → landing; sonraki açılışta OTP istenir | Manuel | ⬜ | — |
+| 15 | Sentry PII: test event'te telefon alanı [REDACTED] görünür | Manuel | ⬜ | — |
+| 16 | Backblaze B2: son 24 saatte alınmış staging dump mevcut | Manuel | ⬜ | — |
+| 17 | Geçersiz/kullanılmış davet linki → "Bu davet süresi geçmiş..." mesajı | Manuel | ⬜ | — |
+| 18 | TR telefon inline validation: yanlış format girince anında hata | Manuel | ⬜ | — |
+| 19 | Manuel davet kodu ("Davetim var") akışı: 6 haneli kod elle girilip kabul edilir | Manuel | ⬜ | — |
+| 20 | Aynı telefon iki kez kayıt → "Bu telefon zaten kayıtlı" yönlendirmesi | Manuel | ⬜ | — |
 
 ---
 
@@ -309,4 +331,4 @@ Plan-phase'de bu liste task'lere bölünür; task sayısı ve kesim plan-phase'd
 ---
 
 **Oluşturulma:** 2026-05-29 (discuss-phase 1)
-**Son Güncelleme:** 2026-05-30 — TASK-1.32 ✅: Davet kabul in-app banner + liste real-time. Backend `GET /trainers/me/events?since` (trainer-only, kaynak TrainerMember: startedAt>since + soft-delete hariç; `{type,memberId,memberFirstName,occurredAt}`; geçersiz since→400; AuditLog DEĞİL çünkü üye-hash + trainerId yok — DECISIONS.md TASK-1.32). Mobile event katmanı: `src/api/trainers.ts` listPtEvents + `banner-store.ts` (zustand dedup+overflow) + `use-pt-events.ts` (foreground-only polling 20sn + backoff). UI: `in-app-banner.tsx` (slide-down + 4sn auto-dismiss) + `banner-stack.tsx`; `members.tsx` entegrasyon (refresh + yeni üye 1sn highlight). Yeni mobile i18n namespace `notifications`. Backend 167 PASS + mobile 89 PASS; typecheck/lint/format temiz.
+**Son Güncelleme:** 2026-05-30 — verify-phase 1 kısmen tamamlandı. Otomatik kontroller geçti (backend 171 + mobile 114 + lint/typecheck + staging healthz). Security review: TASK-1.35 açıldı (admin-internal timingSafeEqual). Manuel UAT 13 senaryo bekliyor (cihaz + staging). TASK-1.35 sonrası verify-phase yeniden çalışacak.
