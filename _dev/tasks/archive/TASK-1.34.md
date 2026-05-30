@@ -1,6 +1,6 @@
 # TASK-1.34: Uçtan uca smoke testi (Mock SMS → OTP → profil → PT bağlanma)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -151,7 +151,36 @@ _dev/docs/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Backend integration smoke** (`backend/test/smoke/onboarding-flow.test.ts` — YENİ): 4 senaryo, gerçek HTTP zinciri (`app.inject`), hiçbir adım kısa devre değil — jeton/kod hep önceki adımın çıktısı; OTP kodu `dev_otp_log`'tan okunur (MockSmsProvider, `SMS_PROVIDER=mock`).
+  - **A** PT akışı uçtan uca (send → verify → profile(trainer) → invitations); AuditLog'da `otp_sent`/`otp_verified`/`user_created`/`consent_granted`/`invitation_created` yazılı.
+  - **B** Üye akışı + davet kabul (public preview → onboarding → accept); PT `GET /trainers/me/members` + `GET /trainers/me/events?since=` sonucunda üye + `invitation_accepted` görünür.
+  - **C** Replay (rotate → eski token tekrar → 401 replay + aile iptali → yeni token de 401; `refresh_replay_detected` audit).
+  - **D** Brute force (5 hatalı verify → 423 lockout; doğru kod hâlâ 423 — kilit kod kontrolünden önce).
+- **Mobile component smoke** (`mobile/test/smoke/onboarding-flow.test.tsx` — YENİ): 4 senaryo, gerçek `api/*` + ekranlar + store; backend MSW ile mock (jest.mock api YOK). Expo Router file-based olduğu için ekranlar tek tek render edilip `mockRouter` navigation çağrısı + ortak onboarding store ile zincirlenir.
+  - Senaryo 1 Landing→"Üyeyim"→telefon→OTP→KVKK→profil→home (oturum secure storage'a persist).
+  - Senaryo 2 Deep link davet→önizleme→onboarding→auto-accept→home.
+  - Senaryo 3 PT "Üyeler" sekmesi→"+ davet et"→modal→linki kopyala.
+  - Senaryo 4 Auto-login (saklı refresh token→`bootstrapSession`→authenticated, OTP atlanır).
+- **MSW backend mock** (`mobile/test/msw/handlers.ts`): reusable builder'lar eklendi (`otpSendOk`/`otpVerifyNewUser`/`profileCreated`/`invitationPreviewValid`/`invitationAccepted`/`invitationsList`/`invitationCreated`/`trainersMembers`/`trainersEvents`/`authRefreshOk`/`authMeOk`); default `handlers` boş kaldı, smoke suite `server.use(...)` ile composer.
+- **Manuel staging checklist** (`_dev/docs/staging-smoke-test.md` — YENİ): PT akışı + üye+davet + in-app event + auto-login + Sentry PII-sız event + Backblaze yedek teyidi. Kullanıcı (fiziksel cihaz + staging) tarafından işaretlenir.
+
+**Karar / Çözülen tuzaklar:**
+- **Redis send-slot izolasyonu:** OTP send slot'u Redis'te 60sn TTL ile tutulur, per-suite keyPrefix `beforeEach`'te temizlenmez → her senaryo AYRI telefon kullanır (auth-otp-verify.test.ts ile aynı disiplin), aksi halde ikinci senaryo 429 alır.
+- **Sentry interval leak:** Phone ekranı `src/observability/sentry`'yi import eder; gerçek modül `@sentry/react-native` AsyncExpiringMap cleanup interval'i kurar (unref'siz → jest worker "did not exit"). Smoke'da Sentry modülü stub'lanır (phone.test.tsx ile aynı yaklaşım).
+- **`inject` overload:** koşullu spread `inject` tip çözümünü bozuyor → açık `InjectOptions` nesnesi kuruldu.
+
+**Test Sonucu:**
+- Backend **171 PASS** (25 suite, +4); typecheck (`tsc` + `tsconfig.test.json`) temiz.
+- Mobile **114 PASS** (17 suite, +4); typecheck temiz; worker leak yok.
+- Lint + prettier temiz (değişen 3 dosya). **Yeni kaynak kod YOK** — yalnızca test + doküman.
+
+**Kalan (manuel — kullanıcı):**
+- `staging-smoke-test.md` checklist'i gerçek staging + 2 cihazla işaretlenmeli (Claude otonom yapamaz).
+- Sentry dashboard PII teyidi + Backblaze yedek teyidi aynı checklist içinde.
 
 ---
 

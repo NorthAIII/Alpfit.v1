@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.33 ✅: 30 gün cihaz hatırlama + auto-login. `expo-secure-store ~56.0.4`; `src/auth/storage.ts` (refresh token+rol Keychain/Keystore, access saklanmaz), `src/api/client.ts` (refresh TEK-uçuş singleton + `authedFetch` 401-interceptor + `fetchMe`), `src/auth/auth-actions.ts` (`persistLogin`/`bootstrapSession`/`homePathForRole`), `session.ts` `clearSession`; logout/logout-all api; login persisti bağlandı (otp+profile artık session store'a YAZIYOR); `_layout.tsx` boot gate (in-app overlay); `(tabs)/settings.tsx` Ayarlar sekmesi (çıkış 2-adım onay); i18n `settings`. Reuse: `GET /auth/me` (yeni backend yok), session.ts extend. Mobile 110 PASS (+21); backend dokunulmadı (167); typecheck/lint/format temiz. Lineer sıradaki TASK-1.34 (uçtan uca smoke).
+**Son Güncelleme:** 2026-05-30 — TASK-1.34 ✅: Uçtan uca onboarding smoke (faz son task'ı). Backend `test/smoke/onboarding-flow.test.ts` (4 senaryo, gerçek HTTP zinciri: PT+audit / üye+davet kabul / replay / brute-force; her senaryo ayrı telefon → Redis send-slot izolasyonu). Mobile `test/smoke/onboarding-flow.test.tsx` (4 senaryo: Landing→telefon→OTP→KVKK→profil→home / deep-link+auto-accept / PT davet üret+kopyala / auto-login boot) MSW backend mock (`test/msw/handlers.ts` reusable builder'lar) + ekran-zinciri (mockRouter + onboarding store). Sentry smoke'da stub (AsyncExpiringMap interval leak). `_dev/docs/staging-smoke-test.md` manuel checklist (kullanıcı). Backend 171 PASS (+4), mobile 114 PASS (+4); yeni kaynak kod YOK. Faz 1 tüm task'ları tamam → sıradaki adım verify-phase (UAT).
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Milestone:** PT ve üye telefon + mock SMS OTP ile hesap açabilir; PT davet linki üretir; üye linkten gelip PT'ye otomatik bağlanır; KVKK rızası (placeholder metinli iki-tickbox ekran) alınır; backend unit+integration + mobile component test altyapısı kurulu; CI yeşil (test+lint+typecheck); main → staging otomatik deploy çalışıyor; backend error tracking + mobile crash reporting kurulu; 3 rol veri modeli (Member + Trainer + Gym Owner) yerleşti; TR locale temeli ayakta.
-**Adım:** task
-**İlerleme:** 33/34 task tamam (TASK-1.28 sıra dışı); lineer sıradaki TASK-1.34 (uçtan uca smoke testi)
+**Adım:** verify
+**İlerleme:** 34/34 task tamam; faz milestone'u otomatik smoke ile doğrulandı, sıradaki adım verify-phase (UAT) + manuel staging smoke checklist
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 
 ---
@@ -29,15 +29,15 @@
 
 ## Aktif Task
 
-**Task:** Yok — TASK-1.33 ✅ tamamlandı (commit edildi). Lineer sıradaki TASK-1.34 (uçtan uca smoke testi: Mock SMS → OTP → profil → bağlanma) henüz başlatılmadı.
+**Task:** Yok — TASK-1.34 ✅ tamamlandı (commit edildi). Faz 1'in tüm task'ları tamam.
 **Durum:** —
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task TASK-1.34` ile başla.
+**Sonraki Adım:** Yeni oturumda `/devflow:verify-phase 1` ile kullanıcı kabul testini (UAT) başlat. Ayrıca `_dev/docs/staging-smoke-test.md` manuel checklist gerçek staging + cihazla işaretlenmeli.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-34 task yazıldı, 33 tamamlandı (TASK-1.28 sıra dışı). Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
+34 task yazıldı, 34 tamamlandı. Detay listesi `phases/PHASE-1.md` → Task Listesi tablosunda.
 
 | # | Task | Durum |
 |---|------|-------|
@@ -74,7 +74,7 @@
 | 1.31 | PT "Üyeler" sekmesi UI (Bekleyen + Aktif + Linki kopyala + QR) | ✅ Tamamlandı |
 | 1.32 | Davet kabul banner + liste real-time (in-app polling) | ✅ Tamamlandı |
 | 1.33 | 30 gün cihaz hatırlama (secure storage + auto-login) | ✅ Tamamlandı |
-| 1.34 | Uçtan uca smoke testi (Mock SMS → OTP → profil → bağlanma) | ⬜ Bekliyor |
+| 1.34 | Uçtan uca smoke testi (Mock SMS → OTP → profil → bağlanma) | ✅ Tamamlandı |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -96,17 +96,17 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+### TASK-1.34 — Uçtan uca onboarding smoke testi (2026-05-30) ✅
+
+- **Backend integration smoke** (`backend/test/smoke/onboarding-flow.test.ts` YENİ) — 4 senaryo gerçek HTTP zinciri (`app.inject`, kısa devre yok; OTP `dev_otp_log`'tan): **A** PT akışı (send→verify→profile→invitations + audit zinciri otp_sent/otp_verified/user_created/consent_granted/invitation_created), **B** üye+davet kabul (preview→onboarding→accept; PT members + events'te görünür), **C** replay (rotate→eski token→401 + aile iptal), **D** brute-force (5 hatalı→423; doğru kod hâlâ 423). **Tuzak:** her senaryo AYRI telefon — Redis send-slot 60sn TTL beforeEach'te temizlenmez.
+- **Mobile component smoke** (`mobile/test/smoke/onboarding-flow.test.tsx` YENİ) — gerçek api/*+ekran+store, backend MSW mock (jest.mock api YOK). Ekranlar tek tek render + `mockRouter` + onboarding store ile zincir: 1) Landing→telefon→OTP→KVKK→profil→home, 2) deep-link davet→auto-accept→home, 3) PT davet üret→modal→kopyala, 4) auto-login `bootstrapSession`. **Tuzak:** Sentry modülü stub'landı (gerçek `@sentry/react-native` AsyncExpiringMap interval → jest worker leak).
+- **MSW + manuel + sonuç** — `mobile/test/msw/handlers.ts` reusable builder'lar (default `handlers` boş kaldı, `server.use` ile composer); `_dev/docs/staging-smoke-test.md` (YENİ) manuel staging checklist (kullanıcı: 2 cihaz + Sentry PII + Backblaze teyidi). Backend **171 PASS** (+4), mobile **114 PASS** (+4); typecheck/lint/format temiz; **yeni kaynak kod YOK** (sadece test+doküman).
+
 ### TASK-1.33 — 30 gün cihaz hatırlama (secure storage + auto-login) (2026-05-30) ✅
 
 - **Kalıcılık + client katmanı** — `expo-secure-store ~56.0.4` (app.config plugin). `src/auth/storage.ts` (YENİ): refresh token + rol Keychain/Keystore'da; **access token saklanmaz** (kısa ömürlü, her boot'ta refresh). `src/api/client.ts` (YENİ): `refreshAccessToken` **TEK-uçuş singleton** (eşzamanlı 401'ler tek refresh paylaşır → backend replay tetiklenmez), `authedFetch` (401→bir kez refresh+retry), `fetchMe`/`requestMe`. `src/auth/auth-actions.ts` (YENİ): `persistLogin` (rol biliniyorsa direkt, OTP login'de `/auth/me` ile çözer), `bootstrapSession` (refresh→/me→role), `homePathForRole`. `session.ts` `clearSession`; `api/auth.ts` logout/logout-all.
 - **UI + bağlama** — login persisti **bağlandı**: otp.tsx (logged_in) + profile.tsx (created) artık session store'a YAZIYOR (önceden hiç yazılmıyordu — members tab token boştu). `_layout.tsx` boot gate (in-app "Yükleniyor" overlay; `expo-splash-screen` EKLENMEDİ). `(tabs)/settings.tsx` (YENİ) + Ayarlar sekmesi: çıkış + tüm cihazlardan çıkış, 2-adım satır-içi onay. i18n `settings` namespace.
 - **Reuse + test** — `GET /auth/me` (TASK-1.20) yeniden kullanıldı (yeni backend yok); `auth-store.ts` yerine `session.ts` extend; client.ts interceptor kuruldu ama mevcut trainer/invitation çağrıları henüz authedFetch'e taşınmadı (sonraki faz). `test/mocks/expo-secure-store.ts` (bellek-içi). Mobile **110 PASS** (+21: storage 5 + client 7 + auth-actions 6 + settings 3); backend dokunulmadı (167); typecheck/lint/format temiz.
-
-### TASK-1.32 — Davet kabul banner + liste real-time (in-app polling) (2026-05-30) ✅
-
-- **Backend (`trainers-events.ts` YENİ + `server.ts`)** — `GET /trainers/me/events?since=<ISO>` trainer-only; kaynak **`TrainerMember`** (`startedAt > since`, `endedAt:null`, soft-delete hariç), `{ type:'invitation_accepted', memberId, memberFirstName, occurredAt }` newest-first. `since` opsiyonel; geçersizse 400. **Kaynak kararı:** AuditLog DEĞİL — kabul eden üyenin hash'ini tutar (PT'nin değil) + trainerId/isim yok → PT-scoped sorgu yapılamaz (DECISIONS.md TASK-1.32). `trainers-events.test.ts` 8 PASS.
-- **Mobile event katmanı** — `src/api/trainers.ts` `listPtEvents`; `src/events/banner-store.ts` (zustand: dedup `memberId:occurredAt` + MAX_VISIBLE 5 + overflow); `src/events/use-pt-events.ts` (`useFocusEffect` foreground-only polling 20sn + baseline=focus + 1s→5s→30s backoff). UI: `in-app-banner.tsx` (Animated slide-down + 4sn auto-dismiss, `useNativeDriver:false`) + `banner-stack.tsx` ("+N daha" rozeti). `members.tsx` entegrasyon: yeni event → `load('refresh')` + yeni üye 1sn highlight.
-- **i18n + test** — mobile yeni `notifications` namespace (overflow `{{n}}` çoğul-tuzak kaçışı [[tr-locale]]). Mobile **89 PASS** (banner-store 4 + use-pt-events 4 + in-app-banner 3 + members +1) + backend **167 PASS**; typecheck/lint/format temiz.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -115,8 +115,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** Yok — TASK-1.33 ✅ tamamlandı
+**Aktif Task:** Yok — TASK-1.34 ✅ tamamlandı (Faz 1 tüm task'ları tamam)
 **Aktif Faz:** Faz 1 — Çekirdek altyapı + Auth (M0 + M1)
 **Faz Dokümanı:** [PHASE-1.md](phases/PHASE-1.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task TASK-1.34` (uçtan uca smoke testi)
+**Sıradaki:** `/devflow:verify-phase 1` (kullanıcı kabul testi / UAT)
