@@ -150,6 +150,167 @@ export async function verifyOtp(e164: string, code: string): Promise<OtpVerifyRe
 /** 5 hatalı denemede backend 15dk kilit uygular; `Retry-After` yoksa fallback. */
 const DEFAULT_LOCKOUT_SEC = 15 * 60;
 
+/** Onboarding sonunda dönen kullanıcı özeti (`POST /auth/profile` 201 body'si). */
+export interface ProfileUser {
+  id: string;
+  role: 'member' | 'trainer';
+  firstName: string;
+  lastName: string;
+  phoneE164: string;
+  gymName: string | null;
+  certificateNote: string | null;
+}
+
+export interface CreateProfileInput {
+  /** OTP verify'in "yeni üye" yolunda dönen kayıt jetonu (Bearer; `sub`=telefon). */
+  registrationToken: string;
+  role: 'member' | 'trainer';
+  firstName: string;
+  lastName: string;
+  kvkkConsent: boolean;
+  healthConsent: boolean;
+  /** PT-only opsiyonel alanlar; boşsa gövdeye eklenmez. */
+  gymName?: string;
+  certificateNote?: string;
+}
+
+/**
+ * `POST /auth/profile` (TASK-1.20) cevabının UI eşlemi.
+ *   - 201 → created (access + refresh + user; persist TASK-1.33)
+ *   - 409 → phone_taken (telefon zaten kayıtlı → giriş akışı)
+ *   - 403 → kvkk_required (kvkkConsent !== true; UI normalde engeller)
+ *   - 401 → unauthorized (kayıt jetonu yok/expired → baştan onboarding)
+ *   - 400 → invalid (gövde şeması; UI inline zaten eler)
+ */
+export type CreateProfileResult =
+  | {
+      kind: 'created';
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: string;
+      user: ProfileUser;
+    }
+  | { kind: 'phone_taken' }
+  | { kind: 'kvkk_required' }
+  | { kind: 'unauthorized' }
+  | { kind: 'invalid' }
+  | { kind: 'network' };
+
+interface CreatedBody {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  user: ProfileUser;
+}
+
+/**
+ * Kayıt jetonuyla yeni üye/PT hesabı açar. KVKK rızaları gövdede; kod TAŞINMAZ
+ * (telefon sahipliği jetondan gelir). Opsiyonel PT alanları boşsa atlanır.
+ */
+export async function createProfile(input: CreateProfileInput): Promise<CreateProfileResult> {
+  const body: Record<string, unknown> = {
+    role: input.role,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    kvkkConsent: input.kvkkConsent,
+    healthConsent: input.healthConsent,
+  };
+  if (input.gymName) {
+    body['gymName'] = input.gymName;
+  }
+  if (input.certificateNote) {
+    body['certificateNote'] = input.certificateNote;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${getApiBaseUrl()}/auth/profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${input.registrationToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return { kind: 'network' };
+  }
+
+  if (res.status === 201) {
+    try {
+      const created = (await res.json()) as CreatedBody;
+      return {
+        kind: 'created',
+        accessToken: created.accessToken,
+        refreshToken: created.refreshToken,
+        expiresAt: created.expiresAt,
+        user: created.user,
+      };
+    } catch {
+      return { kind: 'network' };
+    }
+  }
+  if (res.status === 409) {
+    return { kind: 'phone_taken' };
+  }
+  if (res.status === 403) {
+    return { kind: 'kvkk_required' };
+  }
+  if (res.status === 401) {
+    return { kind: 'unauthorized' };
+  }
+  if (res.status === 400) {
+    return { kind: 'invalid' };
+  }
+  return { kind: 'network' };
+}
+
+/**
+ * `POST /invitations/:code/accept` (TASK-1.24) cevabının UI eşlemi. Yalnızca
+ * `member_via_invite` akışında, profil oluşup access jetonu alındıktan sonra
+ * çağrılır. Terminal hatalar (404/410/409/...) tek `failed`'e iner — çözüm aynı:
+ * PT'den yeni link iste. `network` ayrı tutulur (retry edilebilir).
+ */
+export type AcceptInvitationResult =
+  | { kind: 'connected'; trainerFirstName: string; trainerLastName: string }
+  | { kind: 'failed' }
+  | { kind: 'network' };
+
+interface AcceptOkBody {
+  trainerFirstName: string;
+  trainerLastName: string;
+}
+
+export async function acceptInvitation(
+  code: string,
+  accessToken: string,
+): Promise<AcceptInvitationResult> {
+  let res: Response;
+  try {
+    res = await fetch(`${getApiBaseUrl()}/invitations/${encodeURIComponent(code)}/accept`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch {
+    return { kind: 'network' };
+  }
+
+  if (res.ok) {
+    try {
+      const body = (await res.json()) as AcceptOkBody;
+      return {
+        kind: 'connected',
+        trainerFirstName: body.trainerFirstName,
+        trainerLastName: body.trainerLastName,
+      };
+    } catch {
+      return { kind: 'network' };
+    }
+  }
+  // 404/410/409/400/403 → retry düzeltmez; tek terminal failure.
+  return { kind: 'failed' };
+}
+
 /** Dev OTP lookup sonucu — başarısız her durum tek `unavailable`'a indirgenir. */
 export type DevOtpResult = { kind: 'ok'; code: string } | { kind: 'unavailable' };
 

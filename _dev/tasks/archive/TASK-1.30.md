@@ -1,6 +1,6 @@
 # TASK-1.30: Profil oluşturma ekranı (üye + PT)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M1 — Auth & Onboarding (`modules/M1-auth-onboarding.md`)
 **Feature:** F1.1 Onboarding (Davet + Auth)
 **Faz:** Phase 1 (`phases/PHASE-1.md`)
@@ -145,8 +145,21 @@ mobile/
 
 ## Oturum Kayıtları
 
-> Task çalıştırıldığında doldurulacak.
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- **Ekran (`mobile/app/auth/profile.tsx` YENİ)** — Onboarding son adımı. Ortak form: ad + soyad (zorunlu); avatar placeholder (UI-only, tap → image picker import YOK, sadece `photoHint` "yakında" metni). PT akışında (`flow === 'pt'`) ek opsiyonel alanlar: spor salonu + sertifika notu (multiline). "Hesabı oluştur" sadece ad+soyad geçerliyken aktif. KVKK rızaları KVKK ekranından `useLocalSearchParams` ile gelir (store değil — consent ekranlar-arası tek sıçrama). Submit → `createProfile` (kayıt jetonu Bearer); 201 → `member_via_invite` ise `acceptInvitation` ardışık (network'te 3 deneme; terminal hatada uyarı + manuel "Devam et" → home, profil zaten oluştu); diğer akışlarda doğrudan `/home` placeholder'ına `replace`. 409 → "Bu telefon zaten kayıtlı" + "Giriş yap" → `/auth/phone`; 401/403 → oturum hatası; network/invalid → jenerik.
+- **Form şeması (`mobile/src/auth/profile-schema.ts` YENİ)** — zod `nameField`: trim + 2-50 char + `^[\p{L}\s]+$/u` (TR ş/ğ/ı/ç/İ + boşluk; rakam/sembol red). `validateName` inline feedback için `required`/`invalid` döner (blur'da gösterilir). `profileFormSchema` submit-öncesi bütün kontrol; gym ≤100, cert ≤500.
+- **API (`mobile/src/api/auth.ts` GÜNCELLE)** — `createProfile` (201 created / 409 phone_taken / 403 kvkk_required / 401 unauthorized / 400 invalid / network; opsiyonel PT alanları boşsa gövdeye eklenmez) + `acceptInvitation` (200 connected / terminal failed / network). `ProfileUser` tipi eklendi.
+- **Home placeholder (`mobile/app/home/index.tsx` YENİ)** — "Hoş geldin, [isim]" + "yakında" metni; gerçek içerik TASK-1.31/1.33. `/home` route'u.
+- **i18n** — `auth.json` → `profile.*` (başlık, alanlar, hatalar, davet uyarısı, CTA'lar); `common.json` → `home.welcome`/`home.placeholder`.
+
+**Test:** mobile **71 PASS** (`app/auth/profile.test.tsx` 7: üye→home replace, PT alanları görünür+boş submit, üyede PT alanları gizli, geçersiz isim blur→inline hata+CTA disabled, 409→Giriş yap→phone replace, member_via_invite create+accept ardışık→home, accept fail→uyarı+replace yok). typecheck/lint/format temiz. Lint TR `.toUpperCase()` yasağını yakaladı → avatar initial `trUpper` ile düzeltildi.
+
+**Backend kontrat notu:** Task dokümanındaki body taslağı (`{ phone, code, ... textVersion }`) güncel değildi — gerçek `POST /auth/profile` kontratı (TASK-1.20) **kayıt jetonu Bearer** + body `{ role, firstName, lastName, kvkkConsent, healthConsent?, gymName?, certificateNote? }`; kod/telefon gövdede taşınmaz. Gerçek backend kontratı izlendi.
 
 ---
 
 **Oluşturulma:** 2026-05-29 (plan-phase 1)
+**Tamamlanma:** 2026-05-30 (run-task)
