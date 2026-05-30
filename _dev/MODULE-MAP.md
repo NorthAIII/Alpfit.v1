@@ -14,8 +14,8 @@ Alpfit (v1)
 ├── M1: Auth & Onboarding
 │   └── F1.1: Onboarding (davet + SMS OTP)          → Faz 1
 ├── M2: Program Domain
-│   ├── F2.1: Program Builder (PT)                  → —
-│   └── F2.2: Üye Program Görüntüleme + Tamamlama   → —
+│   ├── F2.1: Program Builder (PT)                  → Faz 2
+│   └── F2.2: Üye Program Görüntüleme + Tamamlama   → Faz 2
 ├── M3: Sürdürülebilirlik Motoru
 │   └── F3.1: Streak + Telafi + Comeback            → —
 ├── M4: Bildirim Altyapısı
@@ -69,8 +69,8 @@ M6 ← M0, M1
 | Feature | Modül | Versiyon | Faz | Durum |
 |---------|-------|----------|-----|-------|
 | F1.1: Onboarding (Davet + Auth) | M1 | v1 | 1 | ✅ |
-| F2.1: Program Builder (PT) | M2 | v1 | — | ⬜ |
-| F2.2: Üye Program Görüntüleme + Tamamlama | M2 | v1 | — | ⬜ |
+| F2.1: Program Builder (PT) | M2 | v1 | 2 | 🔄 Devam ediyor |
+| F2.2: Üye Program Görüntüleme + Tamamlama | M2 | v1 | 2 | 🔄 Devam ediyor |
 | F3.1: Sürdürülebilirlik Motoru | M3 | v1 | — | ⬜ |
 | F4.1: Bildirim Sistemi (Push) | M4 | v1 | — | ⬜ |
 | F5.1: PT Dashboard — Üye Listesi | M5 | v1 | — | ⬜ |
@@ -88,4 +88,4 @@ M6 ← M0, M1
 
 ---
 
-**Son Güncelleme:** 2026-05-30 — review-phase 1: F1.1 ✅ Tamamlandı (tüm otomatik+API UAT geçti; 10 manuel UAT Yakın 5'e ertelendi, kod tamamlandı).
+**Son Güncelleme:** 2026-05-30 — discuss-phase 2: F2.1 + F2.2 Faz 2'ye atandı, durum 🔄 Devam ediyor.
