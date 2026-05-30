@@ -40,4 +40,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return (origResolveRequest ?? context.resolveRequest)(context, moduleName, platform);
 };
 
+// Web bundler'ı test dosyalarını route olarak almasın.
+config.resolver.blockList = [/.*\.test\.[jt]sx?$/, /.*\.spec\.[jt]sx?$/];
+
 module.exports = config;

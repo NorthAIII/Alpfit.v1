@@ -28,14 +28,14 @@ export default function MemberDetailScreen() {
     memberId: memberId ?? '',
     onSuccess: (programId) => {
       router.push(
-        `/program/${programId}?memberId=${encodeURIComponent(memberId ?? '')}&memberFirstName=${encodeURIComponent(firstName ?? '')}&memberLastName=${encodeURIComponent(lastName ?? '')}`,
+        `/program/${programId}?memberId=${encodeURIComponent(memberId ?? '')}&memberFirstName=${encodeURIComponent(firstName ?? '')}&memberLastName=${encodeURIComponent(lastName ?? '')}&programStatus=draft`,
       );
     },
   });
 
-  const goToBuilder = (programId: string) => {
+  const goToBuilder = (program: { id: string; status: string }) => {
     router.push(
-      `/program/${programId}?memberId=${encodeURIComponent(memberId ?? '')}&memberFirstName=${encodeURIComponent(firstName ?? '')}&memberLastName=${encodeURIComponent(lastName ?? '')}`,
+      `/program/${program.id}?memberId=${encodeURIComponent(memberId ?? '')}&memberFirstName=${encodeURIComponent(firstName ?? '')}&memberLastName=${encodeURIComponent(lastName ?? '')}&programStatus=${program.status}`,
     );
   };
 
@@ -67,7 +67,7 @@ export default function MemberDetailScreen() {
             <>
               <Pressable
                 style={styles.primaryButton}
-                onPress={() => goToBuilder(program.id)}
+                onPress={() => goToBuilder(program)}
                 accessibilityRole="button"
                 accessibilityLabel="Mevcut programı düzenle"
                 testID="edit-program-button"

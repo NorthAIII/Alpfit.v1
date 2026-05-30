@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-2.08 ✅. ExerciseDayCard bileşeni + ProgramBuilderScreen local state + CRUD (ekle/sil/↑↓/düzenle) + boş gün state + ExerciseSearchBottomSheet entegrasyonu. 152 mobile test 0 hata.
+**Son Güncelleme:** 2026-05-30 — TASK-2.09 ✅. useProgramAutoSave hook (1sn debounce PATCH) + publish butonu (boş gün guard, race condition önlem) + kopyalama CTA/modal + MemberDetailScreen programStatus param. 173 mobile test 0 hata.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.09 — Mobile: Builder Auto-save + Publish + Kopyalama
+**Task:** TASK-2.10 — Mobile: Üye Ana Ekranı Layout
 **Durum:** Bekliyor
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.09 başlat.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.10 başlat.
 
 ---
 
@@ -47,7 +47,7 @@
 | 2.06 | Mobile: Exercises Hook + Bottom Sheet | ✅ Tamamlandı |
 | 2.07 | Mobile: Builder Giriş + Şablon Çatısı | ✅ Tamamlandı |
 | 2.08 | Mobile: Builder Egzersiz Listesi + ↑↓ | ✅ Tamamlandı |
-| 2.09 | Mobile: Builder Auto-save + Publish + Kopyalama | ⬜ Bekliyor |
+| 2.09 | Mobile: Builder Auto-save + Publish + Kopyalama | ✅ Tamamlandı |
 | 2.10 | Mobile: Üye Ana Ekranı Layout | ⬜ Bekliyor |
 | 2.11 | Mobile: Antrenman Ekranı + Video Modal | ⬜ Bekliyor |
 | 2.12 | Mobile: Tamamlama + Offline Senkron | ⬜ Bekliyor |
@@ -74,16 +74,16 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-2.07** (2026-05-30) — Mobile: Builder Giriş Noktası + Şablon Çatısı ✅
-- `src/api/programs.ts` + `src/hooks/useProgram.ts`: fetchMemberActiveProgram + createProgram + useTrainerMemberProgram + useCreateProgram.
-- `app/member/[memberId].tsx` (MemberDetailScreen): ad/tarih + "Program yaz" / "Mevcut programı düzenle" CTA'ları.
-- `app/program/[programId].tsx` (ProgramBuilderScreen): 7 gün sekmeleri (FlatList horizontal, today highlight), boş içerik + placeholder butonlar.
-- members.tsx satır → Pressable + navigasyon. router.d.ts güncellendi. 138 mobile test 0 hata.
-
 **TASK-2.08** (2026-05-30) — Mobile: Builder Egzersiz Listesi + ↑↓ ✅
-- `src/components/ExerciseDayCard.tsx`: ProgramDayExercise tipi, egzersiz adı/kas grubu, set/reps input, ↑↓ disabled state, Alert.alert silme onayı, "Detay ekle" toggle.
-- `app/program/[programId].tsx` güncellendi: 7 günlük local state, CRUD fonksiyonları, boş gün state, ExerciseSearchBottomSheet entegrasyonu.
-- 14 yeni test (ExerciseDayCard.test.tsx). 152 mobile test 0 hata, TypeScript 0 hata.
+- `ExerciseDayCard.tsx`: ProgramDayExercise tipi, set/reps input, ↑↓ sıralama, Alert silme, "Detay ekle" toggle.
+- `app/program/[programId].tsx`: 7 günlük local state, CRUD + boş gün state, ExerciseSearchBottomSheet entegrasyonu.
+- 14 yeni test. 152 mobile test 0 hata.
+
+**TASK-2.09** (2026-05-30) — Mobile: Builder Auto-save + Publish + Kopyalama ✅
+- `src/hooks/useProgramAutoSave.ts` (YENİ): 1sn debounce PATCH, saveState, cancelPendingAutoSave.
+- `src/hooks/useProgram.ts`: usePublishProgram + useCopyProgram + useTrainerMembers eklendi.
+- `app/program/[programId].tsx`: auto-save indicator, publish butonu (boş gün guard + race condition önlem), kopyalama CTA + Modal.
+- `app/member/[memberId].tsx`: programStatus param eklendi. 173 mobile test 0 hata.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -92,8 +92,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-2.09
+**Aktif Task:** TASK-2.10
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` (TASK-2.09)
+**Sıradaki:** `/devflow:run-task` (TASK-2.10)

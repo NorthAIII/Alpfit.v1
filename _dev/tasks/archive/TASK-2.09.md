@@ -1,6 +1,6 @@
 # TASK-2.09: Mobile — Program Builder — Auto-save + Publish + Kopyalama
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.1 — Program Builder (PT)
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -35,7 +35,7 @@ Auto-save client tarafında debounce yaparak PATCH çağrısını geciktirir —
 
 ## Alt Görevler
 
-- [ ] **1. `useProgramAutoSave` Hook**
+- [x] **1. `useProgramAutoSave` Hook**
   - `apps/mobile/src/hooks/useProgramAutoSave.ts` oluştur:
     - Input: `programId: string`, `programData: ProgramDraft` (local state'teki tüm yapı)
     - Davranış: `programData` değiştikçe 1 sn debounce → `PATCH /programs/:id` mutation
@@ -45,14 +45,14 @@ Auto-save client tarafında debounce yaparak PATCH çağrısını geciktirir —
     - `error`: PATCH başarısızsa → "Kaydetme hatası, tekrar dene" + manuel retry butonu
     - `cancelPendingAutoSave()` — publish öncesi inflight timer'ı iptal et
 
-- [ ] **2. Auto-save Indicator UI**
+- [x] **2. Auto-save Indicator UI**
   - `ProgramBuilderScreen.tsx`'te header bölgesine (veya footer) durum göstergesi:
     - `idle`: görünmez
     - `saving`: "⏳ Kaydediliyor..."
     - `saved`: "✓ Taslak kaydedildi"
     - `error`: "⚠️ Kaydetme hatası — Tekrar dene" (tap ile retry)
 
-- [ ] **3. "Kaydet" Butonu (Explicit Publish)**
+- [x] **3. "Kaydet" Butonu (Explicit Publish)**
   - `ProgramBuilderScreen.tsx`'te sağ üst veya footer buton:
     - Tıklanınca: `cancelPendingAutoSave()` → auto-save PATCH'ı bekle (veya iptal et) → `POST /programs/:id/publish` mutation
     - Publish başarılı: "Program kaydedildi! Üye görebilir artık." toast/modal → MemberDetailScreen'e navigate (veya builder'da kal)
@@ -60,7 +60,7 @@ Auto-save client tarafında debounce yaparak PATCH çağrısını geciktirir —
     - **Draft iken:** buton text "Kaydet ve Yayınla"; **active iken:** "Güncelle" (yeniden publish)
   - `usePublishProgram()` mutation — `POST /programs/:id/publish`
 
-- [ ] **4. "Başka Üyenin Programını Kopyala" CTA**
+- [x] **4. "Başka Üyenin Programını Kopyala" CTA**
   - Builder header veya overflow menüsüne ekle: "Programı kopyala..."
   - Tıklanınca modal/bottom sheet: PT'nin üye listesi gösterilir (GET /trainer/members)
   - Üye seçilince: `POST /programs/:id/copy` body: `{ targetMemberId }` → başarıda "Kopyalandı! [Üye adı]'na taslak oluşturuldu" toast
@@ -91,31 +91,42 @@ apps/mobile/src/
 
 ## Test Kriterleri
 
-- [ ] Egzersiz eklendiğinde 1 sn sonra "Kaydediliyor..." gösterilir, ardından "Taslak kaydedildi"
-- [ ] Değişiklik olmadığında PATCH çağrılmaz (debounce)
-- [ ] Tüm günler boşken "Kaydet" basılınca "En az 1 egzersiz ekle" uyarısı gelir, publish çağrılmaz
-- [ ] En az 1 egzersiz varken "Kaydet" basılınca POST /programs/:id/publish çağrılır
-- [ ] Publish başarılı → "Program kaydedildi" toast gösterilir
-- [ ] "Programı kopyala..." → üye listesi açılır → üye seçilince POST /programs/:id/copy çağrılır
-- [ ] Auto-save hata → "Kaydetme hatası" gösterilir + retry çalışır
-- [ ] Publish öncesi inflight auto-save PATCH iptal edilir veya beklenir
-- [ ] TypeScript typecheck: 0 hata
+- [x] Egzersiz eklendiğinde 1 sn sonra "Kaydediliyor..." gösterilir, ardından "Taslak kaydedildi"
+- [x] Değişiklik olmadığında PATCH çağrılmaz (debounce)
+- [x] Tüm günler boşken "Kaydet" basılınca "En az 1 egzersiz ekle" uyarısı gelir, publish çağrılmaz
+- [x] En az 1 egzersiz varken "Kaydet" basılınca POST /programs/:id/publish çağrılır
+- [x] Publish başarılı → "Program kaydedildi" toast gösterilir
+- [x] "Programı kopyala..." → üye listesi açılır → üye seçilince POST /programs/:id/copy çağrılır
+- [x] Auto-save hata → "Kaydetme hatası" gösterilir + retry çalışır
+- [x] Publish öncesi inflight auto-save PATCH iptal edilir veya beklenir (saveState=saving → buton disabled)
+- [x] TypeScript typecheck: 0 hata
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-30
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `src/api/programs.ts`: `PatchDay`, `PatchExercise` tipleri + `patchProgram`, `publishProgram`, `copyProgramToMember` fonksiyonları eklendi.
+- `src/hooks/useProgramAutoSave.ts` (YENİ): `buildPatchPayload` + `useProgramAutoSave` hook — 1sn debounce → PATCH, `saveState: 'idle'|'saving'|'saved'|'error'`, `cancelPendingAutoSave()`, ilk render atlanır.
+- `src/hooks/useProgram.ts`: `useTrainerMembers` (GET /trainers/me/members), `usePublishProgram` (POST /programs/:id/publish + cache invalidate), `useCopyProgram` (POST /programs/:id/copy) eklendi.
+- `app/member/[memberId].tsx`: `goToBuilder` imzası güncellendi — `programStatus` param olarak ProgramBuilderScreen'e geçirilir.
+- `app/program/[programId].tsx`: Auto-save indicator (`SaveIndicator`), publish butonu (boş gün guard + Alert + cancelPendingAutoSave + disabled-on-saving), kopyalama CTA + Modal (üye listesi, mevcut üye filtrelenir).
+- `src/hooks/useProgramAutoSave.test.ts` (YENİ): `buildPatchPayload` unit + hook testleri (mount'ta PATCH çağrılmaz, debounce, cancelPendingAutoSave, hata state).
+- `app/program/[programId].test.tsx`: Publish + copy + auto-save indicator testleri eklendi.
+- 173 mobile test, TypeScript 0 hata.
 
 ---
 
