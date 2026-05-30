@@ -1,3 +1,4 @@
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Fragment, useEffect, useState } from 'react';
@@ -6,6 +7,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { bootstrapSession, homePathForRole } from '../src/auth/auth-actions';
 import i18n from '../src/i18n/index';
+import { asyncStoragePersister, queryClient } from '../src/lib/queryClient';
 import { Sentry, initSentryFromEnv } from '../src/observability/sentry';
 
 // Module-level init: React render başlamadan önce Sentry hazır olur, böylece
@@ -49,13 +51,18 @@ function RootLayout() {
   }, [router]);
 
   return (
-    <I18nextProvider i18n={i18n}>
-      <Fragment>
-        <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false }} />
-        {booting ? <BootSplash /> : null}
-      </Fragment>
-    </I18nextProvider>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: asyncStoragePersister }}
+    >
+      <I18nextProvider i18n={i18n}>
+        <Fragment>
+          <StatusBar style="auto" />
+          <Stack screenOptions={{ headerShown: false }} />
+          {booting ? <BootSplash /> : null}
+        </Fragment>
+      </I18nextProvider>
+    </PersistQueryClientProvider>
   );
 }
 

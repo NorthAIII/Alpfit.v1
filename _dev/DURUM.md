@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-30 — TASK-2.04 ✅. WorkoutCompletions API (POST idempotent upsert + GET cursor-based pagination) tamamlandı. 227 backend testi 0 hata.
+**Son Güncelleme:** 2026-05-30 — TASK-2.05 ✅. TanStack Query v5 + AsyncStorage persist altyapısı kuruldu; react-native-webview@13.16.1 eklendi. 114 mobile testi 0 hata.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.05 — Mobile: TanStack Query + Offline Persist
+**Task:** TASK-2.06 — Mobile: Exercises Hook + Bottom Sheet
 **Durum:** Bekliyor
-**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.05 başlat.
+**Sonraki Adım:** Yeni oturumda `/devflow:run-task` ile TASK-2.06 başlat.
 
 ---
 
@@ -43,7 +43,7 @@
 | 2.02 | Exercises API | ✅ Tamamlandı |
 | 2.03 | Programs API | ✅ Tamamlandı |
 | 2.04 | WorkoutCompletions API | ✅ Tamamlandı |
-| 2.05 | Mobile: TanStack Query + Offline Persist | ⬜ Bekliyor |
+| 2.05 | Mobile: TanStack Query + Offline Persist | ✅ Tamamlandı |
 | 2.06 | Mobile: Exercises Hook + Bottom Sheet | ⬜ Bekliyor |
 | 2.07 | Mobile: Builder Giriş + Şablon Çatısı | ⬜ Bekliyor |
 | 2.08 | Mobile: Builder Egzersiz Listesi + ↑↓ | ⬜ Bekliyor |
@@ -74,15 +74,15 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-2.03** (2026-05-30) — Programs API ✅
-- `program.service.ts`: 7 fonksiyon (create/patch/publish/copy/get/getMemberActive/getMyActive + hasUnreadUpdate).
-- `programs.ts` route: 7 endpoint; trainer guard + ownership; PATCH sadece draft; publish eski aktifi arşivler.
-- 26 integration testi eklendi. 219 backend testi 0 hata.
-
 **TASK-2.04** (2026-05-30) — WorkoutCompletions API ✅
 - `workout-completion.service.ts`: `completeWorkout` (upsert idempotent) + `getMyWorkoutHistory` (cursor-based, limit cap 100).
 - `workout-completions.ts` route: POST + GET; sadece member rolü; server.ts'e kayıt edildi.
 - 8 integration testi. 227 backend testi 0 hata.
+
+**TASK-2.05** (2026-05-30) — Mobile TanStack Query + Offline Persist Altyapısı ✅
+- 5 paket kuruldu: `@tanstack/react-query@5.100.14`, persist-client, async-storage-persister, AsyncStorage, `react-native-webview@13.16.1`.
+- `mobile/src/lib/queryClient.ts`: gcTime 7 gün + staleTime 5 dk + `alpfit-cache-v1` persister.
+- `mobile/app/_layout.tsx`: `PersistQueryClientProvider` wrap eklendi. 114 mobile test 0 hata.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
