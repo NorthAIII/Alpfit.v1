@@ -1,6 +1,6 @@
 # TASK-2.13: Mobile — Geçmiş Sekmesi (WorkoutHistoryScreen)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M2: Program Domain (modules/M2-program-domain.md)
 **Feature:** F2.2 — Üye Program Görüntüleme + Tamamlama
 **Faz:** Phase 2 (phases/PHASE-2.md)
@@ -96,17 +96,29 @@ apps/mobile/src/
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı (conventional commits formatı)
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı (conventional commits formatı)
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Doldurulmadı — task henüz çalıştırılmadı)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `mobile/src/api/completions.ts`: `WorkoutCompletionItem`, `WorkoutHistoryPage` tipleri + `fetchMyWorkoutHistory` eklendi (GET /me/workout-completions, cursor-based).
+- `mobile/src/api/programs.ts`: `fetchProgramById` eklendi (GET /programs/:id, arşivlenmiş dahil, 404 → null).
+- `mobile/src/hooks/useWorkoutHistory.ts` (YENİ): `useInfiniteQuery` cursor-based infinite scroll hook (30/sayfa, gcTime 7 gün).
+- `mobile/app/home/_layout.tsx` (YENİ): Üye alt tab navigasyonu (Ana Sayfa + Geçmiş).
+- `mobile/app/home/history.tsx` (YENİ): WorkoutHistoryScreen — FlatList + infinite scroll + boş durum + isLate ikonu + satıra tıklayınca WorkoutDetailScreen navigate.
+- `mobile/app/workout-history/[programDayId].tsx` (YENİ): WorkoutDetailScreen — okuma modu, set×tekrar + notlar, Tamamlandı/Geç Tamamlandı badge.
+- `mobile/app/home/history.test.tsx` (YENİ): 10 test — loading, hata, boş durum, liste, isLate ikonu, navigate, infinite scroll guard.
+- `mobile/app/workout-history/[programDayId].test.tsx` (YENİ): 7 test — loading, hata, egzersiz listesi, header tarih, badge, geri navigate.
+- 237 mobile test 0 hata (önceki 220 + 17 yeni). TypeScript 0 hata.
 
 ---
 

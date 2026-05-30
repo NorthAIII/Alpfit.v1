@@ -78,3 +78,11 @@ export async function copyProgramToMember(
   if (!res.ok) throw new Error('copyProgram failed');
   return res.json() as Promise<Program>;
 }
+
+/** GET /programs/:id — tam program (trainer kendi | üye kendi). Arşivlenmiş dahil. 404 → null. */
+export async function fetchProgramById(programId: string): Promise<Program | null> {
+  const res = await authedFetch(`/programs/${programId}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`fetchProgramById: ${res.status}`);
+  return res.json() as Promise<Program>;
+}

@@ -210,7 +210,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.10 | TASK-2.10 | ✅ Tamamlandı | Mobile: Üye Ana Ekranı temel layout — streak gizli, BUGÜN kartı, WeeklyBand, bekleme durumu |
 | 2.11 | TASK-2.11 | ✅ Tamamlandı | Mobile: Antrenman Ekranı — egzersiz listesi + yerel tik state + VideoModal (react-native-webview + YouTube embed) |
 | 2.12 | TASK-2.12 | ✅ Tamamlandı | Mobile: Antrenman tamamlama + offline kuyruğu + senkron (POST /workout-completions, idempotent, optimistic UI) |
-| 2.13 | TASK-2.13 | ⬜ Bekliyor | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |
+| 2.13 | TASK-2.13 | ✅ Tamamlandı | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |
 | 2.14 | TASK-2.14 | ⬜ Bekliyor | Mobile: Program değişikliği banner — banner-store'a `program_changed` tipi + MemberHomeScreen banner stack |
 
 ---
@@ -240,4 +240,4 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 ---
 
 **Oluşturulma:** 2026-05-30 (discuss-phase 2)
-**Son Güncelleme:** 2026-05-31 — TASK-2.12 ✅: completeWorkout API + useCompleteWorkout (networkMode: online) + WorkoutScreen tamamlama akışı (success/offline toast, replace navigate). 220 test 0 hata.
+**Son Güncelleme:** 2026-05-31 — TASK-2.13 ✅: useWorkoutHistory + WorkoutHistoryScreen (FlatList infinite scroll, boş durum, isLate ikon) + WorkoutDetailScreen (okuma modu) + üye tab layout. 237 test 0 hata.
