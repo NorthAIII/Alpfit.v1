@@ -12,10 +12,13 @@
  *     - 404 program bulunamadi
  *     - 403 baska trainer'in programi
  *     - 422 aktif/arsivlenmiş program duzenlenemez
+ *     - 422 silinmis egzersiz patch'te reddedilir (TASK-2.16)
  *   POST /programs/:id/publish
  *     - 200 status active olur; publishedAt set edilir; bannerEvent donerPost
  *     - 200 eski aktif program arsivlenir (yeni program publish edilince)
  *     - 403 baska trainer'in programi
+ *     - 403 zaten aktif program tekrar yayin yapilamaz (TASK-2.16)
+ *     - 403 arsivlenmiş program tekrar yayin yapilamaz (TASK-2.16)
  *   POST /programs/:id/copy
  *     - 201 yeni draft program olusur; days+exercises kopyalanir
  *     - 403 hedef uye trainer-member iliskisi olmadan
@@ -319,6 +322,30 @@ describe('TASK-2.03 — Programs API', () => {
 
       expect(res.statusCode).toBe(422);
     });
+
+    it('422 — silinmis egzersiz patch icinde reddedilir (TASK-2.16)', async () => {
+      const { trainer, auth } = await trainerAuth();
+      const { member } = await memberAuth();
+      await linkTrainerMember(trainer.id, member.id);
+
+      // Soft-delete edilmiş egzersiz
+      const deletedExercise = await server.prisma.exercise.create({
+        data: { name: 'Silinmis Egzersiz', isCustom: false, deletedAt: new Date() },
+      });
+
+      const prog = await server.prisma.program.create({
+        data: { trainerId: trainer.id, memberId: member.id, status: 'draft' },
+      });
+
+      const res = await server.app.inject({
+        method: 'PATCH',
+        url: `/programs/${prog.id}`,
+        headers: { authorization: auth, 'content-type': 'application/json' },
+        body: JSON.stringify(buildPatchBody(deletedExercise.id)),
+      });
+
+      expect(res.statusCode).toBe(422);
+    });
   });
 
   // ── POST /programs/:id/publish ─────────────────────────────────────────────
@@ -396,6 +423,48 @@ describe('TASK-2.03 — Programs API', () => {
         method: 'POST',
         url: `/programs/${prog.id}/publish`,
         headers: { authorization: authB },
+      });
+
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('403 — zaten aktif program tekrar yayinlanamaz (TASK-2.16)', async () => {
+      const { trainer, auth } = await trainerAuth();
+      const { member } = await memberAuth();
+      await linkTrainerMember(trainer.id, member.id);
+
+      const prog = await server.prisma.program.create({
+        data: { trainerId: trainer.id, memberId: member.id, status: 'active', publishedAt: new Date() },
+      });
+
+      const res = await server.app.inject({
+        method: 'POST',
+        url: `/programs/${prog.id}/publish`,
+        headers: { authorization: auth },
+      });
+
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('403 — arsivlenmis program yayinlanamaz (TASK-2.16)', async () => {
+      const { trainer, auth } = await trainerAuth();
+      const { member } = await memberAuth();
+      await linkTrainerMember(trainer.id, member.id);
+
+      const prog = await server.prisma.program.create({
+        data: {
+          trainerId: trainer.id,
+          memberId: member.id,
+          status: 'archived',
+          publishedAt: new Date(),
+          archivedAt: new Date(),
+        },
+      });
+
+      const res = await server.app.inject({
+        method: 'POST',
+        url: `/programs/${prog.id}/publish`,
+        headers: { authorization: auth },
       });
 
       expect(res.statusCode).toBe(403);

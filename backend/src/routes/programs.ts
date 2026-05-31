@@ -73,6 +73,9 @@ export const programsRoutes: FastifyPluginAsync = async (app) => {
       if (result.kind === 'not_draft') {
         return reply.code(422).send({ status: 'not_draft', message: t('programs.notDraft') });
       }
+      if (result.kind === 'invalidInput') {
+        return reply.code(422).send({ status: 'invalid_input', message: t('exercises.notFound') });
+      }
 
       return reply.code(200).send(result.program);
     },

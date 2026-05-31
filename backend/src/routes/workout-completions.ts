@@ -30,13 +30,17 @@ export const workoutCompletionsRoutes: FastifyPluginAsync = async (app) => {
 
     const { programDayId, scheduledDate, isLate } = parsed.data;
 
-    const row = await completeWorkout(app.prisma, claims.sub, {
+    const result = await completeWorkout(app.prisma, claims.sub, {
       programDayId,
       scheduledDate: new Date(scheduledDate),
       ...(typeof isLate === 'boolean' && { isLate }),
     });
 
-    return reply.code(200).send(row);
+    if (result.kind === 'forbidden') {
+      return reply.code(403).send({ status: 'forbidden', message: t('workoutCompletions.forbidden') });
+    }
+
+    return reply.code(200).send(result.completion);
   });
 
   // ── GET /me/workout-completions ────────────────────────────────────────────

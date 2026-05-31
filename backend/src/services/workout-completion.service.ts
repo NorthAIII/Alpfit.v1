@@ -34,6 +34,10 @@ export interface WorkoutCompletionRow {
   };
 }
 
+export type CompleteWorkoutResult =
+  | { kind: 'ok'; completion: WorkoutCompletionRow }
+  | { kind: 'forbidden' };
+
 export interface WorkoutHistoryPage {
   items: WorkoutCompletionRow[];
   nextCursor: string | null;
@@ -45,8 +49,15 @@ export async function completeWorkout(
   prisma: PrismaClient,
   memberId: string,
   input: CompleteWorkoutInput,
-): Promise<WorkoutCompletionRow> {
+): Promise<CompleteWorkoutResult> {
   const { programDayId, scheduledDate, isLate = false } = input;
+
+  // programDayId'nin üyenin aktif programına ait olduğunu doğrula
+  const programDay = await prisma.programDay.findFirst({
+    where: { id: programDayId, program: { memberId, status: 'active' } },
+    select: { id: true },
+  });
+  if (!programDay) return { kind: 'forbidden' };
 
   const row = await prisma.workoutCompletion.upsert({
     where: {
@@ -73,7 +84,7 @@ export async function completeWorkout(
     },
   });
 
-  return row;
+  return { kind: 'ok', completion: row };
 }
 
 export async function getMyWorkoutHistory(

@@ -7,6 +7,7 @@
  *     - 200 ayni (memberId, programDayId, scheduledDate) tekrar gonderilirse DB'de tek kayit (idempotent)
  *     - 400 body eksik
  *     - 403 trainer rolu
+ *     - 403 uye baska uyenin programDayId'si ile tamamlama yapamaz (TASK-2.16)
  *   GET /me/workout-completions
  *     - 200 paginated list donerken en yeni uste
  *     - 200 cursor sonrasi kayitlar donerken, oncekiler yok
@@ -174,6 +175,28 @@ describe('TASK-2.04 — WorkoutCompletions API', () => {
         headers: { authorization: trainerAuthToken, 'content-type': 'application/json' },
         body: JSON.stringify({
           programDayId: 'some-id',
+          scheduledDate: '2026-05-30T00:00:00.000Z',
+        }),
+      });
+
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('403 — uye baska uyenin programDayId ile tamamlama yapamaz (TASK-2.16)', async () => {
+      const { trainer } = await trainerAuth('+905550000001');
+      const { member: memberA } = await memberAuth('+905550000002');
+      const { auth: authB } = await memberAuth('+905550000003');
+
+      // memberA'nın aktif programı ve günü
+      const { day } = await seedProgramWithDay(trainer.id, memberA.id);
+
+      // memberB, memberA'nın gün ID'siyle tamamlama yapmaya çalışıyor
+      const res = await server.app.inject({
+        method: 'POST',
+        url: '/workout-completions',
+        headers: { authorization: authB, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          programDayId: day.id,
           scheduledDate: '2026-05-30T00:00:00.000Z',
         }),
       });

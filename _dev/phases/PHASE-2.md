@@ -213,7 +213,7 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.13 | TASK-2.13 | ✅ Tamamlandı | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |
 | 2.14 | TASK-2.14 | ✅ Tamamlandı | Mobile: Program değişikliği banner — banner-store'a `program_changed` tipi + MemberHomeScreen banner stack |
 | 2.15 | TASK-2.15 | ✅ Tamamlandı | CI Kalite: Lint + Format + Backend Typecheck düzeltmesi (verify-phase 2 bulgusu) |
-| 2.16 | TASK-2.16 | ⬜ Bekliyor | Backend güvenlik düzeltmeleri: programDayId ownership, publishProgram status guard, patchProgram silinmiş egzersiz kontrolü |
+| 2.16 | TASK-2.16 | ✅ Tamamlandı | Backend güvenlik düzeltmeleri: programDayId ownership, publishProgram status guard, patchProgram silinmiş egzersiz kontrolü |
 
 ---
 

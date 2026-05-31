@@ -29,7 +29,8 @@ export type PatchProgramResult =
   | { kind: 'ok'; program: FullProgram }
   | { kind: 'not_found' }
   | { kind: 'forbidden' }
-  | { kind: 'not_draft' };
+  | { kind: 'not_draft' }
+  | { kind: 'invalidInput' };
 
 export type PublishProgramResult =
   | { kind: 'ok'; program: FullProgram }
@@ -186,6 +187,16 @@ export async function patchProgram(
   if (existing.trainerId !== trainerId) return { kind: 'forbidden' };
   if (existing.status !== 'draft') return { kind: 'not_draft' };
 
+  // Payload'daki tüm exerciseId'leri topla ve soft-delete kontrolü yap
+  const exerciseIds = [...new Set(body.days.flatMap((d) => d.exercises.map((ex) => ex.exerciseId)))];
+  if (exerciseIds.length > 0) {
+    const validExercises = await prisma.exercise.findMany({
+      where: { id: { in: exerciseIds }, deletedAt: null },
+      select: { id: true },
+    });
+    if (validExercises.length !== exerciseIds.length) return { kind: 'invalidInput' };
+  }
+
   await prisma.$transaction(async (tx) => {
     // Önce mevcut günleri bul — ProgramDayExercise'leri silmek için gerekli
     const existingDays = await tx.programDay.findMany({
@@ -239,10 +250,11 @@ export async function publishProgram(
 ): Promise<PublishProgramResult> {
   const existing = await prisma.program.findFirst({
     where: { id: programId },
-    select: { trainerId: true, memberId: true },
+    select: { trainerId: true, memberId: true, status: true },
   });
   if (!existing) return { kind: 'not_found' };
   if (existing.trainerId !== trainerId) return { kind: 'forbidden' };
+  if (existing.status !== 'draft') return { kind: 'forbidden' };
 
   const now = new Date();
 

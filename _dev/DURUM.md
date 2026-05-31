@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — verify-phase 2 ✅ kısmi. 519 test ✅, 9/19 UAT otonom doğrulandı, 10 senaryo simülatör gerektiriyor (ertelendi). Güvenlik: 3 orta bulgu → TASK-2.16 açıldı.
+**Son Güncelleme:** 2026-05-31 — TASK-2.16 ✅ güvenlik düzeltmeleri. 231 backend test ✅, lint temiz. Faz 2 tüm task'lar tamamlandı → verify-phase 2 yeniden çalıştırılmalı.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 2 — Program akışı uçtan uca (M2)
 **Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** task
-**İlerleme:** 15/15 task tamamlandı + TASK-2.16 (güvenlik düzeltme) bekliyor. verify-phase 2 kısmi geçti → TASK-2.16 sonrası yeniden.
+**Adım:** verify
+**İlerleme:** 16/16 task tamamlandı. verify-phase 2 yeniden çalıştırılmalı (güvenlik bulguları düzeltildi).
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 
 ---
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-2.16 — Backend güvenlik düzeltmeleri
-**Durum:** ⬜ Bekliyor
-**Sonraki Adım:** `/devflow:run-task` — TASK-2.16 güvenlik düzeltmelerini uygula → ardından verify-phase 2 yeniden.
+**Task:** —
+**Durum:** Tüm task'lar tamamlandı
+**Sonraki Adım:** `/devflow:verify-phase 2` — güvenlik düzeltmeleri tamamlandı, verify-phase 2 yeniden çalıştır.
 
 ---
 
@@ -54,7 +54,7 @@
 | 2.13 | Mobile: Geçmiş Sekmesi | ✅ Tamamlandı |
 | 2.14 | Mobile: Program Değişikliği Banner | ✅ Tamamlandı |
 | 2.15 | CI Kalite: Lint + Format + Backend Typecheck | ✅ Tamamlandı |
-| 2.16 | Backend güvenlik düzeltmeleri (verify-phase bulgusu) | ⬜ Bekliyor |
+| 2.16 | Backend güvenlik düzeltmeleri (verify-phase bulgusu) | ✅ Tamamlandı |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -76,13 +76,13 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+**TASK-2.16** (2026-05-31) — Backend güvenlik düzeltmeleri ✅
+- `completeWorkout` ownership guard, `publishProgram` status guard, `patchProgram` soft-delete exercise check.
+- 4 yeni test eklendi; 231 backend test ✅, lint temiz.
+
 **verify-phase 2** (2026-05-31, yeniden) — Kısmi geçti
 - 519 test ✅, CI temiz. 9/19 UAT otonom doğrulandı; 10 senaryo simülatör gerektirdiği için ertelendi.
-- Güvenlik: 3 orta bulgu (programDayId ownership, publishProgram status, silinmiş egzersiz) → TASK-2.16 açıldı.
-
-**TASK-2.15** (2026-05-31) — CI Kalite: Lint + Format + Backend Typecheck ✅
-- Lint 0 hata, format 0 uyumsuz, backend+mobile typecheck 0 hata, 519 test ✅.
-- `exercises.ts` + `workout-completions.ts` exactOptionalPropertyTypes fix; mobile test dosyalarında import/unused var düzeltmeleri.
+- Güvenlik: 3 orta bulgu → TASK-2.16 açıldı (bu task).
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -95,4 +95,4 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 **Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
 **Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:verify-phase 2` — UAT yeniden (CI engeli kalktı)
+**Sıradaki:** `/devflow:verify-phase 2` — güvenlik düzeltmeleri tamamlandı, UAT yeniden
