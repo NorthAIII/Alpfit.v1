@@ -1,6 +1,6 @@
 # TASK-3.03: Streak Motoru — Antrenman Tamamlama Servisi
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M3 — Sürdürülebilirlik Motoru (`modules/M3-surdurulebilirlik-motoru.md`)
 **Feature:** F3.1 — Streak + Telafi + Comeback
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -36,7 +36,7 @@
 
 ## Alt Görevler
 
-- [ ] **1. `streak.service.ts` Oluştur**
+- [x] **1. `streak.service.ts` Oluştur**
 
   `backend/src/services/streak.service.ts` (yeni dosya):
 
@@ -58,19 +58,19 @@
     - `ptT7DismissedAt` sıfırlanmaz (PRD: "Okudum" kalıcıdır; yeni kopma = yeni `ptT7AlertedAt`)
   - StreakState'i tek `update` ile yaz (atomic)
 
-- [ ] **2. Çoklu Antrenman Aynı Gün Edge Case**
+- [x] **2. Çoklu Antrenman Aynı Gün Edge Case**
   - Aynı gün birden fazla antrenman tamamlanabilir (+2 streak M3 kabul kriteri)
   - `lastActivityDate` günü zaten eşitse: streak yine +1 (her tamamlama = +1)
   - Not: `today` = Europe/Istanbul saat dilimine göre mevcut gün
 
-- [ ] **3. `workout-completions.ts` Route'una Bağla**
+- [x] **3. `workout-completions.ts` Route'una Bağla**
   - `POST /workout-completions` handler'ında `completeWorkout` başarıyla döndükten sonra (`kind === 'ok'`):
     ```ts
     await processWorkoutCompletion(app.prisma, claims.sub);
     ```
   - Hata olursa: log at, HTTP yanıtını 200 olarak gönder (motor hatası üyenin tamamlama kaydını engellemez)
 
-- [ ] **4. Test Yaz**
+- [x] **4. Test Yaz**
 
   `backend/src/services/streak.service.test.ts` (yeni dosya):
   - Normal tamamlama → `currentStreak` +1, `maxStreak` güncellendi
@@ -110,30 +110,38 @@ backend/src/routes/
 
 ## Test Kriterleri
 
-- [ ] `POST /workout-completions` başarılı → `StreakState.currentStreak` +1 arttı (integration test veya service test)
-- [ ] İki farklı antrenman aynı gün → streak +2
-- [ ] `streakResetAt` set üye antrenman yaparsa → `streakResetAt = null`, T-flag'ler temizlendi
-- [ ] `ptT7DismissedAt` re-aktivasyon sonrası hâlâ set (sıfırlanmadı)
-- [ ] Motor throw etse bile `POST /workout-completions` 200 döner (log kaydı var)
-- [ ] 23:58 Istanbul → `lastActivityDate` bugün (gece yarısı geçişi)
-- [ ] 00:02 Istanbul → `lastActivityDate` yeni gün (gece yarısı geçişi)
-- [ ] Tüm yeni testler + mevcut `workout-completions.test.ts` testleri yeşil
+- [x] `POST /workout-completions` başarılı → `StreakState.currentStreak` +1 arttı (service test)
+- [x] İki farklı antrenman aynı gün → streak +2
+- [x] `streakResetAt` set üye antrenman yaparsa → `streakResetAt = null`, T-flag'ler temizlendi
+- [x] `ptT7DismissedAt` re-aktivasyon sonrası hâlâ set (sıfırlanmadı)
+- [x] Motor throw etse bile `POST /workout-completions` 200 döner (try/catch + req.log.error)
+- [x] 23:58 Istanbul → `lastActivityDate` bugün (gece yarısı geçişi)
+- [x] 00:02 Istanbul → `lastActivityDate` yeni gün (gece yarısı geçişi)
+- [x] Tüm yeni testler + mevcut `workout-completions.test.ts` testleri yeşil (242 test)
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `streak.service.ts` oluşturuldu — `processWorkoutCompletion(prisma, memberId)` fonksiyonu; Istanbul timezone'a göre `getTodayInIstanbul()` yardımcı fonksiyonu ile gece yarısı geçişi doğru handle ediliyor; Prisma transaction ile atomic write.
+- `workout-completions.ts` route güncellendi — `completeWorkout` başarılı döndükten sonra motor çağrısı try/catch ile sarıldı; hata `req.log.error` ile loglanıyor, HTTP yanıtı 200 korunuyor.
+- `streak.service.test.ts` oluşturuldu — 8 senaryo: normal +1, aynı gün +2, re-aktivasyon T-flag temizleme, ptT7DismissedAt kalıcılığı, upsert güvenlik ağı, maxStreak koruması, 23:58 Istanbul gece yarısı, 00:02 Istanbul yeni gün.
+- `workout-completions.test.ts` cleanup güncellendi — `streakState.deleteMany()` user'dan önce eklendi (FK RESTRICT).
+- 242 test yeşil (önceden 234, +8 yeni test).
 
 ---
 

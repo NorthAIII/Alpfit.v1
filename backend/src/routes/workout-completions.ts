@@ -10,6 +10,7 @@ import { createWorkoutCompletionSchema } from '@alpfit/shared';
 import { z } from 'zod';
 
 import { t } from '../i18n/index.js';
+import { processWorkoutCompletion } from '../services/streak.service.js';
 import { completeWorkout, getMyWorkoutHistory } from '../services/workout-completion.service.js';
 
 import type { AccessTokenClaims } from '../auth/jwt.js';
@@ -44,6 +45,13 @@ export const workoutCompletionsRoutes: FastifyPluginAsync = async (app) => {
 
     if (result.kind === 'forbidden') {
       return reply.code(403).send({ status: 'forbidden', message: t('workoutCompletions.forbidden') });
+    }
+
+    // Motor entegrasyonu — hata tamamlama kaydını engellemez (TASK-3.03)
+    try {
+      await processWorkoutCompletion(app.prisma, claims.sub);
+    } catch (err) {
+      req.log.error({ err }, 'streak motor hatası');
     }
 
     return reply.code(200).send(result.completion);

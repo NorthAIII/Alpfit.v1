@@ -46,6 +46,10 @@ describe('TASK-2.04 — WorkoutCompletions API', () => {
     await server.prisma.exercise.deleteMany();
     await server.prisma.trainerMember.deleteMany();
     await server.prisma.invitation.deleteMany();
+    // StreakState önce silinir — TASK-3.03 motor entegrasyonu sonrası
+    // POST /workout-completions artık StreakState upsert ediyor; FK (RESTRICT)
+    // nedeniyle user.deleteMany öncesinde temizlenmeli.
+    await server.prisma.streakState.deleteMany();
     await server.prisma.user.deleteMany();
   });
 
