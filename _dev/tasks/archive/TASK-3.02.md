@@ -1,6 +1,6 @@
 # TASK-3.02: M3+M4 Veritabanı Şeması — 4 Yeni Tablo
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M3 + M4 (`modules/M3-surdurulebilirlik-motoru.md`, `modules/M4-bildirim-altyapisi.md`)
 **Feature:** F3.1 + F4.1 (altyapı)
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -36,7 +36,7 @@ Araştırma bulgularından: `StreakState` streak cache + T-sayaç state'i tutar;
 
 ## Alt Görevler
 
-- [ ] **1. Prisma Şemasına 4 Tablo Ekle**
+- [x] **1. Prisma Şemasına 4 Tablo Ekle**
 
   `backend/prisma/schema.prisma`'ya aşağıdaki modelleri ekle:
 
@@ -94,11 +94,11 @@ Araştırma bulgularından: `StreakState` streak cache + T-sayaç state'i tutar;
 
   User modeline yeni `@relation` alanlarını ekle.
 
-- [ ] **2. Migration Çalıştır**
+- [x] **2. Migration Çalıştır**
   - `pnpm -F backend prisma migrate dev --name m3-m4-schema`
   - Migration SQL'ini kontrol et — StreakState için `memberId UNIQUE`, PushToken için `token UNIQUE`
 
-- [ ] **3. StreakState + NotificationPreference Seed — Davet Kabul**
+- [x] **3. StreakState + NotificationPreference Seed — Davet Kabul**
   - `backend/src/routes/invitations-accept.ts` veya ilgili servis → başarılı davet kabul akışı sonunda:
     ```ts
     // StreakState satırı (upsert — idempotent)
@@ -144,29 +144,38 @@ backend/src/routes/
 
 ## Test Kriterleri
 
-- [ ] Migration başarılı çalışıyor (`prisma migrate dev` hata yok)
-- [ ] `StreakState` tablosu oluştu, `memberId UNIQUE` constraint var
-- [ ] `PushToken.token` UNIQUE constraint var
-- [ ] Davet kabul sonrası ilgili üye için `StreakState` satırı oluşuyor
-- [ ] Davet kabul sonrası `NotificationPreference` satırı oluşuyor (default değerlerle)
-- [ ] Aynı üye için ikinci davet kabul → upsert hata vermiyor (idempotent)
-- [ ] `pnpm -F backend test` — mevcut testler kırılmadı (invitations-accept testleri geçiyor)
+- [x] Migration başarılı çalışıyor (`prisma migrate dev` hata yok)
+- [x] `StreakState` tablosu oluştu, `memberId UNIQUE` constraint var (PRIMARY KEY)
+- [x] `PushToken.token` UNIQUE constraint var
+- [x] Davet kabul sonrası ilgili üye için `StreakState` satırı oluşuyor
+- [x] Davet kabul sonrası `NotificationPreference` satırı oluşuyor (default değerlerle)
+- [x] Aynı üye için ikinci davet kabul → upsert hata vermiyor (idempotent)
+- [x] `pnpm -F backend test` — 234 test yeşil (invitations-accept testleri geçiyor)
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `schema.prisma`'ya 4 yeni model eklendi: `StreakState`, `PushToken`, `NotificationPreference`, `NotificationLog`
+- `User` modeline 4 yeni `@relation` eklendi
+- Migration çalıştırıldı (`20260531073951_m3_m4_schema`) — SQL doğrulandı
+- `invitations-accept.ts` transaction'ına `streakState.upsert` + `notificationPreference.upsert` eklendi
+- Test teardown FK sorunu: 2 test dosyasına yeni tabloların `deleteMany()` eklendi (`invitations-accept.test.ts`, `onboarding-flow.test.ts`)
+- 234 test yeşil
 
 ---
 

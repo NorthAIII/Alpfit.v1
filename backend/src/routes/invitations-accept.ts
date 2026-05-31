@@ -137,6 +137,10 @@ export const invitationsAcceptRoutes: FastifyPluginAsync = async (app) => {
 
           await createPtMemberRelation(tx, invitation.trainerId, memberId);
 
+          // M3+M4 altyapısı: StreakState + NotificationPreference satırlarını aç (idempotent).
+          await tx.streakState.upsert({ where: { memberId }, create: { memberId }, update: {} });
+          await tx.notificationPreference.upsert({ where: { memberId }, create: { memberId }, update: {} });
+
           await logAuditEvent(tx, {
             userId: memberId,
             eventType: 'invitation_accepted',

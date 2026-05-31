@@ -70,6 +70,11 @@ model User {
   trainerPrograms     Program[]          @relation("trainer_programs")
   memberPrograms      Program[]          @relation("member_programs")
   workoutCompletions  WorkoutCompletion[] @relation("member_completions")
+  // TASK-3.02 — M3+M4 ilişkileri.
+  streakState              StreakState?              @relation("member_streak_state")
+  pushTokens               PushToken[]              @relation("user_push_tokens")
+  notificationPreference   NotificationPreference?  @relation("member_notification_preference")
+  notificationLogs         NotificationLog[]        @relation("user_notification_logs")
 
   @@index([role])
 }
@@ -425,4 +430,82 @@ model WorkoutCompletion {
 
   @@unique([memberId, programDayId, scheduledDate])
   @@index([memberId, scheduledDate])
+}
+
+// =====================================================================
+// TASK-3.02 — M3+M4 DB Şeması: StreakState, PushToken,
+//             NotificationPreference, NotificationLog
+// =====================================================================
+
+// Üye başına streak cache + T-sayaç state (M3 motoru için okuma hızı).
+// WorkoutCompletion değişmez event log; StreakState mutable state.
+// StreakState satırı üye davet kabul ettiğinde (invitations-accept.ts)
+// upsert ile açılır — yoksa motor broken çalışır.
+model StreakState {
+  memberId           String    @id
+  currentStreak      Int       @default(0)
+  maxStreak          Int       @default(0)
+  lastActivityDate   DateTime?
+  // streak sıfırlanma zamanı = T+2/T+7/T+14 sayaçlarının başlangıcı
+  streakResetAt      DateTime?
+  comebackT2SentAt   DateTime?
+  ptT7AlertedAt      DateTime?
+  t14FlaggedAt       DateTime?
+  ptT7DismissedAt    DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  member User @relation("member_streak_state", fields: [memberId], references: [id])
+}
+
+// Cihaz push token yönetimi (Expo Push API). Üye veya PT başına N cihaz.
+// token @unique: aynı Expo token iki kez kayıt olmaz; cihaz değişiminde
+// sil + yeni ekle (güncelleme değil).
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  // "ios" | "android"
+  platform  String
+  createdAt DateTime @default(now())
+
+  user User @relation("user_push_tokens", fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// Üye başına bildirim tercihleri. morningHour 0-23, morningMinute 0-59
+// validation uygulama katmanında (Zod) yapılır.
+model NotificationPreference {
+  memberId        String   @id
+  reminderEnabled Boolean  @default(true)
+  comebackEnabled Boolean  @default(true)
+  systemEnabled   Boolean  @default(true)
+  // 0-23 arası sabah reminder saati (default 09:00)
+  morningHour     Int      @default(9)
+  // 0-59 arası dakika
+  morningMinute   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  member User @relation("member_notification_preference", fields: [memberId], references: [id])
+}
+
+// Gönderilen/başarısız/atlanan bildirim kaydı — idempotent gönderim
+// kontrolü ("bu job bu üye için bugün zaten gönderildi mi?").
+// meta alanına PII YASAK — yalnızca teknik meta (hata kodu, job ID, skip nedeni).
+model NotificationLog {
+  id      String   @id @default(cuid())
+  userId  String
+  // "morning-reminder" | "comeback-t2" | "comeback-t7-pt" | "t14-flag"
+  jobType String
+  sentAt  DateTime @default(now())
+  // "sent" | "failed" | "skipped"
+  status  String
+  // teknik meta — PII yasak (KVKK)
+  meta    Json?
+
+  user User @relation("user_notification_logs", fields: [userId], references: [id])
+
+  @@index([userId, jobType, sentAt])
 }

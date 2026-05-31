@@ -69,6 +69,10 @@ describe('TASK-1.34 — onboarding uçtan uca smoke', () => {
     await server.prisma.invitation.deleteMany();
     await server.prisma.trainerMember.deleteMany();
     await server.prisma.auditLog.deleteMany();
+    await server.prisma.streakState.deleteMany();
+    await server.prisma.notificationPreference.deleteMany();
+    await server.prisma.pushToken.deleteMany();
+    await server.prisma.notificationLog.deleteMany();
     await server.prisma.user.deleteMany();
   });
 
