@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — TASK-3.07 tamamlandı. notification-preferences.ts (GET+PATCH), patchNotificationPreferenceSchema shared şema, server.ts register. 10 yeni test, 282 yeşil. Adım → run-task 3.08.
+**Son Güncelleme:** 2026-05-31 — TASK-3.08 tamamlandı. sendMorningReminders servisi + 7 test, notification.worker.ts sistem job mimarisine geçirildi, queue.test.ts QueueEvents ile güncellendi. 290 yeşil. Adım → run-task 3.09.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-3.08
-**Durum:** TASK-3.07 ✅ tamamlandı. TASK-3.08 çalıştırmaya hazır.
-**Sonraki Adım:** `/devflow:run-task` — TASK-3.08: Sabah reminder push job.
+**Task:** TASK-3.09
+**Durum:** TASK-3.08 ✅ tamamlandı. TASK-3.09 çalıştırmaya hazır.
+**Sonraki Adım:** `/devflow:run-task` — TASK-3.09: Comeback T+2 push job.
 
 ---
 
@@ -46,7 +46,7 @@
 | 3.05 | TASK-3.05 | ✅ Tamamlandı | Nightly streak sıfırlama job |
 | 3.06 | TASK-3.06 | ✅ Tamamlandı | Push token backend API |
 | 3.07 | TASK-3.07 | ✅ Tamamlandı | Bildirim tercihleri backend API |
-| 3.08 | TASK-3.08 | ⬜ Bekliyor | Sabah reminder push job |
+| 3.08 | TASK-3.08 | ✅ Tamamlandı | Sabah reminder push job |
 | 3.09 | TASK-3.09 | ⬜ Bekliyor | Comeback T+2 push job |
 | 3.10 | TASK-3.10 | ⬜ Bekliyor | Comeback T+7 PT uyarısı + T+14 flag + dismiss |
 | 3.11 | TASK-3.11 | ⬜ Bekliyor | Mobile: push token + bildirim izni akışı |
@@ -74,13 +74,13 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+**TASK-3.08** (2026-05-31) — Sabah reminder push job ✅
+- notification.service.ts: sendMorningReminders (late check, per-member: silent hours / no_token / reminder_disabled skip+log, push+sent log). notification.worker.ts sistem job mimarisine geçirildi (morning-reminder → sendMorningReminders, 0 * * * * Istanbul cron). queue.test.ts QueueEvents+waitUntilFinished ile güncellendi.
+- 7 yeni test + smoke test yeniden yazıldı. 290 yeşil.
+
 **TASK-3.07** (2026-05-31) — Bildirim tercihleri backend API ✅
 - notification-preferences.ts: GET (upsert default satır yoksa) + PATCH (partial update upsert). patchNotificationPreferenceSchema shared şema. server.ts register.
 - 10 yeni test (GET/PATCH tüm senaryolar, member-only guard). 282 yeşil.
-
-**TASK-3.06** (2026-05-31) — Push token backend API ✅
-- push-tokens.ts: POST /push-tokens (upsert, 201) + DELETE /push-tokens (deleteMany ownership guard, 204). Shared schema push-token.ts. server.ts register.
-- 10 yeni test (POST/DELETE tüm senaryolar). 272 yeşil.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -89,8 +89,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-3.08 — Sabah reminder push job
+**Aktif Task:** TASK-3.09 — Comeback T+2 push job
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` — TASK-3.08: Sabah reminder push job
+**Sıradaki:** `/devflow:run-task` — TASK-3.09: Comeback T+2 push job

@@ -2,7 +2,9 @@ import { Worker } from 'bullmq';
 
 import { createBullMQConnection, createNotificationQueue, type NotificationJobName } from '../queue.js';
 import { isInSilentHours, msUntilTomorrowMorning } from '../lib/silent-hours.js';
+import { ExpoPushAdapter } from '../lib/expo-push.js';
 import { runNightlyStreakReset } from '../services/streak-reset.service.js';
+import { sendMorningReminders } from '../services/notification.service.js';
 
 import type { PrismaClient } from '../db/prisma.js';
 
@@ -28,12 +30,13 @@ async function writeLog(
 /**
  * Notification worker'ı başlatır.
  *
- * streak-reset-check: Her gün 00:05 Istanbul repeatable job — runNightlyStreakReset çağırır.
- * User-targeted job'lar (morning-reminder, comeback-t2, vb.): sessiz saat kontrolü + NotificationLog.
+ * Sistem job'ları (userId yok): streak-reset-check, morning-reminder.
+ * User-targeted job'lar (userId zorunlu): comeback-t2, comeback-t7-pt, t14-flag.
  */
 export function startNotificationWorker(prisma: PrismaClient, redisUrl: string): Worker {
-  // Job göndermek için dahili kuyruk (runNightlyStreakReset → comeback-t2, TASK-3.08 → morning-reminder)
+  // Job göndermek için dahili kuyruk (runNightlyStreakReset → comeback-t2)
   const internalQueue = createNotificationQueue(redisUrl);
+  const expoAdapter = new ExpoPushAdapter(prisma);
 
   // 00:05 Istanbul — nightly streak sıfırlama repeatable job (idempotent kayıt)
   void internalQueue.add(
@@ -42,12 +45,24 @@ export function startNotificationWorker(prisma: PrismaClient, redisUrl: string):
     { repeat: { pattern: '5 0 * * *', tz: 'Europe/Istanbul' } },
   );
 
+  // Her saat başı Istanbul — sabah reminder (morningHour eşleşen üyelere gönderir)
+  void internalQueue.add(
+    'morning-reminder',
+    {},
+    { repeat: { pattern: '0 * * * *', tz: 'Europe/Istanbul' } },
+  );
+
   const worker = new Worker<NotificationJobData, void, NotificationJobName>(
     'notifications',
     async (job) => {
-      // Sistem job'ı: userId yok, direkt çalıştır
+      // Sistem job'ları: userId yok, direkt çalıştır
       if (job.name === 'streak-reset-check') {
         await runNightlyStreakReset(prisma, internalQueue);
+        return;
+      }
+
+      if (job.name === 'morning-reminder') {
+        await sendMorningReminders(prisma, expoAdapter);
         return;
       }
 
@@ -55,16 +70,6 @@ export function startNotificationWorker(prisma: PrismaClient, redisUrl: string):
       if (!userId) return; // user-targeted job'da userId olmaması beklenmiyor
 
       switch (job.name) {
-        case 'morning-reminder': {
-          if (isInSilentHours()) {
-            await writeLog(prisma, userId, job.name, 'skipped', { reason: 'silent-hours' });
-            return;
-          }
-          // TASK-3.08'de implement edilecek
-          await writeLog(prisma, userId, job.name, 'skipped', { reason: 'not-implemented' });
-          break;
-        }
-
         case 'comeback-t2': {
           if (isInSilentHours()) {
             await job.moveToDelayed(Date.now() + msUntilTomorrowMorning(9));

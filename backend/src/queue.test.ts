@@ -2,32 +2,17 @@
  * TASK-3.04 — BullMQ queue + worker smoke testleri.
  *
  * - notificationQueue: Redis'e bağlanıyor, Queue objesi oluşuyor
- * - Worker skeleton: başlatılıyor, job işliyor, NotificationLog yazıyor
+ * - Worker skeleton: başlatılıyor, sistem job işliyor (morning-reminder → completed)
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { QueueEvents } from 'bullmq';
 
 import { createPrismaClient, type PrismaClient } from './db/prisma.js';
 import { createTestDatabase, dropTestDatabase, type TestDatabase } from '../test/db.js';
-import { createNotificationQueue } from './queue.js';
+import { createBullMQConnection, createNotificationQueue } from './queue.js';
 import { startNotificationWorker } from './workers/notification.worker.js';
 
 const REDIS_URL = process.env['REDIS_URL'] ?? 'redis://redis:6379';
-
-/** Job tamamlanana kadar polling ile bekle (maks `timeoutMs`). */
-async function waitForLog(
-  prisma: PrismaClient,
-  userId: string,
-  jobType: string,
-  timeoutMs = 8_000,
-): Promise<{ status: string } | null> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const log = await prisma.notificationLog.findFirst({ where: { userId, jobType } });
-    if (log) return log;
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  return null;
-}
 
 describe('TASK-3.04 — BullMQ queue integration', () => {
   it('createNotificationQueue: Queue objesi oluşur, Redis bağlantısı kurulur', async () => {
@@ -54,6 +39,11 @@ describe('TASK-3.04 — Notification worker smoke', () => {
   });
 
   beforeEach(async () => {
+    // Stale job ID'lerinin çakışmasını önlemek için queue'yu sıfırla
+    const q = createNotificationQueue(REDIS_URL);
+    await q.obliterate({ force: true });
+    await q.close();
+
     await prisma.notificationLog.deleteMany();
     await prisma.user.deleteMany();
   });
@@ -62,21 +52,23 @@ describe('TASK-3.04 — Notification worker smoke', () => {
     await prisma.notificationLog.deleteMany();
   });
 
-  it('Worker başlar, morning-reminder job işler, NotificationLog yazar', async () => {
-    const user = await prisma.user.create({
-      data: { phoneE164: '+905550000099', role: 'member', firstName: 'W', lastName: 'Test' },
-    });
-
+  it('Worker başlar, morning-reminder sistem job işler (üye yok → erken dönüş, log yok)', async () => {
+    // TASK-3.08: morning-reminder artık sistem job'ı (userId almıyor).
+    // DB'de eşleşen üye yok → sendMorningReminders erken döner → log yazılmaz → completed.
     const queue = createNotificationQueue(REDIS_URL);
+    const queueEvents = new QueueEvents('notifications', { connection: createBullMQConnection(REDIS_URL) });
     const worker = startNotificationWorker(prisma, REDIS_URL);
 
-    await queue.add('morning-reminder', { userId: user.id });
+    const job = await queue.add('morning-reminder', {});
 
-    const log = await waitForLog(prisma, user.id, 'morning-reminder');
-    expect(log).not.toBeNull();
-    expect(log?.status).toBe('skipped');
+    // QueueEvents aracılığıyla Redis pubsub üzerinden job tamamlanmasını bekle (race condition yok)
+    await job.waitUntilFinished(queueEvents, 8_000);
+
+    const logCount = await prisma.notificationLog.count();
+    expect(logCount).toBe(0);
 
     await worker.close();
+    await queueEvents.close();
     await queue.close();
   }, 20_000);
 });
