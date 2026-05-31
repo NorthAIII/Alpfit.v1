@@ -213,39 +213,40 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | 2.13 | TASK-2.13 | ✅ Tamamlandı | Mobile: Geçmiş Sekmesi — WorkoutHistoryScreen (infinite scroll, cursor-based, okuma modu, boş durum) |
 | 2.14 | TASK-2.14 | ✅ Tamamlandı | Mobile: Program değişikliği banner — banner-store'a `program_changed` tipi + MemberHomeScreen banner stack |
 | 2.15 | TASK-2.15 | ✅ Tamamlandı | CI Kalite: Lint + Format + Backend Typecheck düzeltmesi (verify-phase 2 bulgusu) |
+| 2.16 | TASK-2.16 | ⬜ Bekliyor | Backend güvenlik düzeltmeleri: programDayId ownership, publishProgram status guard, patchProgram silinmiş egzersiz kontrolü |
 
 ---
 
 ## UAT Senaryoları ve Sonuçları
 
-> verify-phase 2 başlatıldı: 2026-05-31. UAT senaryoları hazırlandı; CI bulguları giderilince yeniden çalıştırılacak.
+> verify-phase 2 yeniden çalıştırıldı: 2026-05-31 (TASK-2.15 sonrası). Otonom testler tamamlandı; 10 simülatör senaryosu review-phase öncesi ertelendi.
 
-**Durum:** ⏸️ Bekliyor — TASK-2.15 ✅ tamamlandı; UAT yeniden başlatılacak (`/devflow:verify-phase 2`).
-**Toplam Senaryo:** 19
+**Durum:** ⚠️ Kısmi — 9/19 senaryo otonom doğrulandı, 10 manuel senaryo ertelendi (simülatör/cihaz gerekiyor)
+**Toplam Senaryo:** 19 | **Geçen:** 9 (otonom) | **Ertelenen:** 10 (manuel)
 
 | # | Senaryo | Sonuç | Not |
 |---|---------|-------|-----|
-| 1 | PT çekirdek kütüphaneden egzersiz arayıp en az 1 güne ekleyebilir | ⬜ | UAT bekliyor |
-| 2 | PT custom egzersiz oluşturup (sadece ad) şablona ekleyebilir | ⬜ | UAT bekliyor |
-| 3 | PT program builder'da 1 saniye aktif olmayınca "✓ Taslak kaydedildi" indicator çıkar | ⬜ | UAT bekliyor |
-| 4 | Hiç egzersiz yok iken "Kaydet" basılınca "En az 1 egzersiz ekle" uyarısı gelir, publish çağrılmaz | ⬜ | UAT bekliyor |
-| 5 | PT en az 1 egzersiz olan şablonu publish edince üyenin uygulamasında program anında görünür | ⬜ | UAT bekliyor |
-| 6 | Programı olmayan üye bekleme ekranı görür ("PT senin için programını hazırlıyor") | ⬜ | UAT bekliyor |
-| 7 | Üye BUGÜN kartı + haftalık bandı görür; bugün antrenman varsa "Antrenmana git" CTA aktiftir | ⬜ | UAT bekliyor |
-| 8 | Antrenman ekranında egzersizleri tik kutularıyla işaretleyebilir; tüm tiklenince "Antrenmanı bitir" aktif olur | ⬜ | UAT bekliyor |
-| 9 | "Antrenmanı bitir" basılınca backend'e workout_completion kaydı düşer ve başarı mesajı görünür | ⬜ | UAT bekliyor |
-| 10 | "Antrenmanı bitir" aynı gün tekrar gönderilse (409) → hata yoktur, sessizce başarı | ⬜ | UAT bekliyor |
-| 11 | Video ▶ butonuna basılınca YouTube videosu in-app modal'da oynar, modal ✕ ile kapanır | ⬜ | UAT bekliyor |
-| 12 | PT mevcut üyenin programını başka üyeye kopyalayabilir | ⬜ | UAT bekliyor |
-| 13 | PT programı güncelleyip tekrar publish edince üye app'inde "ℹ️ Programında güncelleme var" banner görünür | ⬜ | UAT bekliyor |
-| 14 | Banner ✕ ile kapatılınca bir daha gösterilmez; PT yeniden publish edince tekrar görünür | ⬜ | UAT bekliyor |
-| 15 | Geçmiş sekmesinde tamamlanmış antrenmanlar tarih sırasıyla listelenir; satıra tıklayınca egzersizler okuma modunda açılır | ⬜ | UAT bekliyor |
-| 16 | Çevrimdışı: antrenman ekranı cache'ten açılır (uçak modu aktifken) | ⬜ | UAT bekliyor |
-| 17 | Çevrimdışı: "Antrenmanı bitir" basılınca "Bağlantı yok — internet gelince otomatik kaydedilecek" mesajı görünür | ⬜ | UAT bekliyor |
-| 18 | PT başka PT'nin custom egzersizini silmeye çalışırsa yetki hatası alır | ⬜ | UAT bekliyor |
-| 19 | Üye başka üyenin programını göremez (API /me/program kendi programını döndürür) | ⬜ | UAT bekliyor |
+| 1 | PT çekirdek kütüphaneden egzersiz arayıp en az 1 güne ekleyebilir | ⬜ Ertelendi | Simülatör gerekiyor |
+| 2 | PT custom egzersiz oluşturup (sadece ad) şablona ekleyebilir | ⬜ Ertelendi | Simülatör gerekiyor |
+| 3 | PT program builder'da 1 saniye aktif olmayınca "✓ Taslak kaydedildi" indicator çıkar | ✅ Otonom | `[programId].test.tsx` — save-indicator-saved test |
+| 4 | Hiç egzersiz yok iken "Kaydet" basılınca "En az 1 egzersiz ekle" uyarısı gelir, publish çağrılmaz | ✅ Otonom | `[programId].test.tsx` — Alert validation test |
+| 5 | PT en az 1 egzersiz olan şablonu publish edince üyenin uygulamasında program anında görünür | ⬜ Ertelendi | Simülatör gerekiyor |
+| 6 | Programı olmayan üye bekleme ekranı görür ("PT senin için programını hazırlıyor") | ⬜ Ertelendi | Simülatör gerekiyor |
+| 7 | Üye BUGÜN kartı + haftalık bandı görür; bugün antrenman varsa "Antrenmana git" CTA aktiftir | ⬜ Ertelendi | Simülatör gerekiyor |
+| 8 | Antrenman ekranında egzersizleri tik kutularıyla işaretleyebilir; tüm tiklenince "Antrenmanı bitir" aktif olur | ⬜ Ertelendi | Simülatör gerekiyor |
+| 9 | "Antrenmanı bitir" basılınca backend'e workout_completion kaydı düşer ve başarı mesajı görünür | ⬜ Ertelendi | Simülatör gerekiyor |
+| 10 | "Antrenmanı bitir" aynı gün tekrar gönderilse (409) → hata yoktur, sessizce başarı | ✅ Otonom | `workout-completions.test.ts` — idempotent upsert test |
+| 11 | Video ▶ butonuna basılınca YouTube videosu in-app modal'da oynar, modal ✕ ile kapanır | ⬜ Ertelendi | Simülatör gerekiyor |
+| 12 | PT mevcut üyenin programını başka üyeye kopyalayabilir | ⬜ Ertelendi | Simülatör gerekiyor |
+| 13 | PT programı güncelleyip tekrar publish edince üye app'inde "ℹ️ Programında güncelleme var" banner görünür | ✅ Otonom | `home/index.test.tsx` — "Programında güncelleme var" render test |
+| 14 | Banner ✕ ile kapatılınca bir daha gösterilmez; PT yeniden publish edince tekrar görünür | ✅ Otonom | `home/index.test.tsx` — handleDismiss test |
+| 15 | Geçmiş sekmesinde tamamlanmış antrenmanlar tarih sırasıyla listelenir; satıra tıklayınca egzersizler okuma modunda açılır | ✅ Otonom | `history.test.tsx` — WorkoutDetailScreen navigate test |
+| 16 | Çevrimdışı: antrenman ekranı cache'ten açılır (uçak modu aktifken) | ⬜ Ertelendi | Cihaz uçak modu gerekiyor |
+| 17 | Çevrimdışı: "Antrenmanı bitir" basılınca "Bağlantı yok — internet gelince otomatik kaydedilecek" mesajı görünür | ✅ Otonom | `[programDayId].test.tsx` — offline-toast + isPaused test |
+| 18 | PT başka PT'nin custom egzersizini silmeye çalışırsa yetki hatası alır | ✅ Otonom | `exercises.test.ts` — "403 baska trainerin customu silinemez" |
+| 19 | Üye başka üyenin programını göremez (API /me/program kendi programını döndürür) | ✅ Otonom | `programs.test.ts` — "403 uye baska uyenin programina erisemez" |
 
-### Otomatik Kontrol Sonuçları (2026-05-31)
+### Otomatik Kontrol Sonuçları (2026-05-31, verify-phase 2 yeniden)
 
 | Kontrol | Durum | Not |
 |---------|-------|-----|
@@ -253,10 +254,20 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 | Backend test (227) | ✅ Geçti | — |
 | Shared test (41) | ✅ Geçti | — |
 | Mobile typecheck | ✅ Geçti | — |
-| Backend typecheck | ✅ Geçti | exercises.ts + workout-completions.ts — TASK-2.15'te düzeltildi |
-| Lint | ✅ Geçti | import/order, trLower, unused vars, require() — TASK-2.15'te düzeltildi |
-| Format | ✅ Geçti | 25 dosya Prettier — TASK-2.15'te düzeltildi |
-| Güvenlik | ✅ Temiz | Tüm endpoint'ler auth'lu, ownership kontrolü mevcut |
+| Backend typecheck | ✅ Geçti | TASK-2.15'te düzeltildi |
+| Lint | ✅ Geçti | TASK-2.15'te düzeltildi |
+| Format | ✅ Geçti | TASK-2.15'te düzeltildi |
+| Güvenlik | ⚠️ Orta bulgular | 3 orta, 3 bilgi bulgusu — TASK-2.16 olarak açılacak |
+
+**Güvenlik Bulguları (Orta):**
+- `completeWorkout`: `programDayId` ownership doğrulaması yok → üye kendi programına ait olmayan gün ID'si gönderebilir (sahte tamamlama, M3'e hatalı sinyal)
+- `publishProgram`: arşivlenmiş/aktif program tekrar yayınlanabilir → streak kaydını bozabilir
+- `patchProgram`: silinmiş egzersiz ID programa eklenebilir → "görünmez egzersiz" sorunu
+
+**Güvenlik Bulguları (Bilgi):**
+- `GET /exercises` ve `GET /me/workout-completions`: query parametreleri Zod ile doğrulanmıyor (`limit=abc` → `NaN`)
+- `POST /programs/:id/copy`: body validasyonu Zod yerine manuel cast
+- Zod schema'larında `string` alanlarında `max()` sınırı yok
 
 ---
 
