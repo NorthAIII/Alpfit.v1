@@ -68,3 +68,7 @@ const patchDaySchema = z.object({
 export const patchProgramSchema = z.object({
   days: z.array(patchDaySchema),
 });
+
+export const copyProgramBodySchema = z.object({
+  targetMemberId: z.string().min(1),
+});

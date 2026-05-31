@@ -7,12 +7,18 @@
  * Tüm endpoint'ler `app.authenticate` arkasındadır.
  */
 import { createWorkoutCompletionSchema } from '@alpfit/shared';
+import { z } from 'zod';
 
 import { t } from '../i18n/index.js';
 import { completeWorkout, getMyWorkoutHistory } from '../services/workout-completion.service.js';
 
 import type { AccessTokenClaims } from '../auth/jwt.js';
 import type { FastifyPluginAsync } from 'fastify';
+
+const workoutHistoryQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+});
 
 export const workoutCompletionsRoutes: FastifyPluginAsync = async (app) => {
   // ── POST /workout-completions ──────────────────────────────────────────────
@@ -51,9 +57,11 @@ export const workoutCompletionsRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(403).send({ status: 'forbidden', message: t('auth.roleForbidden') });
     }
 
-    const query = req.query as { cursor?: string; limit?: string };
-    const cursor = query.cursor;
-    const limit = query.limit ? parseInt(query.limit, 10) : 30;
+    const parsedQuery = workoutHistoryQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) {
+      return reply.code(400).send({ status: 'bad_request', message: parsedQuery.error.message });
+    }
+    const { cursor, limit } = parsedQuery.data;
 
     const page = await getMyWorkoutHistory(app.prisma, claims.sub, cursor, limit);
 

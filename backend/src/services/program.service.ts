@@ -100,46 +100,50 @@ export interface FullProgram {
 
 // ─── Private helpers ──────────────────────────────────────────────────────────
 
+function buildProgramSelect() {
+  return {
+    id: true,
+    trainerId: true,
+    memberId: true,
+    status: true,
+    publishedAt: true,
+    archivedAt: true,
+    days: {
+      select: {
+        id: true,
+        dayOfWeek: true,
+        title: true,
+        position: true,
+        isOneOff: true,
+        specificDate: true,
+        exercises: {
+          select: {
+            id: true,
+            exerciseId: true,
+            sets: true,
+            reps: true,
+            restSeconds: true,
+            notes: true,
+            position: true,
+            exercise: {
+              select: { id: true, name: true, muscleGroup: true, videoUrl: true, isCustom: true },
+            },
+          },
+          orderBy: { position: 'asc' as const },
+        },
+      },
+      orderBy: { position: 'asc' as const },
+    },
+  };
+}
+
 async function fetchFullProgram(
   prisma: PrismaClient,
   programId: string,
 ): Promise<FullProgram | null> {
   const row = await prisma.program.findUnique({
     where: { id: programId },
-    select: {
-      id: true,
-      trainerId: true,
-      memberId: true,
-      status: true,
-      publishedAt: true,
-      archivedAt: true,
-      days: {
-        select: {
-          id: true,
-          dayOfWeek: true,
-          title: true,
-          position: true,
-          isOneOff: true,
-          specificDate: true,
-          exercises: {
-            select: {
-              id: true,
-              exerciseId: true,
-              sets: true,
-              reps: true,
-              restSeconds: true,
-              notes: true,
-              position: true,
-              exercise: {
-                select: { id: true, name: true, muscleGroup: true, videoUrl: true, isCustom: true },
-              },
-            },
-            orderBy: { position: 'asc' },
-          },
-        },
-        orderBy: { position: 'asc' },
-      },
-    },
+    select: buildProgramSelect(),
   });
   return row as FullProgram | null;
 }
@@ -349,40 +353,7 @@ export async function getMemberActiveProgram(
 
   const row = await prisma.program.findFirst({
     where: { memberId, trainerId, status: 'active' },
-    select: {
-      id: true,
-      trainerId: true,
-      memberId: true,
-      status: true,
-      publishedAt: true,
-      archivedAt: true,
-      days: {
-        select: {
-          id: true,
-          dayOfWeek: true,
-          title: true,
-          position: true,
-          isOneOff: true,
-          specificDate: true,
-          exercises: {
-            select: {
-              id: true,
-              exerciseId: true,
-              sets: true,
-              reps: true,
-              restSeconds: true,
-              notes: true,
-              position: true,
-              exercise: {
-                select: { id: true, name: true, muscleGroup: true, videoUrl: true, isCustom: true },
-              },
-            },
-            orderBy: { position: 'asc' },
-          },
-        },
-        orderBy: { position: 'asc' },
-      },
-    },
+    select: buildProgramSelect(),
   });
 
   if (!row) return { kind: 'not_found' };
@@ -395,40 +366,7 @@ export async function getMyActiveProgram(
 ): Promise<GetMyActiveProgramResult> {
   const program = await prisma.program.findFirst({
     where: { memberId, status: 'active' },
-    select: {
-      id: true,
-      trainerId: true,
-      memberId: true,
-      status: true,
-      publishedAt: true,
-      archivedAt: true,
-      days: {
-        select: {
-          id: true,
-          dayOfWeek: true,
-          title: true,
-          position: true,
-          isOneOff: true,
-          specificDate: true,
-          exercises: {
-            select: {
-              id: true,
-              exerciseId: true,
-              sets: true,
-              reps: true,
-              restSeconds: true,
-              notes: true,
-              position: true,
-              exercise: {
-                select: { id: true, name: true, muscleGroup: true, videoUrl: true, isCustom: true },
-              },
-            },
-            orderBy: { position: 'asc' },
-          },
-        },
-        orderBy: { position: 'asc' },
-      },
-    },
+    select: buildProgramSelect(),
   });
 
   if (!program) return { kind: 'not_found' };

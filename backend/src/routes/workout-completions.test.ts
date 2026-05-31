@@ -327,5 +327,47 @@ describe('TASK-2.04 — WorkoutCompletions API', () => {
 
       expect(res.statusCode).toBe(403);
     });
+
+    it('400 — limit=abc gecersiz query param (TASK-3.01)', async () => {
+      const { auth } = await memberAuth();
+
+      const res = await server.app.inject({
+        method: 'GET',
+        url: '/me/workout-completions?limit=abc',
+        headers: { authorization: auth },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('200 — limit=5 sorgusu max 5 kayit donerken (TASK-3.01)', async () => {
+      const { trainer } = await trainerAuth();
+      const { member, auth } = await memberAuth();
+      const { day } = await seedProgramWithDay(trainer.id, member.id);
+
+      // 7 kayit olustur (farkli scheduledDate ile)
+      for (let i = 1; i <= 7; i++) {
+        await server.prisma.workoutCompletion.create({
+          data: {
+            memberId: member.id,
+            programDayId: day.id,
+            scheduledDate: new Date(`2026-05-${String(i).padStart(2, '0')}T00:00:00.000Z`),
+            completedAt: new Date(`2026-05-${String(i).padStart(2, '0')}T10:00:00.000Z`),
+            isLate: false,
+          },
+        });
+      }
+
+      const res = await server.app.inject({
+        method: 'GET',
+        url: '/me/workout-completions?limit=5',
+        headers: { authorization: auth },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const body = res.json<{ items: unknown[]; nextCursor: string | null }>();
+      expect(body.items).toHaveLength(5);
+      expect(body.nextCursor).not.toBeNull();
+    });
   });
 });

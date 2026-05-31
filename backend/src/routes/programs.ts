@@ -11,7 +11,7 @@
  *
  * Tüm endpoint'ler `app.authenticate` arkasındadır.
  */
-import { createProgramSchema, patchProgramSchema } from '@alpfit/shared';
+import { copyProgramBodySchema, createProgramSchema, patchProgramSchema } from '@alpfit/shared';
 
 import { t } from '../i18n/index.js';
 import { ensureTrainer } from '../invitations/guard.js';
@@ -113,13 +113,13 @@ export const programsRoutes: FastifyPluginAsync = async (app) => {
 
       const claims = req.user as AccessTokenClaims;
       const { id } = req.params;
-      const body = req.body as { targetMemberId?: unknown };
 
-      if (typeof body.targetMemberId !== 'string' || !body.targetMemberId) {
-        return reply.code(400).send({ status: 'bad_request', message: 'targetMemberId gerekli.' });
+      const parsed = copyProgramBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.code(400).send({ status: 'bad_request', message: parsed.error.message });
       }
 
-      const result = await copyProgram(app.prisma, claims.sub, id, body.targetMemberId);
+      const result = await copyProgram(app.prisma, claims.sub, id, parsed.data.targetMemberId);
 
       if (result.kind === 'not_found') {
         return reply.code(404).send({ status: 'not_found', message: t('programs.notFound') });

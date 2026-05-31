@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — verify-plan 3 tamamlandı. 3 düzeltme (morningHour saatlik job, gece yarısı testleri, TASK-3.10 etkilenen dosyalar). Adım → run-task 3.01.
+**Son Güncelleme:** 2026-05-31 — TASK-3.01 tamamlandı. 3 teknik borç kapatıldı: limit Zod coerce, copy Zod şeması, buildProgramSelect() refactor. 234 test yeşil. Adım → run-task 3.02.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-3.01
-**Durum:** verify-plan tamamlandı. TASK-3.01 çalıştırmaya hazır.
-**Sonraki Adım:** `/devflow:run-task 3.01` — Faz 2 teknik borç kapatma.
+**Task:** TASK-3.02
+**Durum:** TASK-3.01 ✅ tamamlandı. TASK-3.02 çalıştırmaya hazır.
+**Sonraki Adım:** `/devflow:run-task 3.02` — M3+M4 DB şeması (4 yeni tablo).
 
 ---
 
@@ -39,7 +39,7 @@
 
 | # | Task | Durum | Açıklama |
 |---|------|-------|----------|
-| 3.01 | TASK-3.01 | ⬜ Bekliyor | Faz 2 teknik borç kapatma |
+| 3.01 | TASK-3.01 | ✅ Tamamlandı | Faz 2 teknik borç kapatma |
 | 3.02 | TASK-3.02 | ⬜ Bekliyor | M3+M4 DB şeması (4 yeni tablo) |
 | 3.03 | TASK-3.03 | ⬜ Bekliyor | Streak motoru: processWorkoutCompletion |
 | 3.04 | TASK-3.04 | ⬜ Bekliyor | BullMQ + Expo Push altyapısı |
@@ -74,13 +74,13 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+**TASK-3.01** (2026-05-31) — Faz 2 teknik borç kapatma ✅
+- `limit=abc → 400` (Zod coerce), `copy` body Zod şeması, `buildProgramSelect()` refactor.
+- 234 test yeşil. Shared build gerekliydi (dist güncellenmeli).
+
 **verify-plan 3** (2026-05-31) — 14 task dokümanı review edildi
 - 1 mekanik düzeltme (TASK-3.10 etkilenen dosyalar). 2 yapısal düzeltme: TASK-3.08 saatlik job (morningHour per-user), TASK-3.03+3.05 gece yarısı geçişi testleri.
 - Lineer zincir onaylandı: 3.01→3.02→3.03→3.04→3.05→…→3.14. Tüm bağımlılıklar doğru.
-
-**review-phase 2** (2026-05-31) — Faz 2 ✅ Tamamlandı
-- Retrospektif + kalite kontrol yazıldı. F2.1+F2.2 ✅, 523 test, M2 milestone karşılandı.
-- 3 bilgi düzeyi güvenlik borcu + 10 simülatör UAT sonraki fazda kapatılacak.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -93,4 +93,4 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task 3.01` — Faz 2 teknik borç kapatma
+**Sıradaki:** `/devflow:run-task 3.02` — M3+M4 DB şeması (4 yeni tablo)

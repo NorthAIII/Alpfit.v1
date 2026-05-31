@@ -532,6 +532,25 @@ describe('TASK-2.03 — Programs API', () => {
       expect(res.statusCode).toBe(403);
     });
 
+    it('400 — body eksik (Zod dogrulamasi, TASK-3.01)', async () => {
+      const { trainer, auth } = await trainerAuth();
+      const { member } = await memberAuth();
+      await linkTrainerMember(trainer.id, member.id);
+
+      const prog = await server.prisma.program.create({
+        data: { trainerId: trainer.id, memberId: member.id, status: 'draft' },
+      });
+
+      const res = await server.app.inject({
+        method: 'POST',
+        url: `/programs/${prog.id}/copy`,
+        headers: { authorization: auth, 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
     it('403 — baska trainer programini kopyalayamaz', async () => {
       const { trainer: trainerA } = await trainerAuth('+905550000001');
       const { trainer: trainerB, auth: authB } = await trainerAuth('+905550000002');

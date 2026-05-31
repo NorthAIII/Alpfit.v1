@@ -160,7 +160,7 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 
 | # | Task | Durum | Açıklama |
 |---|------|-------|----------|
-| 3.01 | TASK-3.01 | ⬜ Bekliyor | Faz 2 teknik borç: limit coerce, copy Zod, getMemberActiveProgram dedup |
+| 3.01 | TASK-3.01 | ✅ Tamamlandı | Faz 2 teknik borç: limit coerce, copy Zod, getMemberActiveProgram dedup |
 | 3.02 | TASK-3.02 | ⬜ Bekliyor | M3+M4 DB şeması: StreakState, PushToken, NotificationPreference, NotificationLog |
 | 3.03 | TASK-3.03 | ⬜ Bekliyor | Streak motoru: processWorkoutCompletion servisi + M2 hook |
 | 3.04 | TASK-3.04 | ⬜ Bekliyor | BullMQ + Expo Push altyapısı kurulumu |
@@ -196,4 +196,4 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 ---
 
 **Oluşturulma:** 2026-05-31 (discuss-phase 3)
-**Son Güncelleme:** 2026-05-31 — plan-phase 3: 14 task dokümanı oluşturuldu.
+**Son Güncelleme:** 2026-05-31 — TASK-3.01 tamamlandı.
