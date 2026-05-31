@@ -1,6 +1,6 @@
 # TASK-3.07: Bildirim Tercihleri — Backend API
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M4 — Bildirim Altyapısı (`modules/M4-bildirim-altyapisi.md`)
 **Feature:** F4.1 — Bildirim Ayarları
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -28,7 +28,7 @@
 
 ## Alt Görevler
 
-- [ ] **1. Route Dosyası Oluştur**
+- [x] **1. Route Dosyası Oluştur**
 
   `backend/src/routes/notification-preferences.ts` (yeni dosya):
 
@@ -50,22 +50,22 @@
   - Response: 200, güncel tercih objesi
   - **PT bu endpoint'e erişemez** (role guard: member only)
 
-- [ ] **2. Shared Şema Ekle**
+- [x] **2. Shared Şema Ekle**
 
   `shared/src/schemas/` → `notificationPreferenceSchema` Zod şeması:
   - `patchNotificationPreferenceSchema` — tüm alanlar optional, morningHour 0-23 arası, morningMinute 0-59 arası
 
-- [ ] **3. Route'u Fastify'a Kaydet**
+- [x] **3. Route'u Fastify'a Kaydet**
 
   `backend/src/server.ts` → `app.register(notificationPreferencesRoutes)`
 
-- [ ] **4. Güvenlik Kontrolleri**
+- [x] **4. Güvenlik Kontrolleri**
   - Role: yalnızca `member` erişir (PT'nin üyenin tercihini görmesi/değiştirmesi yasak — M4 gizlilik kuralı)
   - Ownership: `memberId = claims.sub` (implicit — herkes kendi tercihini okur)
   - Input bounding: morningHour 0-23, morningMinute 0-59 (Zod `.min(0).max(23)`)
   - Status guard: `deletedAt IS NULL` (authenticate middleware)
 
-- [ ] **5. Test Yaz**
+- [x] **5. Test Yaz**
 
   `backend/src/routes/notification-preferences.test.ts` (yeni dosya):
   - `GET` satır yok → 200, default değerler
@@ -101,28 +101,36 @@ shared/src/schemas/
 
 ## Test Kriterleri
 
-- [ ] `GET /notification-preferences` — satır yok → default değerler dönüyor
-- [ ] `GET /notification-preferences` — satır var → güncel değerler dönüyor
-- [ ] `PATCH /notification-preferences` morningHour güncellendi → `GET` yeni değer dönüyor
-- [ ] `PATCH { morningHour: 25 }` → 400
-- [ ] Trainer rolü `GET` → 403
-- [ ] Auth eksik → 401
+- [x] `GET /notification-preferences` — satır yok → default değerler dönüyor
+- [x] `GET /notification-preferences` — satır var → güncel değerler dönüyor
+- [x] `PATCH /notification-preferences` morningHour güncellendi → `GET` yeni değer dönüyor
+- [x] `PATCH { morningHour: 25 }` → 400
+- [x] Trainer rolü `GET` → 403
+- [x] Auth eksik → 401
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `shared/src/schemas/notification-preference.ts`: `patchNotificationPreferenceSchema` Zod şeması (tüm alanlar optional, morningHour 0-23, morningMinute 0-59 bound)
+- `backend/src/routes/notification-preferences.ts`: GET + PATCH handler; member-only role guard; GET satır yoksa default upsert; PATCH partial update upsert
+- `backend/src/server.ts`: `notificationPreferencesRoutes` register
+- `backend/src/routes/notification-preferences.test.ts`: 10 test — GET 200×2, 403, 401; PATCH 200×2, 400×2, 403, 401
+- 10 yeni test, 282 yeşil (272 önceki + 10 yeni)
 
 ---
 

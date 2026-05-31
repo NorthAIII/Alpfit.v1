@@ -9,3 +9,5 @@ export * from './schemas/program.js';
 export * from './schemas/workout-completion.js';
 // TASK-3.06 — M4 Push token şemaları
 export * from './schemas/push-token.js';
+// TASK-3.07 — M4 Bildirim tercihleri şeması
+export * from './schemas/notification-preference.js';
