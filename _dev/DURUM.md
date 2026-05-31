@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — review-phase 2 tamamlandı. 16 task ✅, 523 test, M2 uçtan uca çalışıyor. F2.1+F2.2 ✅. Adım → Faz 3 discuss.
+**Son Güncelleme:** 2026-05-31 — discuss-phase 3 tamamlandı. M3+M4 birlikte, kapsam kararları alındı. Adım → research-phase 3.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -8,11 +8,11 @@
 
 ## Aktif Faz
 
-**Faz:** 3 — Sürdürülebilirlik motoru + Bildirim (M3+M4) *(geçici ad — discuss-phase'de netleşir)*
-**Milestone:** (discuss-phase'de belirlenecek)
-**Adım:** discuss
-**İlerleme:** Henüz başlamadı. Önceki: Faz 2 ✅ Tamamlandı ([PHASE-2.md](phases/PHASE-2.md))
-**Faz Dokümanı:** (discuss-phase'de oluşturulacak)
+**Faz:** 3 — Sürdürülebilirlik Motoru + Bildirim (M3 + M4)
+**Milestone:** Streak doğru hesaplanır; telafi penceresi açılır/kapanır; T+2 push gider; T+7 PT uyarısı gider; sabah reminder çalışır; bildirim izni ilk antrenman bitince istenir
+**Adım:** research
+**İlerleme:** discuss-phase tamamlandı. Önceki: Faz 2 ✅ ([PHASE-2.md](phases/PHASE-2.md))
+**Faz Dokümanı:** [PHASE-3.md](phases/PHASE-3.md)
 
 ---
 
@@ -30,14 +30,14 @@
 ## Aktif Task
 
 **Task:** —
-**Durum:** Faz 2 tamamlandı. Faz 3 henüz başlamadı.
-**Sonraki Adım:** `/devflow:discuss-phase 3` — Sürdürülebilirlik motoru + Bildirim (M3+M4) kapsam tartışması.
+**Durum:** Faz 3 discuss-phase tamamlandı, research-phase bekleniyor.
+**Sonraki Adım:** `/devflow:research-phase 3` — Teknik araştırma (push provider, motor zamanlama, M3↔M4 entegrasyon).
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-Faz 3 henüz başlamadı — task listesi discuss-phase → plan-phase oturumlarında oluşturulacak.
+Faz 3 task listesi plan-phase oturumunda oluşturulacak.
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -74,8 +74,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** (yok — Faz 3 henüz başlamadı)
-**Aktif Faz:** Faz 3 — Sürdürülebilirlik motoru + Bildirim (M3+M4) *(discuss-phase'de açılacak)*
+**Aktif Task:** (yok — plan-phase'de oluşturulacak)
+**Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:discuss-phase 3` — kapsam tartışması
+**Sıradaki:** `/devflow:research-phase 3` — teknik araştırma

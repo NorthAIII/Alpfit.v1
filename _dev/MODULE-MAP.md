@@ -71,8 +71,8 @@ M6 ← M0, M1
 | F1.1: Onboarding (Davet + Auth) | M1 | v1 | 1 | ✅ |
 | F2.1: Program Builder (PT) | M2 | v1 | 2 | ✅ |
 | F2.2: Üye Program Görüntüleme + Tamamlama | M2 | v1 | 2 | ✅ |
-| F3.1: Sürdürülebilirlik Motoru | M3 | v1 | — | ⬜ |
-| F4.1: Bildirim Sistemi (Push) | M4 | v1 | — | ⬜ |
+| F3.1: Sürdürülebilirlik Motoru | M3 | v1 | 3 | 🔄 |
+| F4.1: Bildirim Sistemi (Push) | M4 | v1 | 3 | 🔄 |
 | F5.1: PT Dashboard — Üye Listesi | M5 | v1 | — | ⬜ |
 | F6.1: Üye Ölçüm Takibi | M6 | v1 | — | ⬜ |
 | F6.2: Üye Yemek Günlüğü | M6 | v1 | — | ⬜ |
@@ -88,4 +88,4 @@ M6 ← M0, M1
 
 ---
 
-**Son Güncelleme:** 2026-05-31 — review-phase 2: F2.1 + F2.2 ✅ Tamamlandı.
+**Son Güncelleme:** 2026-05-31 — discuss-phase 3: F3.1 + F4.1 → Faz 3, 🔄 Devam ediyor.

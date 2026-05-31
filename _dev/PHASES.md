@@ -21,6 +21,7 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 |---|-----|-------|---------|
 | 1 | Çekirdek altyapı + Auth (M0 + M1) | ✅ Tamamlandı | [PHASE-1.md](phases/PHASE-1.md) |
 | 2 | Program akışı uçtan uca (M2) | ✅ Tamamlandı | [PHASE-2.md](phases/PHASE-2.md) |
+| 3 | Sürdürülebilirlik motoru + Bildirim (M3 + M4) | 🔄 Devam ediyor | [PHASE-3.md](phases/PHASE-3.md) |
 
 **Durum simgeleri:**
 - 🔄 **Devam ediyor** — discuss-phase başladı (aktif faz)
@@ -35,7 +36,6 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 
 > Yaklaşan faz konuları — **numarasız**. Faza girildiğinde (discuss-phase) buradan çıkar, numara (mevcut en büyük faz no + 1) alıp Faz Durumu tablosuna 🔄 olarak geçer.
 
-- **Sürdürülebilirlik motoru + Bildirim (M3 + M4)** ⭐ — Streak +1/0 doğru hesaplanır; 1 gün telafi penceresi açılır/kapanır; T+2 üye push + T+7 PT in-app + T+14 kayıp risk doğru tetiklenir; sessiz saat penceresi (22–08) uygulanır; deep link doğru ekrana gider. (Bu faz [[ilkeler]] §En Yüksek Öncelikli Eksen #1'in doğrulandığı fazdır.)
 - **PT dashboard + Sağlık verisi (M5 + M6)** — PT ana ekranı tüm modüllerin çıktısını gösterir (banner stack adaptif 1/2+); üye detay drill-down çalışır; PT ölçüm ekler (24h düzenleme); üye yemek girer (24h düzenleme + disclaimer); gizlilik toggle iki tarafta çalışır; WhatsApp deep link açılır.
 - **UAT + Pilot launch (cross-cutting)** — Çekirdek 50 egzersiz + video finalize; app store yayını (Apple Developer + Google Play); kardeş gerçek SMS ile pilot kullanır; production deploy; KVKK aydınlatma metni hukuki review'dan geçmiş.
 
@@ -63,11 +63,12 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 | 2026-05-30 | Faz 1 → ✅ | 36 task, M0+M1 tamamlandı; 10 manuel UAT Yakın 5'e ertelendi; Faz 2 (Program domain M2) → discuss |
 | 2026-05-30 | Faz 2 → 🔄 | discuss-phase tamamlandı; kapsam kararları alındı; research-phase bekliyor |
 | 2026-05-31 | Faz 2 → ✅ | 16 task, M2 tamamlandı; 523 test ✅; 10 simülatör UAT ertelendi; Faz 3 (M3+M4) → discuss |
+| 2026-05-31 | Faz 3 → 🔄 | discuss-phase tamamlandı; kapsam kararları alındı; research-phase bekliyor |
 
 <!-- KURAL: Her geçiş için TEK satır + kısa not. Geçiş gerekçesi/detayı PHASE-N.md retrospektifindedir, burada tekrar edilmez. "Önceki:" prefix veya HTML comment ile detay yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
 ---
 
-**Son Güncelleme:** 2026-05-31 — review-phase 2: Faz 2 ✅ Tamamlandı; Faz 3 → Sıradaki Fazlar'ın ilk maddesi.
+**Son Güncelleme:** 2026-05-31 — discuss-phase 3: Faz 3 🔄 başladı; M3+M4 birlikte; Sıradaki Fazlar'dan çıkarıldı.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
