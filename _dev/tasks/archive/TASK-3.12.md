@@ -1,6 +1,6 @@
 # TASK-3.12: Mobile — Bildirim Tercihleri Ekranı (Ayarlar > Bildirimler)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M4 — Bildirim Altyapısı (`modules/M4-bildirim-altyapisi.md`)
 **Feature:** F4.1 — Bildirim Ayarları (üye tarafı)
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -29,7 +29,7 @@
 
 ## Alt Görevler
 
-- [ ] **1. Bildirim Tercihleri API Client**
+- [x] **1. Bildirim Tercihleri API Client**
 
   `mobile/src/api/notification-preferences.ts` (yeni dosya):
   ```ts
@@ -37,14 +37,14 @@
   export async function patchNotificationPreferences(patch: Partial<NotificationPreferences>): Promise<NotificationPreferences>
   ```
 
-- [ ] **2. `useNotificationPreferences` Hook**
+- [x] **2. `useNotificationPreferences` Hook**
 
   `mobile/src/hooks/useNotificationPreferences.ts` (yeni dosya):
   - `getNotificationPreferences()` ile veri çek
   - `update(patch)` → `patchNotificationPreferences(patch)` → local state güncelle
   - Loading / error state
 
-- [ ] **3. Bildirim Tercihleri Ekranı**
+- [x] **3. Bildirim Tercihleri Ekranı**
 
   `mobile/src/components/NotificationPreferencesScreen.tsx` veya mevcut Ayarlar ekranına sekme ekle (proje navigasyon yapısına göre):
 
@@ -56,11 +56,11 @@
     - Değer değişince anında `PATCH` gönderilir (debounced, 500ms)
   - **Bildirim izni durumu:** İzin kapalıysa üstte uyarı + "İzin ver" butonu (Linking.openSettings())
 
-- [ ] **4. Toggle Aksiyonları**
+- [x] **4. Toggle Aksiyonları**
 
   Her toggle değişiminde `patchNotificationPreferences` çağrılır. Optimistic update: local state hemen güncellenir, API hata dönerse geri alınır.
 
-- [ ] **5. Test Yaz**
+- [x] **5. Test Yaz**
 
   - Ekran ilk yüklenince `getNotificationPreferences` çağrıldı (mock API)
   - Reminder toggle kapatılınca `patchNotificationPreferences({ reminderEnabled: false })` çağrıldı
@@ -92,28 +92,36 @@ mobile/src/
 
 ## Test Kriterleri
 
-- [ ] Ekran ilk açılışında `getNotificationPreferences` çağrıldı, değerler gösteriliyor
-- [ ] Reminder toggle off → `patchNotificationPreferences` çağrıldı, UI off state
-- [ ] API hata dönünce toggle geri döndü (optimistic rollback)
-- [ ] Sabah saati değişimi → debounce sonrası `PATCH` çağrıldı
-- [ ] İzin kapalıysa banner + "İzin ver" CTA görünüyor
-- [ ] Tüm testler yeşil
+- [x] Ekran ilk açılışında `getNotificationPreferences` çağrıldı, değerler gösteriliyor
+- [x] Reminder toggle off → `patchNotificationPreferences` çağrıldı, UI off state
+- [x] API hata dönünce toggle geri döndü (optimistic rollback)
+- [x] Sabah saati değişimi → debounce sonrası `PATCH` çağrıldı
+- [x] İzin kapalıysa banner + "İzin ver" CTA görünüyor
+- [x] Tüm testler yeşil
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `mobile/src/api/notification-preferences.ts` — `getNotificationPreferences` + `patchNotificationPreferences` API client; `NotificationPreferences` tipi tanımlandı.
+- `mobile/src/hooks/useNotificationPreferences.ts` — mount'ta yükleme, optimistic `update()`, rollback; stale-closure için `dataRef` pattern.
+- `mobile/src/components/NotificationPreferencesScreen.tsx` — 3 toggle (reminder/comeback/system), +/− saat seçici (debounced 500ms), izin banner + "İzin ver" CTA (Linking.openSettings), member-only role guard.
+- `mobile/app/home/notifications.tsx` — route (named export re-export).
+- 15 yeni test: `useNotificationPreferences.test.ts` (4) + `NotificationPreferencesScreen.test.tsx` (11). Tüm suite: 279 yeşil.
 
 ---
 

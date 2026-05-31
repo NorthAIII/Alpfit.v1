@@ -171,7 +171,7 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 | 3.09 | TASK-3.09 | ✅ Tamamlandı | Comeback T+2 push (BullMQ delayed job — streak sıfırlamadan 48h) |
 | 3.10 | TASK-3.10 | ✅ Tamamlandı | Comeback T+7 PT uyarısı + T+14 kayıp risk flag + PT dismiss endpoint |
 | 3.11 | TASK-3.11 | ✅ Tamamlandı | Mobile: push token kaydı + bildirim izni akışı |
-| 3.12 | TASK-3.12 | ⬜ Bekliyor | Mobile: Ayarlar > Bildirimler ekranı |
+| 3.12 | TASK-3.12 | ✅ Tamamlandı | Mobile: Ayarlar > Bildirimler ekranı |
 | 3.13 | TASK-3.13 | ⬜ Bekliyor | Streak göstergesi: GET /me/streak + mobile UI açılışı |
 | 3.14 | TASK-3.14 | ⬜ Bekliyor | T+7 PT in-app banner: GET /pt/member-alerts + mobile UI |
 
@@ -196,4 +196,4 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 ---
 
 **Oluşturulma:** 2026-05-31 (discuss-phase 3)
-**Son Güncelleme:** 2026-05-31 — TASK-3.11 tamamlandı.
+**Son Güncelleme:** 2026-05-31 — TASK-3.12 tamamlandı.

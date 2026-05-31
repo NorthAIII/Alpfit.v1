@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — TASK-3.11 tamamlandı. expo-notifications kurulumu, usePushToken + useNotificationPermission hook'ları, NotificationPermissionModal + DisabledBanner, useCompleteWorkout izin akışı, logout token silme. 264 yeşil. Adım → run-task 3.12.
+**Son Güncelleme:** 2026-05-31 — TASK-3.12 tamamlandı. notification-preferences API client, useNotificationPreferences hook (optimistic+rollback), NotificationPreferencesScreen (3 toggle + saat seçici + izin banner), app/home/notifications route. 279 yeşil. Adım → run-task 3.13.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-3.12
-**Durum:** TASK-3.11 ✅ tamamlandı. TASK-3.12 çalıştırmaya hazır.
-**Sonraki Adım:** `/devflow:run-task` — TASK-3.12: Mobile: Ayarlar > Bildirimler ekranı.
+**Task:** TASK-3.13
+**Durum:** TASK-3.12 ✅ tamamlandı. TASK-3.13 çalıştırmaya hazır.
+**Sonraki Adım:** `/devflow:run-task` — TASK-3.13: Streak göstergesi backend + mobile UI.
 
 ---
 
@@ -50,7 +50,7 @@
 | 3.09 | TASK-3.09 | ✅ Tamamlandı | Comeback T+2 push job |
 | 3.10 | TASK-3.10 | ✅ Tamamlandı | Comeback T+7 PT uyarısı + T+14 flag + dismiss |
 | 3.11 | TASK-3.11 | ✅ Tamamlandı | Mobile: push token + bildirim izni akışı |
-| 3.12 | TASK-3.12 | ⬜ Bekliyor | Mobile: bildirim tercihleri ekranı |
+| 3.12 | TASK-3.12 | ✅ Tamamlandı | Mobile: bildirim tercihleri ekranı |
 | 3.13 | TASK-3.13 | ⬜ Bekliyor | Streak göstergesi backend + mobile UI |
 | 3.14 | TASK-3.14 | ⬜ Bekliyor | T+7 PT in-app banner backend + mobile UI |
 
@@ -74,15 +74,15 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+**TASK-3.12** (2026-05-31) — Mobile: bildirim tercihleri ekranı ✅
+- notification-preferences API client (GET+PATCH), useNotificationPreferences hook (optimistic update + rollback, dataRef stale-closure guard).
+- NotificationPreferencesScreen: 3 toggle (reminder/comeback/system), +/− saat seçici (500ms debounce), izin kapalıysa banner + "İzin ver" CTA, member-only role guard.
+- app/home/notifications.tsx route. 15 yeni test. 279 yeşil (mobile suite).
+
 **TASK-3.11** (2026-05-31) — Mobile: push token kaydı + bildirim izni akışı ✅
 - usePushToken (mount token + backend), useNotificationPermission (izin state), NotificationPermissionModal (açıklama + İzin Ver/Şimdi Değil), NotificationDisabledBanner (haftada bir, AsyncStorage).
 - useCompleteWorkout: showPermissionModal state + AsyncStorage flag. settings.tsx: logout öncesi clearPushToken. home + tabs layout: usePushToken mount.
 - 13 yeni test. 264 yeşil (mobile suite).
-
-**TASK-3.10** (2026-05-31) — Comeback T+7 PT uyarısı + T+14 flag + dismiss ✅
-- notification.service.ts: sendComebackT7Pt (ptT7AlertedAt idempotency, re-aktivasyon, trainer bulma, PT push) + setT14Flag (t14FlaggedAt, push yok). worker case'ler güncellendi.
-- routes/pt-alerts.ts: PATCH /pt/member-alerts/:memberId/dismiss-t7 (ownership + ptT7DismissedAt). server.ts'e register eklendi.
-- 12 yeni test. 308 yeşil (backend suite).
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -91,8 +91,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-3.12 — Mobile: Ayarlar > Bildirimler ekranı
+**Aktif Task:** TASK-3.13 — Streak göstergesi backend + mobile UI
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` — TASK-3.12: Mobile: Ayarlar > Bildirimler ekranı
+**Sıradaki:** `/devflow:run-task` — TASK-3.13: Streak göstergesi backend + mobile UI
