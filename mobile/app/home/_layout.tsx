@@ -1,8 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 
+import { usePushToken } from '../../src/hooks/usePushToken';
+
 // Üye alt navigasyonu (TASK-2.13). Sekmeler: "Ana Sayfa" (index) + "Geçmiş" (history).
 // Trainer alt navigasyonu (tabs)/_layout.tsx'te ayrı yönetilir.
+// TASK-3.11: usePushToken burada çağrılır — üye her app açtığında token yenilenir.
 
 function HomeIcon({ focused }: { focused: boolean }) {
   return <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.5 }}>🏠</Text>;
@@ -13,6 +16,7 @@ function HistoryIcon({ focused }: { focused: boolean }) {
 }
 
 export default function MemberHomeLayout() {
+  usePushToken();
   return (
     <Tabs
       screenOptions={{

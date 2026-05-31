@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { NotificationPermissionModal } from '../../src/components/NotificationPermissionModal';
 import { VideoModal } from '../../src/components/VideoModal';
 import { useCompleteWorkout } from '../../src/hooks/useCompleteWorkout';
 import { useMyActiveProgram } from '../../src/hooks/useMemberHome';
@@ -33,7 +34,7 @@ export default function WorkoutScreen() {
   }>();
 
   const { data: program, isLoading, isError, refetch } = useMyActiveProgram();
-  const { mutate, isPaused } = useCompleteWorkout();
+  const { mutate, isPaused, showPermissionModal, onPermissionHandled } = useCompleteWorkout();
 
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
@@ -283,6 +284,12 @@ export default function WorkoutScreen() {
           onClose={() => setShowVideoModal(false)}
         />
       ) : null}
+
+      {/* Bildirim İzni Modal — ilk antrenman tamamlanınca bir kez gösterilir */}
+      <NotificationPermissionModal
+        visible={showPermissionModal}
+        onDismiss={onPermissionHandled}
+      />
     </View>
   );
 }

@@ -6,6 +6,7 @@ import * as matchers from '@testing-library/react-native/matchers';
 
 import { __resetAsyncStorage } from './mocks/async-storage';
 import { __resetSecureStore } from './mocks/expo-secure-store';
+import { __resetNotifications } from './mocks/expo-notifications';
 import { server } from './msw/server';
 
 // TanStack Query'yi test modunda senkron çalıştır. Varsayılan scheduler
@@ -36,6 +37,7 @@ afterEach(() => {
   server.resetHandlers();
   __resetSecureStore();
   __resetAsyncStorage();
+  __resetNotifications();
 });
 
 afterAll(() => {

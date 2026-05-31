@@ -1,6 +1,6 @@
 # TASK-3.11: Mobile — Push Token Kaydı + Bildirim İzni Akışı
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M4 — Bildirim Altyapısı (`modules/M4-bildirim-altyapisi.md`)
 **Feature:** F4.1 — Push İzni + Token
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -123,17 +123,36 @@ mobile/src/
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `expo-notifications` paketi yüklendi (pnpm -F mobile add)
+- `app.json` güncellendi: iOS `NSUserNotificationsUsageDescription` + `expo-notifications` plugin
+- `src/api/push-tokens.ts` (YENİ): `registerPushToken` + `deletePushToken` API client
+- `src/hooks/usePushToken.ts` (YENİ): mount'ta token al + backend kaydet; `clearPushToken` logout için; `setCurrentPushToken` modal path için
+- `src/hooks/useNotificationPermission.ts` (YENİ): `getPermissionsAsync` / `requestPermissionsAsync` wrapper; `IosAuthorizationStatus.AUTHORIZED|PROVISIONAL` kontrolü
+- `src/hooks/useCompleteWorkout.ts` güncellendi: `showPermissionModal` state + `onPermissionHandled` callback; AsyncStorage `notification:permission_asked` flag
+- `src/components/NotificationPermissionModal.tsx` (YENİ): "İzin Ver" / "Şimdi Değil" modal; izin verilince token al + kaydet; reddedilince `Linking.openSettings()`
+- `src/components/NotificationDisabledBanner.tsx` (YENİ): izin kapalıysa haftada bir üye home'da banner; AsyncStorage `notification:banner_dismissed_at`
+- `app/workout/[programDayId].tsx` güncellendi: `NotificationPermissionModal` entegre
+- `app/home/_layout.tsx` güncellendi: `usePushToken()` mount
+- `app/(tabs)/_layout.tsx` güncellendi: `usePushToken()` mount (PT tarafı)
+- `app/(tabs)/settings.tsx` güncellendi: logout öncesi `clearPushToken()`
+- `test/mocks/expo-notifications.ts` (YENİ): Jest mock; `test/setup.ts` güncellendi
+- `jest.config.js` güncellendi: `expo-notifications` mock mapping
+- Yeni testler: `usePushToken.test.ts` (4), `useNotificationPermission.test.ts` (5), `NotificationPermissionModal.test.tsx` (4)
+- 264 yeşil (tüm mobile test suite).
 
 ---
 

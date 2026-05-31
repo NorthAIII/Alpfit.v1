@@ -43,6 +43,8 @@ module.exports = {
     '^expo-secure-store$': '<rootDir>/test/mocks/expo-secure-store.ts',
     // @react-native-async-storage native modülü Jest'te yok → bellek-içi mock (TASK-2.14).
     '^@react-native-async-storage/async-storage$': '<rootDir>/test/mocks/async-storage.ts',
+    // expo-notifications native modülü Jest'te yok → minimal mock (TASK-3.11).
+    '^expo-notifications$': '<rootDir>/test/mocks/expo-notifications.ts',
   },
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',

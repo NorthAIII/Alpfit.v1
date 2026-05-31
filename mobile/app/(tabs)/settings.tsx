@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 
 import { logout, logoutAll } from '../../src/api/auth';
 import { clearSession, useSessionStore } from '../../src/auth/session';
+import { clearPushToken } from '../../src/hooks/usePushToken';
 
 // Ayarlar ekranı — minimum (TASK-1.33). v1 Auth fazında tek işlev: çıkış. PT
 // "Üyeler" sekmesinin yanında yer alır (member-side ayarlar/sekme yapısı sonraki
@@ -38,6 +39,8 @@ export default function SettingsScreen() {
         }
       }
 
+      // Push token'ı backend'den sil (hata sessizce yutulur — çıkışı engellememeli).
+      await clearPushToken();
       // Sunucu sonucu ne olursa olsun yerel oturumu temizle (bellek + SecureStore).
       await clearSession();
       router.replace('/');
