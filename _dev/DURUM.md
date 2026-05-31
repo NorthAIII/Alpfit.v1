@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — TASK-3.03 tamamlandı. Streak motoru: streak.service.ts (processWorkoutCompletion, Istanbul tz, tx), route hook (try/catch), 8 yeni test (gece yarısı, re-aktivasyon, upsert). 242 test yeşil. Adım → run-task 3.04.
+**Son Güncelleme:** 2026-05-31 — TASK-3.04 tamamlandı. BullMQ+ExpoSDK kurulum; queue.ts, lib/push.ts, expo-push.ts, silent-hours.ts, workers/notification.worker.ts; server.ts onReady hook. 14 yeni test, 256 yeşil. Adım → run-task 3.05.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-3.04
-**Durum:** TASK-3.03 ✅ tamamlandı. TASK-3.04 çalıştırmaya hazır.
-**Sonraki Adım:** `/devflow:run-task` — TASK-3.04: BullMQ + Expo Push altyapısı kurulumu.
+**Task:** TASK-3.05
+**Durum:** TASK-3.04 ✅ tamamlandı. TASK-3.05 çalıştırmaya hazır.
+**Sonraki Adım:** `/devflow:run-task` — TASK-3.05: Nightly streak sıfırlama job.
 
 ---
 
@@ -42,7 +42,7 @@
 | 3.01 | TASK-3.01 | ✅ Tamamlandı | Faz 2 teknik borç kapatma |
 | 3.02 | TASK-3.02 | ✅ Tamamlandı | M3+M4 DB şeması (4 yeni tablo) |
 | 3.03 | TASK-3.03 | ✅ Tamamlandı | Streak motoru: processWorkoutCompletion |
-| 3.04 | TASK-3.04 | ⬜ Bekliyor | BullMQ + Expo Push altyapısı |
+| 3.04 | TASK-3.04 | ✅ Tamamlandı | BullMQ + Expo Push altyapısı |
 | 3.05 | TASK-3.05 | ⬜ Bekliyor | Nightly streak sıfırlama job |
 | 3.06 | TASK-3.06 | ⬜ Bekliyor | Push token backend API |
 | 3.07 | TASK-3.07 | ⬜ Bekliyor | Bildirim tercihleri backend API |
@@ -74,12 +74,13 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+**TASK-3.04** (2026-05-31) — BullMQ + Expo Push altyapısı ✅
+- queue.ts (createBullMQConnection + createNotificationQueue), lib/push.ts (PushChannel), expo-push.ts (ExpoPushAdapter), silent-hours.ts (isInSilentHours, msUntilTomorrowMorning).
+- workers/notification.worker.ts: skeleton + sessiz saat kontrolü + NotificationLog. server.ts onReady hook. 14 yeni test, 256 yeşil.
+
 **TASK-3.03** (2026-05-31) — Streak motoru: processWorkoutCompletion ✅
 - streak.service.ts: Istanbul tz, Prisma tx, re-aktivasyon T-flag temizleme (ptT7DismissedAt hariç).
 - Route hook (try/catch, req.log.error). 8 yeni servis testi (gece yarısı geçişi dahil). 242 test yeşil.
-
-**TASK-3.02** (2026-05-31) — M3+M4 DB şeması ✅
-- 4 tablo: StreakState, PushToken, NotificationPreference, NotificationLog. Migration + davet kabul upsert seed. 234 test yeşil.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -88,8 +89,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-3.04 — BullMQ + Expo Push altyapısı kurulumu
+**Aktif Task:** TASK-3.05 — Nightly streak sıfırlama job
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` — TASK-3.04: BullMQ + Expo Push altyapısı kurulumu
+**Sıradaki:** `/devflow:run-task` — TASK-3.05: Nightly streak sıfırlama job

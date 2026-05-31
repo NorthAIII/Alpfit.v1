@@ -1,6 +1,6 @@
 # TASK-3.04: BullMQ + Expo Push Altyapısı Kurulumu
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M4 — Bildirim Altyapısı (`modules/M4-bildirim-altyapisi.md`)
 **Feature:** F4.1 — Bildirim Sistemi (Push) — altyapı katmanı
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -35,11 +35,11 @@ Araştırma kararı: Redis zaten `backend/src/redis/client.ts`'te mevcut → Bul
 
 ## Alt Görevler
 
-- [ ] **1. Paket Kurulumu**
+- [x] **1. Paket Kurulumu**
   - `pnpm -F backend add bullmq expo-server-sdk`
   - Versiyonlar package.json'a kaydedildi
 
-- [ ] **2. BullMQ Queue Tanımı**
+- [x] **2. BullMQ Queue Tanımı**
 
   `backend/src/queue.ts` (yeni dosya):
   ```ts
@@ -60,7 +60,7 @@ Araştırma kararı: Redis zaten `backend/src/redis/client.ts`'te mevcut → Bul
     | 'streak-reset-check';
   ```
 
-- [ ] **3. Kanal-Agnostik Push Interface + Expo Adapter**
+- [x] **3. Kanal-Agnostik Push Interface + Expo Adapter**
 
   `backend/src/lib/push.ts` (yeni dosya):
   ```ts
@@ -75,7 +75,7 @@ Araştırma kararı: Redis zaten `backend/src/redis/client.ts`'te mevcut → Bul
   - `invalid_token` dönüşünde token DB'den sil (PushToken tablosu)
   - APNs/FCM hataları: `throw` et, BullMQ retry yakalar
 
-- [ ] **4. Sessiz Saat Util**
+- [x] **4. Sessiz Saat Util**
 
   `backend/src/lib/silent-hours.ts` (yeni dosya):
   ```ts
@@ -85,7 +85,7 @@ Araştırma kararı: Redis zaten `backend/src/redis/client.ts`'te mevcut → Bul
   export function msUntilTomorrowMorning(hour = 9): number
   ```
 
-- [ ] **5. Notification Worker Skeleton**
+- [x] **5. Notification Worker Skeleton**
 
   `backend/src/workers/notification.worker.ts` (yeni dosya):
   - BullMQ `Worker` instance, `notificationQueue` dinler
@@ -93,7 +93,7 @@ Araştırma kararı: Redis zaten `backend/src/redis/client.ts`'te mevcut → Bul
   - `NotificationLog` yazımı: her job tamamlanınca `status: 'sent' | 'failed' | 'skipped'` yaz
   - Worker başlatma fonksiyonu export edilir
 
-- [ ] **6. Fastify Başlangıcına Worker Ekle**
+- [x] **6. Fastify Başlangıcına Worker Ekle**
 
   `backend/src/server.ts` (veya `app.ts`) → `onReady` hook'unda:
   ```ts
@@ -134,28 +134,40 @@ src/
 
 ## Test Kriterleri
 
-- [ ] `notificationQueue` Redis'e bağlanıyor, `Queue` objesi oluşuyor (integration test)
-- [ ] `isInSilentHours()` — 22:01 Istanbul → `true`, 08:30 Istanbul → `false` (unit test)
-- [ ] `msUntilTomorrowMorning()` → pozitif ms değeri, 09:00'a kadar doğru (unit test)
-- [ ] `ExpoPushAdapter.send()` invalid token → `'invalid_token'` döner, PushToken silinir
-- [ ] Worker skeleton başlatılıyor, Fastify `onReady` sonrası çalışıyor
-- [ ] `pnpm -F backend test` — mevcut testler kırılmadı
+- [x] `notificationQueue` Redis'e bağlanıyor, `Queue` objesi oluşuyor (integration test)
+- [x] `isInSilentHours()` — 22:01 Istanbul → `true`, 08:30 Istanbul → `false` (unit test)
+- [x] `msUntilTomorrowMorning()` → pozitif ms değeri, 09:00'a kadar doğru (unit test)
+- [x] `ExpoPushAdapter.send()` invalid token → `'invalid_token'` döner, PushToken silinir
+- [x] Worker skeleton başlatılıyor, Fastify `onReady` sonrası çalışıyor
+- [x] `pnpm -F backend test` — mevcut testler kırılmadı (256 ✅)
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `pnpm -F backend add bullmq expo-server-sdk` kurulumu (bullmq@5.77.6, expo-server-sdk@6.1.0)
+- `backend/src/queue.ts`: `createBullMQConnection` + `createNotificationQueue` (BullMQ için `maxRetriesPerRequest: null, enableReadyCheck: false` zorunlu)
+- `backend/src/lib/push.ts`: `PushChannel` kanal-agnostik interface
+- `backend/src/lib/expo-push.ts`: `ExpoPushAdapter` — DeviceNotRegistered → PushToken sil, diğer hatalar → throw (BullMQ retry)
+- `backend/src/lib/silent-hours.ts`: `isInSilentHours()` + `msUntilTomorrowMorning(hour)` — Istanbul UTC+3 sabit
+- `backend/src/workers/notification.worker.ts`: Worker skeleton — sessiz saat kontrolü, job dispatcher (stub), NotificationLog yazımı
+- `backend/src/server.ts`: `onReady` hook'una `void startNotificationWorker(app.prisma, opts.env.REDIS_URL)` eklendi
+- Testler: 14 yeni test (silent-hours ×9, expo-push ×3, queue integration ×1, worker smoke ×1)
+- 256 test yeşil
 
 ---
 

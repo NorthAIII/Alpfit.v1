@@ -30,6 +30,7 @@ import { trainersEventsRoutes } from './routes/trainers-events.js';
 import { trainersMembersRoutes } from './routes/trainers-members.js';
 import { wellKnownRoutes } from './routes/well-known.js';
 import { workoutCompletionsRoutes } from './routes/workout-completions.js';
+import { startNotificationWorker } from './workers/notification.worker.js';
 
 import type { Env } from './config/env.js';
 import type { PrismaClient } from './db/prisma.js';
@@ -100,6 +101,12 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   // davet fallback sayfası (QR). bunker-nginx tüm path'leri backend'e proxy'ler.
   await app.register(wellKnownRoutes({ env: opts.env }));
   await app.register(davetWebFallbackRoutes({ env: opts.env }));
+
+  // Bildirim worker'ı: Fastify hazır olunca background'da başlar.
+  // await edilmez — process ömürlü arka plan prosesi; crash → restart'ta onReady tekrar tetikler.
+  app.addHook('onReady', async () => {
+    void startNotificationWorker(app.prisma, opts.env.REDIS_URL);
+  });
 
   return app;
 }

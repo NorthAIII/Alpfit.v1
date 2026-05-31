@@ -28,6 +28,8 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@sentry/node": "^10.55.0",
+    "bullmq": "^5.77.6",
+    "expo-server-sdk": "^6.1.0",
     "fast-redact": "^3.5.0",
     "fastify": "^5.8.5",
     "i18next": "^26.3.0",
