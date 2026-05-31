@@ -4,7 +4,7 @@ import { createBullMQConnection, createNotificationQueue, type NotificationJobNa
 import { isInSilentHours, msUntilTomorrowMorning } from '../lib/silent-hours.js';
 import { ExpoPushAdapter } from '../lib/expo-push.js';
 import { runNightlyStreakReset } from '../services/streak-reset.service.js';
-import { sendMorningReminders } from '../services/notification.service.js';
+import { sendMorningReminders, sendComebackT2 } from '../services/notification.service.js';
 
 import type { PrismaClient } from '../db/prisma.js';
 
@@ -70,16 +70,9 @@ export function startNotificationWorker(prisma: PrismaClient, redisUrl: string):
       if (!userId) return; // user-targeted job'da userId olmaması beklenmiyor
 
       switch (job.name) {
-        case 'comeback-t2': {
-          if (isInSilentHours()) {
-            await job.moveToDelayed(Date.now() + msUntilTomorrowMorning(9));
-            await writeLog(prisma, userId, job.name, 'skipped', { reason: 'silent-hours-delayed' });
-            return;
-          }
-          // TASK-3.09'da implement edilecek
-          await writeLog(prisma, userId, job.name, 'skipped', { reason: 'not-implemented' });
+        case 'comeback-t2':
+          await sendComebackT2(prisma, expoAdapter, internalQueue, userId);
           break;
-        }
 
         case 'comeback-t7-pt': {
           if (isInSilentHours()) {

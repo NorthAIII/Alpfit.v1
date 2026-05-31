@@ -168,7 +168,7 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 | 3.06 | TASK-3.06 | ✅ Tamamlandı | Push token yönetimi: POST + DELETE /push-tokens (backend) |
 | 3.07 | TASK-3.07 | ✅ Tamamlandı | Bildirim tercihleri: GET + PATCH /notification-preferences (backend) |
 | 3.08 | TASK-3.08 | ✅ Tamamlandı | Sabah reminder push (BullMQ repeatable job — 09:00 Istanbul) |
-| 3.09 | TASK-3.09 | ⬜ Bekliyor | Comeback T+2 push (BullMQ delayed job — streak sıfırlamadan 48h) |
+| 3.09 | TASK-3.09 | ✅ Tamamlandı | Comeback T+2 push (BullMQ delayed job — streak sıfırlamadan 48h) |
 | 3.10 | TASK-3.10 | ⬜ Bekliyor | Comeback T+7 PT uyarısı + T+14 kayıp risk flag + PT dismiss endpoint |
 | 3.11 | TASK-3.11 | ⬜ Bekliyor | Mobile: push token kaydı + bildirim izni akışı |
 | 3.12 | TASK-3.12 | ⬜ Bekliyor | Mobile: Ayarlar > Bildirimler ekranı |

@@ -1,6 +1,6 @@
 # TASK-3.09: Comeback T+2 Push Bildirimi (BullMQ Delayed Job)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M3 — Sürdürülebilirlik Motoru (`modules/M3-surdurulebilirlik-motoru.md`)
 **Feature:** F3.1 — Comeback T+2 (üye nazik dokunuş)
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -30,7 +30,7 @@ Streak sıfırlandıktan 2 gün sonra üyeye "Bugün yeni bir streak başlatabil
 
 ## Alt Görevler
 
-- [ ] **1. T+2 Job Handler Yaz**
+- [x] **1. T+2 Job Handler Yaz**
 
   `backend/src/services/notification.service.ts` → `sendComebackT2` fonksiyonu ekle:
 
@@ -54,7 +54,7 @@ Streak sıfırlandıktan 2 gün sonra üyeye "Bugün yeni bir streak başlatabil
   - `comebackT2SentAt = now()` → StreakState güncelle
   - `NotificationLog` yaz: `status: 'sent'`
 
-- [ ] **2. Worker Dispatcher'a Handler Ekle**
+- [x] **2. Worker Dispatcher'a Handler Ekle**
 
   `backend/src/workers/notification.worker.ts` → `case 'comeback-t2'`:
   ```ts
@@ -63,7 +63,7 @@ Streak sıfırlandıktan 2 gün sonra üyeye "Bugün yeni bir streak başlatabil
     break;
   ```
 
-- [ ] **3. Test Yaz**
+- [x] **3. Test Yaz**
 
   `backend/src/services/notification.service.test.ts` → T+2 testler:
   - Normal akış: push gönderildi, `comebackT2SentAt` set, log `sent`
@@ -100,28 +100,36 @@ backend/src/workers/
 
 ## Test Kriterleri
 
-- [ ] Push gönderildi, `comebackT2SentAt` set, NotificationLog `sent`
-- [ ] `comebackT2SentAt` önceden set → skip, push yok
-- [ ] `currentStreak > 0` → skip, push yok
-- [ ] `comebackEnabled: false` → skip
-- [ ] Sessiz saat (mocked) → rescheduled, push yok
-- [ ] Token yok → skip
+- [x] Push gönderildi, `comebackT2SentAt` set, NotificationLog `sent`
+- [x] `comebackT2SentAt` önceden set → skip, push yok
+- [x] `currentStreak > 0` → skip, push yok
+- [x] `comebackEnabled: false` → skip
+- [x] Sessiz saat (mocked) → rescheduled, push yok
+- [x] Token yok → skip
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `notification.service.ts`: `sendComebackT2(prisma, pushChannel, queue, memberId)` eklendi — idempotency (comebackT2SentAt), re-aktivasyon skip, comebackEnabled:false skip, no_token skip, sessiz saat ertele (queue.add), push gönder, StreakState güncelle, NotificationLog.
+- `notification.worker.ts`: `comeback-t2` case eski `isInSilentHours + moveToDelayed + not-implemented` stub'ı kaldırıldı, `sendComebackT2(prisma, expoAdapter, internalQueue, userId)` çağrısına dönüştürüldü. `sendComebackT2` import'u eklendi.
+- `notification.service.test.ts`: 6 yeni T+2 testi (normal akış, idempotency, re-aktivasyon, comeback_disabled, no_token, silent_hours_rescheduled). 290 → 296 yeşil.
+
+**Not:** `sendComebackT2` task dokümanındaki imzaya `queue: Queue` parametresi eklendi — sessiz saat reschedule için gerekli; task doc'ta imza basitleştirilmişti.
 
 ---
 

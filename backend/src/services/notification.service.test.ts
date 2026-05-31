@@ -1,5 +1,5 @@
 /**
- * TASK-3.08 — Sabah reminder push servisi testleri.
+ * Notification service testleri — TASK-3.08 (sendMorningReminders) + TASK-3.09 (sendComebackT2).
  *
  * sendMorningReminders senaryoları:
  *   - morningHour eşleşen, bugün planlı, reminder açık, token var → push sent, log sent
@@ -10,15 +10,24 @@
  *   - Bugün planlı antrenman yok → push yok
  *   - Job geç başladı (minute > 30) → push yok, log yok
  *
+ * sendComebackT2 senaryoları:
+ *   - Normal akış: push gönderildi, comebackT2SentAt set, log sent
+ *   - comebackT2SentAt önceden set → idempotency skip, push yok
+ *   - currentStreak > 0 (re-aktivasyon) → skip, push yok
+ *   - comebackEnabled: false → skip, log skipped (comeback_disabled)
+ *   - Token yok → skip, log skipped (no_token)
+ *   - Sessiz saat (mock) → yeniden zamanlandı, log skipped (silent_hours_rescheduled)
+ *
  * M3 §Teknik Notlar: "En yüksek test sıklığı + en katı kabul kriteri"
  * (ILKELER §En Yüksek Öncelikli Eksen #1)
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Queue } from 'bullmq';
 
 import { createPrismaClient, type PrismaClient } from '../db/prisma.js';
 import { createTestDatabase, dropTestDatabase, type TestDatabase } from '../../test/db.js';
 import type { PushChannel } from '../lib/push.js';
-import { sendMorningReminders } from './notification.service.js';
+import { sendMorningReminders, sendComebackT2 } from './notification.service.js';
 import * as silentHoursModule from '../lib/silent-hours.js';
 
 // Sabit test zamanı: 2026-06-01 09:00 Istanbul = 2026-06-01 06:00 UTC
@@ -272,5 +281,211 @@ describe('TASK-3.08 — sendMorningReminders', () => {
     expect(sendSpy).not.toHaveBeenCalled();
     const logCount = await prisma.notificationLog.count({ where: { userId: member.id } });
     expect(logCount).toBe(0);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TASK-3.09 — sendComebackT2
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('TASK-3.09 — sendComebackT2', () => {
+  let testDb: TestDatabase;
+  let prisma: PrismaClient;
+
+  beforeAll(async () => {
+    testDb = await createTestDatabase();
+    prisma = createPrismaClient(testDb.databaseUrl);
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+    await dropTestDatabase(testDb.databaseName);
+  });
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW_UTC);
+
+    await prisma.notificationLog.deleteMany();
+    await prisma.pushToken.deleteMany();
+    await prisma.notificationPreference.deleteMany();
+    await prisma.streakState.deleteMany();
+    await prisma.user.deleteMany();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  // ── Yardımcılar ──────────────────────────────────────────────────────────
+
+  function buildMockQueue(): { queue: Queue; addSpy: ReturnType<typeof vi.fn> } {
+    const addSpy = vi.fn().mockResolvedValue(undefined);
+    return { queue: { add: addSpy } as unknown as Queue, addSpy };
+  }
+
+  async function createMember(phone = '+905550003000') {
+    return prisma.user.create({
+      data: { phoneE164: phone, role: 'member', firstName: 'Comeback', lastName: 'Test' },
+    });
+  }
+
+  async function createStreakState(
+    memberId: string,
+    opts: { currentStreak?: number; comebackT2SentAt?: Date | null } = {},
+  ) {
+    return prisma.streakState.create({
+      data: {
+        memberId,
+        currentStreak: opts.currentStreak ?? 0,
+        maxStreak: 0,
+        comebackT2SentAt: opts.comebackT2SentAt ?? null,
+        streakResetAt: new Date(),
+      },
+    });
+  }
+
+  async function createPref(memberId: string, opts: { comebackEnabled?: boolean } = {}) {
+    return prisma.notificationPreference.create({
+      data: {
+        memberId,
+        comebackEnabled: opts.comebackEnabled ?? true,
+      },
+    });
+  }
+
+  async function createPushToken(userId: string, token = 'ExponentPushToken[comeback-token-1]') {
+    return prisma.pushToken.create({ data: { userId, token, platform: 'ios' } });
+  }
+
+  // ── Normal akış ──────────────────────────────────────────────────────────
+
+  it('normal akış: push gönderildi, comebackT2SentAt set, log sent', async () => {
+    const member = await createMember();
+    await createStreakState(member.id);
+    await createPref(member.id);
+    await createPushToken(member.id);
+
+    const { channel, sendSpy } = buildMockPushChannel('sent');
+    const { queue } = buildMockQueue();
+    await sendComebackT2(prisma, channel, queue, member.id);
+
+    expect(sendSpy).toHaveBeenCalledOnce();
+    expect(sendSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'ExponentPushToken[comeback-token-1]',
+        title: 'Yeni bir başlangıç!',
+        body: 'Bugün yeni bir streak başlatabilirsin. 🔥',
+      }),
+    );
+
+    const state = await prisma.streakState.findUnique({ where: { memberId: member.id } });
+    expect(state?.comebackT2SentAt).not.toBeNull();
+
+    const log = await prisma.notificationLog.findFirst({ where: { userId: member.id } });
+    expect(log).not.toBeNull();
+    expect(log!.status).toBe('sent');
+    expect(log!.jobType).toBe('comeback-t2');
+  });
+
+  // ── Idempotency ──────────────────────────────────────────────────────────
+
+  it('comebackT2SentAt önceden set → idempotency skip, push yok', async () => {
+    const member = await createMember();
+    await createStreakState(member.id, { comebackT2SentAt: new Date('2026-05-30T10:00:00.000Z') });
+    await createPref(member.id);
+    await createPushToken(member.id);
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    const { queue } = buildMockQueue();
+    await sendComebackT2(prisma, channel, queue, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    const logCount = await prisma.notificationLog.count({ where: { userId: member.id } });
+    expect(logCount).toBe(0);
+  });
+
+  // ── Re-aktivasyon ────────────────────────────────────────────────────────
+
+  it('currentStreak > 0 (re-aktivasyon) → skip, push yok', async () => {
+    const member = await createMember();
+    await createStreakState(member.id, { currentStreak: 3 });
+    await createPref(member.id);
+    await createPushToken(member.id);
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    const { queue } = buildMockQueue();
+    await sendComebackT2(prisma, channel, queue, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    const logCount = await prisma.notificationLog.count({ where: { userId: member.id } });
+    expect(logCount).toBe(0);
+  });
+
+  // ── comebackEnabled: false ───────────────────────────────────────────────
+
+  it('comebackEnabled: false → skip, log skipped (comeback_disabled)', async () => {
+    const member = await createMember();
+    await createStreakState(member.id);
+    await createPref(member.id, { comebackEnabled: false });
+    await createPushToken(member.id);
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    const { queue } = buildMockQueue();
+    await sendComebackT2(prisma, channel, queue, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    const log = await prisma.notificationLog.findFirst({ where: { userId: member.id } });
+    expect(log).not.toBeNull();
+    expect(log!.status).toBe('skipped');
+    expect(log!.meta).toMatchObject({ reason: 'comeback_disabled' });
+  });
+
+  // ── Token yok ────────────────────────────────────────────────────────────
+
+  it('token yok → skip, log skipped (no_token)', async () => {
+    const member = await createMember();
+    await createStreakState(member.id);
+    await createPref(member.id);
+    // push token yok
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    const { queue } = buildMockQueue();
+    await sendComebackT2(prisma, channel, queue, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    const log = await prisma.notificationLog.findFirst({ where: { userId: member.id } });
+    expect(log).not.toBeNull();
+    expect(log!.status).toBe('skipped');
+    expect(log!.meta).toMatchObject({ reason: 'no_token' });
+  });
+
+  // ── Sessiz saat ─────────────────────────────────────────────────────────
+
+  it('sessiz saatteyse → yeniden zamanlandı, push yok, log skipped (silent_hours_rescheduled)', async () => {
+    vi.spyOn(silentHoursModule, 'isInSilentHours').mockReturnValue(true);
+
+    const member = await createMember();
+    await createStreakState(member.id);
+    await createPref(member.id);
+    await createPushToken(member.id);
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    const { queue, addSpy } = buildMockQueue();
+    await sendComebackT2(prisma, channel, queue, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    expect(addSpy).toHaveBeenCalledOnce();
+    expect(addSpy).toHaveBeenCalledWith(
+      'comeback-t2',
+      { userId: member.id },
+      { delay: expect.any(Number) },
+    );
+
+    const log = await prisma.notificationLog.findFirst({ where: { userId: member.id } });
+    expect(log).not.toBeNull();
+    expect(log!.status).toBe('skipped');
+    expect(log!.meta).toMatchObject({ reason: 'silent_hours_rescheduled' });
   });
 });

@@ -1,16 +1,19 @@
 /**
- * Notification service — sabah reminder push bildirimi (TASK-3.08).
+ * Notification service — sabah reminder (TASK-3.08) + comeback T+2 push (TASK-3.09).
  *
- * sendMorningReminders: Saatlik BullMQ repeatable job'dan çağrılır.
- * Şu anki Istanbul saatini morningHour olarak ayarlamış, bugün planlı
- * antrenmanı olan üyelere push bildirim gönderir.
+ * sendMorningReminders: Saatlik BullMQ repeatable job'dan çağrılır. Şu anki
+ * Istanbul saatini morningHour olarak ayarlamış, bugün planlı antrenmanı olan
+ * üyelere push bildirim gönderir. Sessiz saat / token yok / reminder disabled
+ * durumları per-member NotificationLog kaydıyla skip edilir.
  *
- * Sessiz saat (22:00–08:00), token yok ve reminder disabled durumları
- * per-member NotificationLog kaydıyla skip edilir.
+ * sendComebackT2: Streak sıfırlandıktan 2 gün sonra çağrılır (delayed BullMQ job).
+ * Üyeye "Bugün yeni bir streak başlatabilirsin." push gönderir. Tek seferlik
+ * (comebackT2SentAt idempotency), re-aktivasyon skip, sessiz saatte ertele.
  */
+import type { Queue } from 'bullmq';
 import type { PrismaClient } from '../db/prisma.js';
 import type { PushChannel } from '../lib/push.js';
-import { isInSilentHours } from '../lib/silent-hours.js';
+import { isInSilentHours, msUntilTomorrowMorning } from '../lib/silent-hours.js';
 
 const TZ = 'Europe/Istanbul';
 
@@ -131,4 +134,82 @@ export async function sendMorningReminders(
       data: { userId: memberId, jobType: 'morning-reminder', status: sent ? 'sent' : 'failed' },
     });
   }
+}
+
+/**
+ * Streak sıfırlandıktan T+2 gün sonra üyeye comeback push bildirimi gönderir.
+ *
+ * İdempotent (comebackT2SentAt kontrolü), re-aktivasyon skip, sessiz saatte
+ * erteler (iptal etmez — ertesi gün 09:00 Istanbul için yeni delayed job).
+ */
+export async function sendComebackT2(
+  prisma: PrismaClient,
+  pushChannel: PushChannel,
+  queue: Queue,
+  memberId: string,
+): Promise<void> {
+  const state = await prisma.streakState.findUnique({
+    where: { memberId },
+    select: { comebackT2SentAt: true, currentStreak: true },
+  });
+
+  // Idempotency: zaten gönderildi
+  if (state?.comebackT2SentAt != null) return;
+
+  // Re-aktivasyon: üye antrenman yapmış, streak sıfırdan yükseldi
+  if ((state?.currentStreak ?? 0) > 0) return;
+
+  // Comeback bildirimi tercihi
+  const pref = await prisma.notificationPreference.findUnique({
+    where: { memberId },
+    select: { comebackEnabled: true },
+  });
+  if (pref?.comebackEnabled === false) {
+    await prisma.notificationLog.create({
+      data: { userId: memberId, jobType: 'comeback-t2', status: 'skipped', meta: { reason: 'comeback_disabled' } },
+    });
+    return;
+  }
+
+  // Push token yok
+  const tokenRows = await prisma.pushToken.findMany({
+    where: { userId: memberId },
+    select: { token: true },
+  });
+  if (tokenRows.length === 0) {
+    await prisma.notificationLog.create({
+      data: { userId: memberId, jobType: 'comeback-t2', status: 'skipped', meta: { reason: 'no_token' } },
+    });
+    return;
+  }
+
+  // Sessiz saat: ertele (iptal değil — comeback ertelenir, reminder ertelen mez)
+  if (isInSilentHours()) {
+    await queue.add('comeback-t2', { userId: memberId }, { delay: msUntilTomorrowMorning(9) });
+    await prisma.notificationLog.create({
+      data: { userId: memberId, jobType: 'comeback-t2', status: 'skipped', meta: { reason: 'silent_hours_rescheduled' } },
+    });
+    return;
+  }
+
+  // Push gönder (çoklu cihaz desteği)
+  let sent = false;
+  for (const { token } of tokenRows) {
+    const result = await pushChannel.send({
+      token,
+      title: 'Yeni bir başlangıç!',
+      body: 'Bugün yeni bir streak başlatabilirsin. 🔥',
+    });
+    if (result === 'sent') sent = true;
+  }
+
+  // comebackT2SentAt'ı işaretle — idempotency garantisi
+  await prisma.streakState.update({
+    where: { memberId },
+    data: { comebackT2SentAt: new Date() },
+  });
+
+  await prisma.notificationLog.create({
+    data: { userId: memberId, jobType: 'comeback-t2', status: sent ? 'sent' : 'failed' },
+  });
 }
