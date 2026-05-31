@@ -79,6 +79,8 @@
   - Re-aktivasyon: `ptT7DismissedAt` sıfırlanmadı (kalıcı)
   - StreakState yoksa → upsert oluşturur, hata vermez
   - `maxStreak` asla azalmaz (önceki max 5, şimdiki streak 1 → max hâlâ 5)
+  - **[Gece yarısı geçişi]** `jest.useFakeTimers` ile saat 23:58 Istanbul → tamamlama bugüne ait (`lastActivityDate` = bugün)
+  - **[Gece yarısı geçişi]** Saat 00:02 Istanbul → tamamlama yeni güne ait (`lastActivityDate` = yeni gün)
 
 ---
 
@@ -113,6 +115,8 @@ backend/src/routes/
 - [ ] `streakResetAt` set üye antrenman yaparsa → `streakResetAt = null`, T-flag'ler temizlendi
 - [ ] `ptT7DismissedAt` re-aktivasyon sonrası hâlâ set (sıfırlanmadı)
 - [ ] Motor throw etse bile `POST /workout-completions` 200 döner (log kaydı var)
+- [ ] 23:58 Istanbul → `lastActivityDate` bugün (gece yarısı geçişi)
+- [ ] 00:02 Istanbul → `lastActivityDate` yeni gün (gece yarısı geçişi)
 - [ ] Tüm yeni testler + mevcut `workout-completions.test.ts` testleri yeşil
 
 ---

@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — plan-phase 3 tamamlandı. 14 task dokümanı oluşturuldu (TASK-3.01–3.14). Adım → verify-plan 3.
+**Son Güncelleme:** 2026-05-31 — verify-plan 3 tamamlandı. 3 düzeltme (morningHour saatlik job, gece yarısı testleri, TASK-3.10 etkilenen dosyalar). Adım → run-task 3.01.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,7 +10,7 @@
 
 **Faz:** 3 — Sürdürülebilirlik Motoru + Bildirim (M3 + M4)
 **Milestone:** Streak doğru hesaplanır; telafi penceresi açılır/kapanır; T+2 push gider; T+7 PT uyarısı gider; sabah reminder çalışır; bildirim izni ilk antrenman bitince istenir
-**Adım:** verify-plan
+**Adım:** task
 **İlerleme:** plan-phase tamamlandı (14 task). Önceki: Faz 2 ✅ ([PHASE-2.md](phases/PHASE-2.md))
 **Faz Dokümanı:** [PHASE-3.md](phases/PHASE-3.md)
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** —
-**Durum:** Faz 3 plan-phase tamamlandı. 14 task dokümanı hazır.
-**Sonraki Adım:** `/devflow:verify-plan 3` — Task dokümanlarını review et.
+**Task:** TASK-3.01
+**Durum:** verify-plan tamamlandı. TASK-3.01 çalıştırmaya hazır.
+**Sonraki Adım:** `/devflow:run-task 3.01` — Faz 2 teknik borç kapatma.
 
 ---
 
@@ -74,9 +74,9 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**plan-phase 3** (2026-05-31) — 14 task dokümanı oluşturuldu
-- TASK-3.01–3.14 hazır. Lineer bağımlılık zinciri: borç → şema → motor → infra → job'lar → mobile → UI.
-- Faz 2 teknik borç TASK-3.01'de kapatılacak (M3 öncesi temizlik).
+**verify-plan 3** (2026-05-31) — 14 task dokümanı review edildi
+- 1 mekanik düzeltme (TASK-3.10 etkilenen dosyalar). 2 yapısal düzeltme: TASK-3.08 saatlik job (morningHour per-user), TASK-3.03+3.05 gece yarısı geçişi testleri.
+- Lineer zincir onaylandı: 3.01→3.02→3.03→3.04→3.05→…→3.14. Tüm bağımlılıklar doğru.
 
 **review-phase 2** (2026-05-31) — Faz 2 ✅ Tamamlandı
 - Retrospektif + kalite kontrol yazıldı. F2.1+F2.2 ✅, 523 test, M2 milestone karşılandı.
@@ -89,8 +89,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** (yok — verify-plan sonrası 3.01'den başlanır)
+**Aktif Task:** TASK-3.01 — Faz 2 teknik borç kapatma
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:verify-plan 3` — task dokümanları review
+**Sıradaki:** `/devflow:run-task 3.01` — Faz 2 teknik borç kapatma

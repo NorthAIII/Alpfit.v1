@@ -99,19 +99,20 @@ T+7 (PT'ye in-app banner + push backup) ve T+14 (kayıp risk flag) job handler'l
 
 ---
 
-## Etkilenen Dosyalar
+## Etkilened Dosyalar
 
 ```
 backend/src/services/
-├── streak-reset.service.ts     # T+7 + T+14 delayed job ekleme
-└── notification.service.ts     # sendComebackT7Pt + setT14Flag
+├── streak-reset.service.ts       # T+7 + T+14 delayed job ekleme
+├── streak-reset.service.test.ts  # T+7 + T+14 job kuyruğa ekleme testleri güncelle
+└── notification.service.ts       # sendComebackT7Pt + setT14Flag
 
 backend/src/routes/
-├── pt-alerts.ts                # YENİ — PATCH dismiss-t7
-└── pt-alerts.test.ts           # YENİ — testler
+├── pt-alerts.ts                  # YENİ — PATCH dismiss-t7
+└── pt-alerts.test.ts             # YENİ — testler
 
 backend/src/workers/
-└── notification.worker.ts      # comeback-t7-pt + t14-flag case'ler
+└── notification.worker.ts        # comeback-t7-pt + t14-flag case'ler
 ```
 
 ---
@@ -135,6 +136,7 @@ backend/src/workers/
 - [ ] T+14 idempotent + re-aktivasyon → skip
 - [ ] `PATCH dismiss-t7` → `ptT7DismissedAt` set
 - [ ] Başka PT'nin üyesi dismiss → 403
+- [ ] Sıfırlama sonrası T+7 ve T+14 delayed job'ları da kuyruğa eklendi (streak-reset.service.test.ts güncellendi)
 - [ ] Tüm testler yeşil
 
 ---

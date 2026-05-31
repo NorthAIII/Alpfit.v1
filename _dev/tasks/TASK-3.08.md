@@ -10,7 +10,7 @@
 
 ## Hedef
 
-Her gün 09:00 Europe/Istanbul'da çalışan sabah reminder BullMQ repeatable job'ı yaz. Job: aktif programlı ve bugün planlı antrenmanı olan üyeleri tespit eder, reminder bildirimini kapalı olmayanlar için push gönderir, sessiz saat kontrolü yapar, `NotificationLog` yazar.
+Her saat başında çalışan sabah reminder BullMQ repeatable job'ı yaz. Job: mevcut Istanbul saatini alır, o saati `morningHour` olarak ayarlamış ve bugün planlı antrenmanı olan üyelere push gönderir. Bu sayede her üye kendi belirlediği saatte reminder alır (milestone: "Üye reminder saatini değiştirebilir"). Sessiz saat kontrolü yapar, `NotificationLog` yazar.
 
 ---
 
@@ -40,11 +40,11 @@ Her gün 09:00 Europe/Istanbul'da çalışan sabah reminder BullMQ repeatable jo
   ```
 
   Mantık:
-  - Bugün (Europe/Istanbul) planlı antrenmanı olan aktif programlı tüm üyeleri bul
-    - Program status `active`, ProgramDay dayOfWeek = bugünün günü
+  - Mevcut Istanbul saatini al (`currentHour` = 0–23)
+  - Aktif programlı, `NotificationPreference.morningHour = currentHour` ve `reminderEnabled = true` olan üyeleri bul
+    - Aynı sorguda: bugün planlı antrenmanı olan üyeler (`ProgramDay.dayOfWeek = bugünün günü`)
     - `isOneOff` günler → `specificDate` karşılaştırması
   - Her üye için:
-    - `NotificationPreference.reminderEnabled` → false ise skip (log: skipped)
     - Üyenin push tokenları → hiç yoksa skip (log: skipped, `status: no_token`)
     - Sessiz saat kontrolü: `isInSilentHours()` → true ise bu reminder atılmaz (log: skipped, `status: silent_hours`; M4 kuralı: reminder sessiz saatte ertelenmez, iptal)
     - Push gönder: başlık `"Antrenman günün 💪"`, body `"Planını gör ve başla →"`
@@ -61,13 +61,14 @@ Her gün 09:00 Europe/Istanbul'da çalışan sabah reminder BullMQ repeatable jo
 
 - [ ] **3. Repeatable Job Kaydı**
 
-  Worker başlatılınca `notificationQueue.add('morning-reminder', {}, { repeat: { pattern: '0 9 * * *', tz: 'Europe/Istanbul' } })` ile günlük 09:00 job'ı kaydet.
+  Worker başlatılınca `notificationQueue.add('morning-reminder', {}, { repeat: { pattern: '0 * * * *', tz: 'Europe/Istanbul' } })` ile saatlik job'ı kaydet. Her saat başında çalışır; mantık `morningHour = currentHour` filtresi ile hangi üyelerin o saat için reminder alacağını belirler.
 
 - [ ] **4. Test Yaz**
 
   `backend/src/services/notification.service.test.ts` (yeni dosya):
-  - Bugün planlı antrenmanı olan, reminder açık, token kayıtlı üye → push gönderildi, log `sent`
-  - Reminder kapalı üye → skip, log `skipped`
+  - `morningHour = currentHour` eşleşen, bugün planlı antrenmanı olan, reminder açık, token kayıtlı üye → push gönderildi, log `sent`
+  - `morningHour ≠ currentHour` → push gönderilmedi (farklı saat tercihli üye)
+  - `reminderEnabled: false` → skip, log `skipped`
   - Token yok → skip, log `skipped` (`no_token`)
   - Sessiz saatteyse (mock `isInSilentHours` → true) → skip, log `skipped` (`silent_hours`)
   - Bugün planlı antrenmanı olmayan üye → push gönderilmedi
@@ -90,7 +91,8 @@ backend/src/workers/
 ## Dikkat Noktaları
 
 - Reminder sessiz saatte denk gelirse: **atılmaz** (ertelenmez) — M4 kuralı "bir sonraki açık pencerede de atılmaz (geç hatırlatma kafa karıştırıcı)"
-- Sabah 09:00 job tam 09:00'da çalışır ama job işleme gecikmesi olabilir → M3 edge case: "en geç 09:30'a kadar atılır, daha geç atılırsa o gün için atılmaz" — job timestamp ile başlangıç saatini karşılaştır, 09:30'dan geç ise skip
+- Saatlik job geç başlarsa (örn. 07:30 → 07:00 için): job timestamp ile `currentHour` başlangıcını karşılaştır, 30 dakikadan geç ise o saat için skip (log: skipped, `status: late`)
+- `morningHour` filtresi tek satır DB sorgusu: `NotificationPreference WHERE morningHour = currentHour AND reminderEnabled = true` — performans sorun değil (30 üye)
 - Çoklu cihaz: aynı üyenin tüm tokenlarına push gönder
 - `PushChannel.send()` → `'invalid_token'` dönerse token DB'den sil (TASK-3.04'te Expo adapter zaten yapıyor)
 - v1 pilot (30 üye) için batch push yeterli; future: M4 rate limit 600 msg/s
@@ -100,12 +102,13 @@ backend/src/workers/
 
 ## Test Kriterleri
 
-- [ ] Bugün planlı antrenmanı olan + reminder açık + token var → push gönderildi, NotificationLog `sent`
+- [ ] `morningHour = currentHour` eşleşen, bugün planlı, reminder açık, token var → push gönderildi, NotificationLog `sent`
+- [ ] `morningHour ≠ currentHour` → push yok (farklı saatte reminder tercih eden üye)
 - [ ] `reminderEnabled: false` → push yok, NotificationLog `skipped`
 - [ ] Token yok → push yok, NotificationLog `skipped`
 - [ ] Sessiz saat (mocked) → push yok, NotificationLog `skipped`
 - [ ] Bugün planlı antrenman yok → push yok
-- [ ] Job başlama süresi 09:30'dan geç (mocked) → o gün için skip
+- [ ] Job 30 dakikadan geç başladı (mocked) → o saat için skip
 - [ ] Tüm yeni ve mevcut testler yeşil
 
 ---

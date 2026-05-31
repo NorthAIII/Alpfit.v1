@@ -79,6 +79,7 @@ Telafi penceresi kuralı (M3): planlı antrenman günü 23:59'da tamamlanmamış
   - Aktif programı olmayan üye → etkilenmedi
   - Dünkü planlı gün (< 48h) → etkilenmedi (telafi penceresi açık)
   - T+2 delayed job kuyruğa eklendi (mock queue veya test queue)
+  - **[Gece yarısı geçişi]** Üye 23:58'de antrenman tamamladı → 00:05 nightly job'da `lastActivityDate` dün değil bugün, sıfırlanmaz
 
 ---
 
@@ -114,6 +115,7 @@ backend/src/workers/
 - [ ] İkinci çalıştırma → idempotent (streak zaten 0, `streakResetAt` değişmedi)
 - [ ] T+2 delayed job → sıfırlama olan üyeler için kuyruğa eklendi
 - [ ] Aktif programsız üye → işlem yapılmadı
+- [ ] 23:58'de antrenman yapan üye → 00:05 job'da sıfırlanmaz (gece yarısı geçişi)
 
 ---
 
