@@ -213,3 +213,93 @@ export async function sendComebackT2(
     data: { userId: memberId, jobType: 'comeback-t2', status: sent ? 'sent' : 'failed' },
   });
 }
+
+/**
+ * Streak sıfırlandıktan T+7 gün sonra PT'ye uyarı bildirimi gönderir.
+ *
+ * ptT7AlertedAt in-app banner state'ini set eder (push başarısız olsa bile banner
+ * aktif kalır — T+7 uyarısı M5 UI'ında gösterilir). Push, PT'nin push tokenına
+ * yedek bildirimdir. İdempotent (ptT7AlertedAt kontrolü), re-aktivasyon skip.
+ */
+export async function sendComebackT7Pt(
+  prisma: PrismaClient,
+  pushChannel: PushChannel,
+  memberId: string,
+): Promise<void> {
+  const state = await prisma.streakState.findUnique({
+    where: { memberId },
+    select: { ptT7AlertedAt: true, currentStreak: true },
+  });
+
+  if (state?.ptT7AlertedAt != null) return;
+  if ((state?.currentStreak ?? 0) > 0) return;
+
+  // ptT7AlertedAt işaretle — in-app banner state (PHASE-3 Araştırma Bulguları: T+7 banner)
+  await prisma.streakState.update({
+    where: { memberId },
+    data: { ptT7AlertedAt: new Date() },
+  });
+
+  const rel = await prisma.trainerMember.findFirst({
+    where: { memberId, endedAt: null },
+    select: { trainerId: true },
+  });
+
+  if (!rel) {
+    await prisma.notificationLog.create({
+      data: { userId: memberId, jobType: 'comeback-t7-pt', status: 'skipped', meta: { reason: 'no_trainer' } },
+    });
+    return;
+  }
+
+  const trainerTokens = await prisma.pushToken.findMany({
+    where: { userId: rel.trainerId },
+    select: { token: true },
+  });
+
+  if (trainerTokens.length === 0) {
+    await prisma.notificationLog.create({
+      data: { userId: memberId, jobType: 'comeback-t7-pt', status: 'skipped', meta: { reason: 'no_trainer_token' } },
+    });
+    return;
+  }
+
+  let sent = false;
+  for (const { token } of trainerTokens) {
+    const result = await pushChannel.send({
+      token,
+      title: 'Üye aktivitesi yok',
+      body: '7 gündür aktif değil — manuel iletişim önerilir.',
+    });
+    if (result === 'sent') sent = true;
+  }
+
+  await prisma.notificationLog.create({
+    data: { userId: memberId, jobType: 'comeback-t7-pt', status: sent ? 'sent' : 'failed' },
+  });
+}
+
+/**
+ * Streak sıfırlandıktan T+14 gün sonra kayıp risk flag'ini DB'ye yazar.
+ *
+ * Push göndermez — yalnızca t14FlaggedAt set eder; PT dashboard'unda ⚠️ etiketi
+ * M5 fazında gösterilir. İdempotent (t14FlaggedAt kontrolü), re-aktivasyon skip.
+ */
+export async function setT14Flag(prisma: PrismaClient, memberId: string): Promise<void> {
+  const state = await prisma.streakState.findUnique({
+    where: { memberId },
+    select: { t14FlaggedAt: true, currentStreak: true },
+  });
+
+  if (state?.t14FlaggedAt != null) return;
+  if ((state?.currentStreak ?? 0) > 0) return;
+
+  await prisma.streakState.update({
+    where: { memberId },
+    data: { t14FlaggedAt: new Date() },
+  });
+
+  await prisma.notificationLog.create({
+    data: { userId: memberId, jobType: 't14-flag', status: 'sent', meta: { reason: 'flag_set' } },
+  });
+}

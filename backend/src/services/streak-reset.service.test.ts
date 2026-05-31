@@ -119,7 +119,7 @@ describe('TASK-3.05 — runNightlyStreakReset', () => {
 
   // ── Planlı gün + tamamlama yok → sıfırlandı ──────────────────────────────
 
-  it('planlı gün + tamamlama yok → streak sıfırlandı, T+2 kuyruğa eklendi', async () => {
+  it('planlı gün + tamamlama yok → streak sıfırlandı, T+2/T+7/T+14 kuyruğa eklendi', async () => {
     const trainer = await createTrainer();
     const member = await createMember();
     const program = await createActiveProgram(trainer.id, member.id);
@@ -132,9 +132,19 @@ describe('TASK-3.05 — runNightlyStreakReset', () => {
     expect(state.currentStreak).toBe(0);
     expect(state.streakResetAt).not.toBeNull();
 
-    expect(mockQueue.add).toHaveBeenCalledOnce();
+    expect(mockQueue.add).toHaveBeenCalledTimes(3);
     expect(mockQueue.add).toHaveBeenCalledWith(
       'comeback-t2',
+      { userId: member.id },
+      expect.objectContaining({ delay: expect.any(Number) }),
+    );
+    expect(mockQueue.add).toHaveBeenCalledWith(
+      'comeback-t7-pt',
+      { userId: member.id },
+      expect.objectContaining({ delay: expect.any(Number) }),
+    );
+    expect(mockQueue.add).toHaveBeenCalledWith(
+      't14-flag',
       { userId: member.id },
       expect.objectContaining({ delay: expect.any(Number) }),
     );
@@ -227,7 +237,7 @@ describe('TASK-3.05 — runNightlyStreakReset', () => {
 
   // ── T+2 job delay doğrulaması ─────────────────────────────────────────────
 
-  it('T+2 delayed job → sıfırlama olan üyeler için kuyruğa eklendi', async () => {
+  it('T+2/T+7/T+14 delayed job → sıfırlama olan üyeler için kuyruğa eklendi', async () => {
     const trainer = await createTrainer();
     const member1 = await createMember('+905550002001');
     const member2 = await createMember('+905550002002');
@@ -251,9 +261,11 @@ describe('TASK-3.05 — runNightlyStreakReset', () => {
 
     await runNightlyStreakReset(prisma, mockQueue as any);
 
-    // Sadece member1 için T+2 kuyruğa eklendi
-    expect(mockQueue.add).toHaveBeenCalledOnce();
+    // Sadece member1 için T+2/T+7/T+14 kuyruğa eklendi (member2 tamamlama yaptı → skip)
+    expect(mockQueue.add).toHaveBeenCalledTimes(3);
     expect(mockQueue.add).toHaveBeenCalledWith('comeback-t2', { userId: member1.id }, expect.anything());
+    expect(mockQueue.add).toHaveBeenCalledWith('comeback-t7-pt', { userId: member1.id }, expect.anything());
+    expect(mockQueue.add).toHaveBeenCalledWith('t14-flag', { userId: member1.id }, expect.anything());
   });
 
   // ── Gece yarısı geçişi ────────────────────────────────────────────────────

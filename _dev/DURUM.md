@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — TASK-3.09 tamamlandı. sendComebackT2 servisi (idempotency + re-aktivasyon + sessiz saat reschedule + push), worker comeback-t2 case güncellendi. 296 yeşil. Adım → run-task 3.10.
+**Son Güncelleme:** 2026-05-31 — TASK-3.10 tamamlandı. T+7 PT uyarısı (sendComebackT7Pt + ptT7AlertedAt + PT push), T+14 kayıp risk flag (setT14Flag), PATCH dismiss-t7 endpoint (ownership + ptT7DismissedAt). 308 yeşil. Adım → run-task 3.11.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -29,9 +29,9 @@
 
 ## Aktif Task
 
-**Task:** TASK-3.10
-**Durum:** TASK-3.09 ✅ tamamlandı. TASK-3.10 çalıştırmaya hazır.
-**Sonraki Adım:** `/devflow:run-task` — TASK-3.10: Comeback T+7 PT uyarısı + T+14 flag + dismiss.
+**Task:** TASK-3.11
+**Durum:** TASK-3.10 ✅ tamamlandı. TASK-3.11 çalıştırmaya hazır.
+**Sonraki Adım:** `/devflow:run-task` — TASK-3.11: Mobile: push token kaydı + bildirim izni akışı.
 
 ---
 
@@ -48,7 +48,7 @@
 | 3.07 | TASK-3.07 | ✅ Tamamlandı | Bildirim tercihleri backend API |
 | 3.08 | TASK-3.08 | ✅ Tamamlandı | Sabah reminder push job |
 | 3.09 | TASK-3.09 | ✅ Tamamlandı | Comeback T+2 push job |
-| 3.10 | TASK-3.10 | ⬜ Bekliyor | Comeback T+7 PT uyarısı + T+14 flag + dismiss |
+| 3.10 | TASK-3.10 | ✅ Tamamlandı | Comeback T+7 PT uyarısı + T+14 flag + dismiss |
 | 3.11 | TASK-3.11 | ⬜ Bekliyor | Mobile: push token + bildirim izni akışı |
 | 3.12 | TASK-3.12 | ⬜ Bekliyor | Mobile: bildirim tercihleri ekranı |
 | 3.13 | TASK-3.13 | ⬜ Bekliyor | Streak göstergesi backend + mobile UI |
@@ -74,13 +74,14 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
-**TASK-3.09** (2026-05-31) — Comeback T+2 push job ✅
-- notification.service.ts: sendComebackT2 (idempotency/comebackT2SentAt, re-aktivasyon skip, comeback_disabled skip, no_token skip, sessiz saat reschedule/queue.add, push gönder, StreakState güncelle, NotificationLog). notification.worker.ts comeback-t2 case güncellendi.
-- 6 yeni test. 296 yeşil.
+**TASK-3.10** (2026-05-31) — Comeback T+7 PT uyarısı + T+14 flag + dismiss ✅
+- notification.service.ts: sendComebackT7Pt (ptT7AlertedAt idempotency, re-aktivasyon, trainer bulma, PT push) + setT14Flag (t14FlaggedAt, push yok). worker case'ler güncellendi.
+- routes/pt-alerts.ts: PATCH /pt/member-alerts/:memberId/dismiss-t7 (ownership + ptT7DismissedAt). server.ts'e register eklendi.
+- 12 yeni test. 308 yeşil.
 
-**TASK-3.08** (2026-05-31) — Sabah reminder push job ✅
-- notification.service.ts: sendMorningReminders + worker sistem job mimarisine geçiş + queue.test.ts güncelleme.
-- 7 yeni test. 290 yeşil.
+**TASK-3.09** (2026-05-31) — Comeback T+2 push job ✅
+- notification.service.ts: sendComebackT2 (idempotency/comebackT2SentAt, re-aktivasyon skip, comeback_disabled skip, no_token skip, sessiz saat reschedule). notification.worker.ts comeback-t2 case güncellendi.
+- 6 yeni test. 296 yeşil.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -89,8 +90,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** TASK-3.10 — Comeback T+7 PT uyarısı + T+14 flag + dismiss
+**Aktif Task:** TASK-3.11 — Mobile: push token kaydı + bildirim izni akışı
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:run-task` — TASK-3.10: Comeback T+7 PT uyarısı + T+14 flag + dismiss
+**Sıradaki:** `/devflow:run-task` — TASK-3.11: Mobile: push token kaydı + bildirim izni akışı

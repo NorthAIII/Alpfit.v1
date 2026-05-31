@@ -14,6 +14,8 @@ import type { Queue } from 'bullmq';
 import type { PrismaClient } from '../db/prisma.js';
 
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
 /**
  * "N gün önce" Istanbul takvim gününü UTC midnight olarak döner.
@@ -97,7 +99,8 @@ export async function runNightlyStreakReset(prisma: PrismaClient, queue: Queue):
       update: { currentStreak: 0, streakResetAt: now },
     });
 
-    // T+2 comeback delayed job — handler TASK-3.09'da implement edilecek
     await queue.add('comeback-t2', { userId: memberId }, { delay: TWO_DAYS_MS });
+    await queue.add('comeback-t7-pt', { userId: memberId }, { delay: SEVEN_DAYS_MS });
+    await queue.add('t14-flag', { userId: memberId }, { delay: FOURTEEN_DAYS_MS });
   }
 }

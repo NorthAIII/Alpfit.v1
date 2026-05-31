@@ -27,7 +27,7 @@ import type { Queue } from 'bullmq';
 import { createPrismaClient, type PrismaClient } from '../db/prisma.js';
 import { createTestDatabase, dropTestDatabase, type TestDatabase } from '../../test/db.js';
 import type { PushChannel } from '../lib/push.js';
-import { sendMorningReminders, sendComebackT2 } from './notification.service.js';
+import { sendMorningReminders, sendComebackT2, sendComebackT7Pt, setT14Flag } from './notification.service.js';
 import * as silentHoursModule from '../lib/silent-hours.js';
 
 // Sabit test zamanı: 2026-06-01 09:00 Istanbul = 2026-06-01 06:00 UTC
@@ -487,5 +487,263 @@ describe('TASK-3.09 — sendComebackT2', () => {
     expect(log).not.toBeNull();
     expect(log!.status).toBe('skipped');
     expect(log!.meta).toMatchObject({ reason: 'silent_hours_rescheduled' });
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TASK-3.10 — sendComebackT7Pt
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('TASK-3.10 — sendComebackT7Pt', () => {
+  let testDb: TestDatabase;
+  let prisma: PrismaClient;
+
+  beforeAll(async () => {
+    testDb = await createTestDatabase();
+    prisma = createPrismaClient(testDb.databaseUrl);
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+    await dropTestDatabase(testDb.databaseName);
+  });
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW_UTC);
+
+    await prisma.notificationLog.deleteMany();
+    await prisma.pushToken.deleteMany();
+    await prisma.streakState.deleteMany();
+    await prisma.trainerMember.deleteMany();
+    await prisma.user.deleteMany();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  // ── Yardımcılar ──────────────────────────────────────────────────────────
+
+  async function createTrainer(phone = '+905550010000') {
+    return prisma.user.create({
+      data: { phoneE164: phone, role: 'trainer', firstName: 'PT', lastName: 'Test' },
+    });
+  }
+
+  async function createMember(phone = '+905550020000') {
+    return prisma.user.create({
+      data: { phoneE164: phone, role: 'member', firstName: 'T7', lastName: 'Test' },
+    });
+  }
+
+  async function linkTrainerMember(trainerId: string, memberId: string) {
+    return prisma.trainerMember.create({ data: { trainerId, memberId } });
+  }
+
+  async function createStreakStateT7(
+    memberId: string,
+    opts: { currentStreak?: number; ptT7AlertedAt?: Date | null } = {},
+  ) {
+    return prisma.streakState.create({
+      data: {
+        memberId,
+        currentStreak: opts.currentStreak ?? 0,
+        maxStreak: 0,
+        streakResetAt: new Date(),
+        ptT7AlertedAt: opts.ptT7AlertedAt ?? null,
+      },
+    });
+  }
+
+  async function createTrainerPushToken(userId: string, token = 'ExponentPushToken[trainer-t7-1]') {
+    return prisma.pushToken.create({ data: { userId, token, platform: 'ios' } });
+  }
+
+  // ── Normal akış ──────────────────────────────────────────────────────────
+
+  it('normal akış: ptT7AlertedAt set, PT push gönderildi, log sent', async () => {
+    const trainer = await createTrainer();
+    const member = await createMember();
+    await linkTrainerMember(trainer.id, member.id);
+    await createStreakStateT7(member.id);
+    await createTrainerPushToken(trainer.id);
+
+    const { channel, sendSpy } = buildMockPushChannel('sent');
+    await sendComebackT7Pt(prisma, channel, member.id);
+
+    expect(sendSpy).toHaveBeenCalledOnce();
+    expect(sendSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'ExponentPushToken[trainer-t7-1]',
+        title: 'Üye aktivitesi yok',
+        body: '7 gündür aktif değil — manuel iletişim önerilir.',
+      }),
+    );
+
+    const state = await prisma.streakState.findUnique({ where: { memberId: member.id } });
+    expect(state?.ptT7AlertedAt).not.toBeNull();
+
+    const log = await prisma.notificationLog.findFirst({ where: { userId: member.id } });
+    expect(log).not.toBeNull();
+    expect(log!.status).toBe('sent');
+    expect(log!.jobType).toBe('comeback-t7-pt');
+  });
+
+  // ── Idempotency ──────────────────────────────────────────────────────────
+
+  it('ptT7AlertedAt önceden set → idempotency skip, push yok', async () => {
+    const trainer = await createTrainer();
+    const member = await createMember();
+    await linkTrainerMember(trainer.id, member.id);
+    await createStreakStateT7(member.id, { ptT7AlertedAt: new Date('2026-05-28T10:00:00.000Z') });
+    await createTrainerPushToken(trainer.id);
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    await sendComebackT7Pt(prisma, channel, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    const logCount = await prisma.notificationLog.count({ where: { userId: member.id } });
+    expect(logCount).toBe(0);
+  });
+
+  // ── Re-aktivasyon ────────────────────────────────────────────────────────
+
+  it('currentStreak > 0 (re-aktivasyon) → skip, push yok', async () => {
+    const trainer = await createTrainer();
+    const member = await createMember();
+    await linkTrainerMember(trainer.id, member.id);
+    await createStreakStateT7(member.id, { currentStreak: 2 });
+    await createTrainerPushToken(trainer.id);
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    await sendComebackT7Pt(prisma, channel, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    const logCount = await prisma.notificationLog.count({ where: { userId: member.id } });
+    expect(logCount).toBe(0);
+  });
+
+  // ── PT token yok ─────────────────────────────────────────────────────────
+
+  it('PT token yok → ptT7AlertedAt set, push yok, log skipped (no_trainer_token)', async () => {
+    const trainer = await createTrainer();
+    const member = await createMember();
+    await linkTrainerMember(trainer.id, member.id);
+    await createStreakStateT7(member.id);
+    // push token yok
+
+    const { channel, sendSpy } = buildMockPushChannel();
+    await sendComebackT7Pt(prisma, channel, member.id);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+
+    const state = await prisma.streakState.findUnique({ where: { memberId: member.id } });
+    expect(state?.ptT7AlertedAt).not.toBeNull();
+
+    const log = await prisma.notificationLog.findFirst({ where: { userId: member.id } });
+    expect(log).not.toBeNull();
+    expect(log!.status).toBe('skipped');
+    expect(log!.meta).toMatchObject({ reason: 'no_trainer_token' });
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TASK-3.10 — setT14Flag
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('TASK-3.10 — setT14Flag', () => {
+  let testDb: TestDatabase;
+  let prisma: PrismaClient;
+
+  beforeAll(async () => {
+    testDb = await createTestDatabase();
+    prisma = createPrismaClient(testDb.databaseUrl);
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+    await dropTestDatabase(testDb.databaseName);
+  });
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW_UTC);
+
+    await prisma.notificationLog.deleteMany();
+    await prisma.streakState.deleteMany();
+    await prisma.user.deleteMany();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // ── Yardımcılar ──────────────────────────────────────────────────────────
+
+  async function createMember(phone = '+905550030000') {
+    return prisma.user.create({
+      data: { phoneE164: phone, role: 'member', firstName: 'T14', lastName: 'Test' },
+    });
+  }
+
+  async function createStreakStateT14(
+    memberId: string,
+    opts: { currentStreak?: number; t14FlaggedAt?: Date | null } = {},
+  ) {
+    return prisma.streakState.create({
+      data: {
+        memberId,
+        currentStreak: opts.currentStreak ?? 0,
+        maxStreak: 0,
+        streakResetAt: new Date(),
+        t14FlaggedAt: opts.t14FlaggedAt ?? null,
+      },
+    });
+  }
+
+  // ── Normal akış ──────────────────────────────────────────────────────────
+
+  it('normal akış: t14FlaggedAt set, push yok, log sent', async () => {
+    const member = await createMember();
+    await createStreakStateT14(member.id);
+
+    await setT14Flag(prisma, member.id);
+
+    const state = await prisma.streakState.findUnique({ where: { memberId: member.id } });
+    expect(state?.t14FlaggedAt).not.toBeNull();
+
+    const log = await prisma.notificationLog.findFirst({ where: { userId: member.id } });
+    expect(log).not.toBeNull();
+    expect(log!.status).toBe('sent');
+    expect(log!.jobType).toBe('t14-flag');
+    expect(log!.meta).toMatchObject({ reason: 'flag_set' });
+  });
+
+  // ── Idempotency ──────────────────────────────────────────────────────────
+
+  it('t14FlaggedAt önceden set → idempotency skip, log yok', async () => {
+    const member = await createMember();
+    await createStreakStateT14(member.id, { t14FlaggedAt: new Date('2026-05-28T10:00:00.000Z') });
+
+    await setT14Flag(prisma, member.id);
+
+    const logCount = await prisma.notificationLog.count({ where: { userId: member.id } });
+    expect(logCount).toBe(0);
+  });
+
+  // ── Re-aktivasyon ────────────────────────────────────────────────────────
+
+  it('currentStreak > 0 (re-aktivasyon) → skip, log yok', async () => {
+    const member = await createMember();
+    await createStreakStateT14(member.id, { currentStreak: 1 });
+
+    await setT14Flag(prisma, member.id);
+
+    const state = await prisma.streakState.findUnique({ where: { memberId: member.id } });
+    expect(state?.t14FlaggedAt).toBeNull();
+    const logCount = await prisma.notificationLog.count({ where: { userId: member.id } });
+    expect(logCount).toBe(0);
   });
 });

@@ -1,6 +1,6 @@
 # TASK-3.10: Comeback T+7 PT Uyarısı + T+14 Kayıp Risk Flag
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M3 — Sürdürülebilirlik Motoru (`modules/M3-surdurulebilirlik-motoru.md`)
 **Feature:** F3.1 — Comeback T+7 + T+14
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -129,31 +129,43 @@ backend/src/workers/
 
 ## Test Kriterleri
 
-- [ ] T+7 job → `ptT7AlertedAt` set, PT'ye push gönderildi, log `sent`
-- [ ] T+7 idempotent → `ptT7AlertedAt` önceden set, skip
-- [ ] T+7 re-aktivasyon (`currentStreak > 0`) → skip
-- [ ] T+14 job → `t14FlaggedAt` set, push yok (yalnızca flag)
-- [ ] T+14 idempotent + re-aktivasyon → skip
-- [ ] `PATCH dismiss-t7` → `ptT7DismissedAt` set
-- [ ] Başka PT'nin üyesi dismiss → 403
-- [ ] Sıfırlama sonrası T+7 ve T+14 delayed job'ları da kuyruğa eklendi (streak-reset.service.test.ts güncellendi)
-- [ ] Tüm testler yeşil
+- [x] T+7 job → `ptT7AlertedAt` set, PT'ye push gönderildi, log `sent`
+- [x] T+7 idempotent → `ptT7AlertedAt` önceden set, skip
+- [x] T+7 re-aktivasyon (`currentStreak > 0`) → skip
+- [x] T+14 job → `t14FlaggedAt` set, push yok (yalnızca flag)
+- [x] T+14 idempotent + re-aktivasyon → skip
+- [x] `PATCH dismiss-t7` → `ptT7DismissedAt` set
+- [x] Başka PT'nin üyesi dismiss → 403
+- [x] Sıfırlama sonrası T+7 ve T+14 delayed job'ları da kuyruğa eklendi (streak-reset.service.test.ts güncellendi)
+- [x] Tüm testler yeşil
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `streak-reset.service.ts`: T+7 ve T+14 delayed job eklendi (`comeback-t7-pt` + `t14-flag`, 7/14 gün delay)
+- `notification.service.ts`: `sendComebackT7Pt` (idempotency/ptT7AlertedAt, re-aktivasyon skip, trainer bulma, PT push backup, NotificationLog) + `setT14Flag` (idempotency/t14FlaggedAt, re-aktivasyon skip, flag set, log)
+- `notification.worker.ts`: iskelet case'ler gerçek handler'larla değiştirildi (import güncellendi)
+- `routes/pt-alerts.ts` (YENİ): `PATCH /pt/member-alerts/:memberId/dismiss-t7` — ensureTrainer + ownership (TrainerMember endedAt IS NULL + member deletedAt IS NULL) + cuid validasyon + updateMany ptT7DismissedAt
+- `server.ts`: ptAlertsRoutes register edildi
+- `notification.service.test.ts`: sendComebackT7Pt (4 test) + setT14Flag (3 test) eklendi
+- `routes/pt-alerts.test.ts` (YENİ): dismiss-t7 endpoint (5 test)
+- `streak-reset.service.test.ts`: T+2 beklentileri T+2/T+7/T+14 olarak güncellendi (2 test)
+- 308 yeşil (296 → +12).
 
 ---
 

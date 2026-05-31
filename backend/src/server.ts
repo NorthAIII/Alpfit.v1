@@ -30,6 +30,7 @@ import { trainersEventsRoutes } from './routes/trainers-events.js';
 import { trainersMembersRoutes } from './routes/trainers-members.js';
 import { wellKnownRoutes } from './routes/well-known.js';
 import { notificationPreferencesRoutes } from './routes/notification-preferences.js';
+import { ptAlertsRoutes } from './routes/pt-alerts.js';
 import { pushTokensRoutes } from './routes/push-tokens.js';
 import { workoutCompletionsRoutes } from './routes/workout-completions.js';
 import { startNotificationWorker } from './workers/notification.worker.js';
@@ -101,6 +102,7 @@ export async function buildServer(opts: BuildServerOptions): Promise<FastifyInst
   await app.register(workoutCompletionsRoutes);
   await app.register(pushTokensRoutes);
   await app.register(notificationPreferencesRoutes);
+  await app.register(ptAlertsRoutes);
   // Deep link altyapısı (TASK-1.25): iOS/Android `.well-known/` + masaüstü
   // davet fallback sayfası (QR). bunker-nginx tüm path'leri backend'e proxy'ler.
   await app.register(wellKnownRoutes({ env: opts.env }));

@@ -4,7 +4,7 @@ import { createBullMQConnection, createNotificationQueue, type NotificationJobNa
 import { isInSilentHours, msUntilTomorrowMorning } from '../lib/silent-hours.js';
 import { ExpoPushAdapter } from '../lib/expo-push.js';
 import { runNightlyStreakReset } from '../services/streak-reset.service.js';
-import { sendMorningReminders, sendComebackT2 } from '../services/notification.service.js';
+import { sendMorningReminders, sendComebackT2, sendComebackT7Pt, setT14Flag } from '../services/notification.service.js';
 
 import type { PrismaClient } from '../db/prisma.js';
 
@@ -80,14 +80,12 @@ export function startNotificationWorker(prisma: PrismaClient, redisUrl: string):
             await writeLog(prisma, userId, job.name, 'skipped', { reason: 'silent-hours-delayed' });
             return;
           }
-          // TASK-3.10'da implement edilecek
-          await writeLog(prisma, userId, job.name, 'skipped', { reason: 'not-implemented' });
+          await sendComebackT7Pt(prisma, expoAdapter, userId);
           break;
         }
 
         case 't14-flag': {
-          // TASK-3.10'da implement edilecek
-          await writeLog(prisma, userId, job.name, 'skipped', { reason: 'not-implemented' });
+          await setT14Flag(prisma, userId);
           break;
         }
       }
