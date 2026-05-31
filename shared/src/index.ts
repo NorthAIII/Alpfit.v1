@@ -7,3 +7,5 @@ export * from './pii-fields.js';
 export * from './schemas/exercise.js';
 export * from './schemas/program.js';
 export * from './schemas/workout-completion.js';
+// TASK-3.06 — M4 Push token şemaları
+export * from './schemas/push-token.js';
