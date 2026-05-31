@@ -164,7 +164,7 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 | 3.02 | TASK-3.02 | ✅ Tamamlandı | M3+M4 DB şeması: StreakState, PushToken, NotificationPreference, NotificationLog |
 | 3.03 | TASK-3.03 | ✅ Tamamlandı | Streak motoru: processWorkoutCompletion servisi + M2 hook |
 | 3.04 | TASK-3.04 | ✅ Tamamlandı | BullMQ + Expo Push altyapısı kurulumu |
-| 3.05 | TASK-3.05 | ⬜ Bekliyor | Nightly streak sıfırlama + telafi kontrolü (BullMQ repeatable job) |
+| 3.05 | TASK-3.05 | ✅ Tamamlandı | Nightly streak sıfırlama + telafi kontrolü (BullMQ repeatable job) |
 | 3.06 | TASK-3.06 | ⬜ Bekliyor | Push token yönetimi: POST + DELETE /push-tokens (backend) |
 | 3.07 | TASK-3.07 | ⬜ Bekliyor | Bildirim tercihleri: GET + PATCH /notification-preferences (backend) |
 | 3.08 | TASK-3.08 | ⬜ Bekliyor | Sabah reminder push (BullMQ repeatable job — 09:00 Istanbul) |
@@ -196,4 +196,4 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 ---
 
 **Oluşturulma:** 2026-05-31 (discuss-phase 3)
-**Son Güncelleme:** 2026-05-31 — TASK-3.04 tamamlandı.
+**Son Güncelleme:** 2026-05-31 — TASK-3.05 tamamlandı.

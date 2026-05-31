@@ -62,7 +62,7 @@ describe('TASK-3.04 — Notification worker smoke', () => {
     await prisma.notificationLog.deleteMany();
   });
 
-  it('Worker başlar, streak-reset-check job işler, NotificationLog yazar', async () => {
+  it('Worker başlar, morning-reminder job işler, NotificationLog yazar', async () => {
     const user = await prisma.user.create({
       data: { phoneE164: '+905550000099', role: 'member', firstName: 'W', lastName: 'Test' },
     });
@@ -70,9 +70,9 @@ describe('TASK-3.04 — Notification worker smoke', () => {
     const queue = createNotificationQueue(REDIS_URL);
     const worker = startNotificationWorker(prisma, REDIS_URL);
 
-    await queue.add('streak-reset-check', { userId: user.id });
+    await queue.add('morning-reminder', { userId: user.id });
 
-    const log = await waitForLog(prisma, user.id, 'streak-reset-check');
+    const log = await waitForLog(prisma, user.id, 'morning-reminder');
     expect(log).not.toBeNull();
     expect(log?.status).toBe('skipped');
 

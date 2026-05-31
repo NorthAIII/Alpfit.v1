@@ -1,6 +1,6 @@
 # TASK-3.05: Nightly Streak Sıfırlama (BullMQ Repeatable Job)
 
-**Durum:** ⬜ Bekliyor
+**Durum:** ✅ Tamamlandı
 **Modül:** M3 — Sürdürülebilirlik Motoru (`modules/M3-surdurulebilirlik-motoru.md`)
 **Feature:** F3.1 — Telafi Penceresi + Streak Sıfırlama
 **Faz:** Phase 3 (`phases/PHASE-3.md`)
@@ -36,7 +36,7 @@ Telafi penceresi kuralı (M3): planlı antrenman günü 23:59'da tamamlanmamış
 
 ## Alt Görevler
 
-- [ ] **1. `streak-reset.service.ts` Fonksiyonu**
+- [x] **1. `streak-reset.service.ts` Fonksiyonu**
 
   `backend/src/services/streak-reset.service.ts` (yeni dosya):
 
@@ -54,14 +54,14 @@ Telafi penceresi kuralı (M3): planlı antrenman günü 23:59'da tamamlanmamış
     - Sıfırlama olan üye → `notificationQueue`'ya `{ name: 'comeback-t2', data: { memberId }, delay: 2 * 24 * 60 * 60 * 1000 }` ekle
   - `streakResetAt` zaten set ama `currentStreak = 0` ise: tekrar sıfırlama yok (idempotent)
 
-- [ ] **2. BullMQ Repeatable Job Kaydı**
+- [x] **2. BullMQ Repeatable Job Kaydı**
 
   `backend/src/workers/notification.worker.ts` veya ayrı `backend/src/workers/streak-reset.worker.ts`:
   - Worker başlatılınca `notificationQueue.add('streak-reset-check', {}, { repeat: { pattern: '5 0 * * *', tz: 'Europe/Istanbul' } })` ile günlük job'ı kaydet
   - Job name: `'streak-reset-check'`
   - Job handler: `runNightlyStreakReset(prisma)` çağrısı
 
-- [ ] **3. Worker Dispatcher'a Handler Ekle**
+- [x] **3. Worker Dispatcher'a Handler Ekle**
 
   `backend/src/workers/notification.worker.ts` → `switch (job.name)` case `'streak-reset-check'`:
   ```ts
@@ -70,7 +70,7 @@ Telafi penceresi kuralı (M3): planlı antrenman günü 23:59'da tamamlanmamış
     break;
   ```
 
-- [ ] **4. Test Yaz**
+- [x] **4. Test Yaz**
 
   `backend/src/services/streak-reset.service.test.ts` (yeni dosya):
   - Üyenin 2 gün önce planlı antrenmanı var, tamamlama yok → streak sıfırlandı
@@ -109,29 +109,36 @@ backend/src/workers/
 
 ## Test Kriterleri
 
-- [ ] Geçmiş planlı gün + eksik tamamlama → `StreakState.currentStreak = 0`, `streakResetAt` set
-- [ ] Geçmiş planlı gün + tamamlama var → streak değişmedi
-- [ ] Dünkü planlı gün → streak değişmedi (telafi penceresi açık)
-- [ ] İkinci çalıştırma → idempotent (streak zaten 0, `streakResetAt` değişmedi)
-- [ ] T+2 delayed job → sıfırlama olan üyeler için kuyruğa eklendi
-- [ ] Aktif programsız üye → işlem yapılmadı
-- [ ] 23:58'de antrenman yapan üye → 00:05 job'da sıfırlanmaz (gece yarısı geçişi)
+- [x] Geçmiş planlı gün + eksik tamamlama → `StreakState.currentStreak = 0`, `streakResetAt` set
+- [x] Geçmiş planlı gün + tamamlama var → streak değişmedi
+- [x] Dünkü planlı gün → streak değişmedi (telafi penceresi açık)
+- [x] İkinci çalıştırma → idempotent (streak zaten 0, `streakResetAt` değişmedi)
+- [x] T+2 delayed job → sıfırlama olan üyeler için kuyruğa eklendi
+- [x] Aktif programsız üye → işlem yapılmadı
+- [x] 23:58'de antrenman yapan üye → 00:05 job'da sıfırlanmaz (gece yarısı geçişi)
 
 ---
 
 ## Tamamlanma Kriterleri
 
-- [ ] Tüm alt görevler tamamlandı
-- [ ] Tüm test kriterleri karşılandı
-- [ ] Git commit & push yapıldı
-- [ ] Bu doküman güncellendi (oturum kaydı)
-- [ ] DURUM.md güncellendi
+- [x] Tüm alt görevler tamamlandı
+- [x] Tüm test kriterleri karşılandı
+- [x] Git commit & push yapıldı
+- [x] Bu doküman güncellendi (oturum kaydı)
+- [x] DURUM.md güncellendi
 
 ---
 
 ## Oturum Kayıtları
 
-*(Task çalıştırılınca doldurulacak)*
+### Oturum 2026-05-31
+**Durum:** ✅ Tamamlandı
+
+**Yapılanlar:**
+- `streak-reset.service.ts` oluşturuldu: `runNightlyStreakReset(prisma, queue)` — missedDay (2 gün önce Istanbul), batch sorgu (program + completion + streakState), idempotent kontrol, `lastActivityDate >= missedDay` guard, upsert reset, T+2 delayed job.
+- `notification.worker.ts` güncellendi: `NotificationJobData.userId` optional yapıldı; `internalQueue` (dahili BullMQ Queue) oluşturulup `streak-reset-check` repeatable job (`'5 0 * * *'`, Istanbul tz) kaydı; handler sistematik refactor (streak-reset-check önce çık, sonra userId guard).
+- `queue.test.ts` güncellendi: skeleton testi `morning-reminder` ile değiştirildi (streak-reset-check artık NotificationLog yazmıyor).
+- `streak-reset.service.test.ts` oluşturuldu: 7 test kriteri (263 test yeşil).
 
 ---
 
