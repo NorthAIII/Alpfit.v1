@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — research-phase 3 tamamlandı. Push=Expo API, Scheduler=BullMQ, Motor=StreakState hibrit, 4 yeni DB tablosu. Adım → plan-phase 3.
+**Son Güncelleme:** 2026-05-31 — plan-phase 3 tamamlandı. 14 task dokümanı oluşturuldu (TASK-3.01–3.14). Adım → verify-plan 3.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 3 — Sürdürülebilirlik Motoru + Bildirim (M3 + M4)
 **Milestone:** Streak doğru hesaplanır; telafi penceresi açılır/kapanır; T+2 push gider; T+7 PT uyarısı gider; sabah reminder çalışır; bildirim izni ilk antrenman bitince istenir
-**Adım:** plan
-**İlerleme:** research-phase tamamlandı. Önceki: Faz 2 ✅ ([PHASE-2.md](phases/PHASE-2.md))
+**Adım:** verify-plan
+**İlerleme:** plan-phase tamamlandı (14 task). Önceki: Faz 2 ✅ ([PHASE-2.md](phases/PHASE-2.md))
 **Faz Dokümanı:** [PHASE-3.md](phases/PHASE-3.md)
 
 ---
@@ -30,14 +30,29 @@
 ## Aktif Task
 
 **Task:** —
-**Durum:** Faz 3 research-phase tamamlandı, plan-phase bekleniyor.
-**Sonraki Adım:** `/devflow:plan-phase 3` — Task yazımı.
+**Durum:** Faz 3 plan-phase tamamlandı. 14 task dokümanı hazır.
+**Sonraki Adım:** `/devflow:verify-plan 3` — Task dokümanlarını review et.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-Faz 3 task listesi plan-phase oturumunda oluşturulacak.
+| # | Task | Durum | Açıklama |
+|---|------|-------|----------|
+| 3.01 | TASK-3.01 | ⬜ Bekliyor | Faz 2 teknik borç kapatma |
+| 3.02 | TASK-3.02 | ⬜ Bekliyor | M3+M4 DB şeması (4 yeni tablo) |
+| 3.03 | TASK-3.03 | ⬜ Bekliyor | Streak motoru: processWorkoutCompletion |
+| 3.04 | TASK-3.04 | ⬜ Bekliyor | BullMQ + Expo Push altyapısı |
+| 3.05 | TASK-3.05 | ⬜ Bekliyor | Nightly streak sıfırlama job |
+| 3.06 | TASK-3.06 | ⬜ Bekliyor | Push token backend API |
+| 3.07 | TASK-3.07 | ⬜ Bekliyor | Bildirim tercihleri backend API |
+| 3.08 | TASK-3.08 | ⬜ Bekliyor | Sabah reminder push job |
+| 3.09 | TASK-3.09 | ⬜ Bekliyor | Comeback T+2 push job |
+| 3.10 | TASK-3.10 | ⬜ Bekliyor | Comeback T+7 PT uyarısı + T+14 flag + dismiss |
+| 3.11 | TASK-3.11 | ⬜ Bekliyor | Mobile: push token + bildirim izni akışı |
+| 3.12 | TASK-3.12 | ⬜ Bekliyor | Mobile: bildirim tercihleri ekranı |
+| 3.13 | TASK-3.13 | ⬜ Bekliyor | Streak göstergesi backend + mobile UI |
+| 3.14 | TASK-3.14 | ⬜ Bekliyor | T+7 PT in-app banner backend + mobile UI |
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -59,13 +74,13 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+**plan-phase 3** (2026-05-31) — 14 task dokümanı oluşturuldu
+- TASK-3.01–3.14 hazır. Lineer bağımlılık zinciri: borç → şema → motor → infra → job'lar → mobile → UI.
+- Faz 2 teknik borç TASK-3.01'de kapatılacak (M3 öncesi temizlik).
+
 **review-phase 2** (2026-05-31) — Faz 2 ✅ Tamamlandı
 - Retrospektif + kalite kontrol yazıldı. F2.1+F2.2 ✅, 523 test, M2 milestone karşılandı.
 - 3 bilgi düzeyi güvenlik borcu + 10 simülatör UAT sonraki fazda kapatılacak.
-
-**verify-phase 2** (2026-05-31, yeniden — TASK-2.16 sonrası) — 12/22 otonom ✅
-- 523 test ✅, lint/typecheck/format temiz. 12 senaryo otonom, 10 simülatör senaryosu ertelendi.
-- Güvenlik: TASK-2.16 düzeltmeleri doğrulandı; 3 bilgi düzey bulgu kalıyor (blokaj değil).
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -74,8 +89,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** (yok — plan-phase'de oluşturulacak)
+**Aktif Task:** (yok — verify-plan sonrası 3.01'den başlanır)
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:plan-phase 3` — task yazımı
+**Sıradaki:** `/devflow:verify-plan 3` — task dokümanları review

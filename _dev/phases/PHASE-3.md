@@ -154,9 +154,26 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 
 ## Task Listesi
 
-> Bu bölüm `/devflow:plan-phase 3` oturumunda doldurulacak.
+> Bu bölüm `/devflow:plan-phase 3` oturumunda (2026-05-31) dolduruldu.
 
 **Durum simgeleri:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
+
+| # | Task | Durum | Açıklama |
+|---|------|-------|----------|
+| 3.01 | TASK-3.01 | ⬜ Bekliyor | Faz 2 teknik borç: limit coerce, copy Zod, getMemberActiveProgram dedup |
+| 3.02 | TASK-3.02 | ⬜ Bekliyor | M3+M4 DB şeması: StreakState, PushToken, NotificationPreference, NotificationLog |
+| 3.03 | TASK-3.03 | ⬜ Bekliyor | Streak motoru: processWorkoutCompletion servisi + M2 hook |
+| 3.04 | TASK-3.04 | ⬜ Bekliyor | BullMQ + Expo Push altyapısı kurulumu |
+| 3.05 | TASK-3.05 | ⬜ Bekliyor | Nightly streak sıfırlama + telafi kontrolü (BullMQ repeatable job) |
+| 3.06 | TASK-3.06 | ⬜ Bekliyor | Push token yönetimi: POST + DELETE /push-tokens (backend) |
+| 3.07 | TASK-3.07 | ⬜ Bekliyor | Bildirim tercihleri: GET + PATCH /notification-preferences (backend) |
+| 3.08 | TASK-3.08 | ⬜ Bekliyor | Sabah reminder push (BullMQ repeatable job — 09:00 Istanbul) |
+| 3.09 | TASK-3.09 | ⬜ Bekliyor | Comeback T+2 push (BullMQ delayed job — streak sıfırlamadan 48h) |
+| 3.10 | TASK-3.10 | ⬜ Bekliyor | Comeback T+7 PT uyarısı + T+14 kayıp risk flag + PT dismiss endpoint |
+| 3.11 | TASK-3.11 | ⬜ Bekliyor | Mobile: push token kaydı + bildirim izni akışı |
+| 3.12 | TASK-3.12 | ⬜ Bekliyor | Mobile: Ayarlar > Bildirimler ekranı |
+| 3.13 | TASK-3.13 | ⬜ Bekliyor | Streak göstergesi: GET /me/streak + mobile UI açılışı |
+| 3.14 | TASK-3.14 | ⬜ Bekliyor | T+7 PT in-app banner: GET /pt/member-alerts + mobile UI |
 
 ---
 
@@ -179,4 +196,4 @@ v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı e
 ---
 
 **Oluşturulma:** 2026-05-31 (discuss-phase 3)
-**Son Güncelleme:** 2026-05-31 — research-phase 3: araştırma bulguları tamamlandı.
+**Son Güncelleme:** 2026-05-31 — plan-phase 3: 14 task dokümanı oluşturuldu.
