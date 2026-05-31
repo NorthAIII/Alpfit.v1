@@ -180,11 +180,10 @@ Alpfit.v1/
 - **Karar zamanı:** Yakın 5 (Pilot launch) öncesi research-phase.
 - **Bu faza hazır:** Provider interface, mock driver. Live driver eklemek interface implement etmek = küçük task.
 
-### Push Provider (M4 fazı)
-- **Seçenekler:** FCM tek nokta (iOS+Android tek SDK, baz varsayım), APNs+FCM ayrı.
-- **Kriter:** Sessiz saat penceresi zamanlama kontrolü, deep link payload formatı.
-- **Karar zamanı:** M4 fazı (Sürdürülebilirlik motoru + Bildirim).
-- **Bu faza hazır:** Expo `expo-notifications` interface'i baseline; mobile permission ekranı M4'te kurulur.
+### Push Provider (M4 fazı — ✅ Karar verildi)
+- **Karar:** Expo Push API + `expo-server-sdk` (Node). Detay: DECISIONS.md "2026-05-31 Faz 3 Push".
+- **Seçenekler:** Expo Push API (seçilen), Firebase Admin SDK (elendi — ek kurulum/sertifika yükü).
+- **Bu faza hazır:** Expo `expo-notifications` (mobile token), `expo-server-sdk` (backend gönderim), BullMQ queue-based teslim.
 
 ### Video Hosting (Yakın 5 öncesi)
 - **Seçenekler:** YouTube embed (baz varsayım — maliyet sıfır), Vimeo, kendi CDN.

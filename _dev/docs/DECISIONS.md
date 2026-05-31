@@ -9,6 +9,46 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-31 — Faz 3 (M4): Push Notification Backend — Expo Push API
+
+**Bağlam:** M4 bildirim altyapısı için backend push gönderim katmanı seçimi. Mobile taraf TECH-STACK'te zaten `expo-notifications` olarak karara bağlanmıştı; backend katmanı research-phase'e ertelenmişti.
+
+**Seçenekler:** (a) Expo Push API — backend `https://exp.host/--/api/v2/push/send` HTTP, `expo-server-sdk` Node sarıcı; (b) Firebase Admin SDK — `firebase-admin` paket, FCM doğrudan, iOS için Apple sertifikası Firebase Console'a yükleme.
+
+**Karar:** Expo Push API + `expo-server-sdk` Node paketi.
+
+**Gerekçe:** `expo-notifications` mobile seçimiyle tutarlı; EAS sertifika yönetimi otomatik (Apple Developer + FCM sertifikaları EAS'ta yönetilir, solo dev için ops sıfır). Gönderim katmanı kanal-agnostik interface arkasına sarılır — v1.5 WhatsApp kanalı ikinci implementation olarak gelir.
+
+**İlgili:** TECH-STACK.md §Push Provider, PHASE-3 Araştırma Bulguları.
+
+---
+
+### 2026-05-31 — Faz 3 (M3+M4): Zamanlama Altyapısı — BullMQ + Redis
+
+**Bağlam:** M3 motor zamanlama gereksinimleri: T+2/T+7/T+14 delayed bildirimler, sabah 09:00 repeatable reminder, telafi penceresi kapanış tetikleyicisi.
+
+**Seçenekler:** (a) BullMQ + Redis — `ioredis` zaten backend'de kurulu, `bullmq` paketi eklenir; (b) node-cron — her periyot DB polling, yeni bağımlılık yok.
+
+**Karar:** BullMQ + Redis.
+
+**Gerekçe:** Redis altyapısı zaten mevcut (ioredis). Delayed job (T+2: `delay: 172800000`ms) ve repeatable job (sabah 09:00: `cron: '0 9 * * *'`) modeli T-sayaçları için doğal fit. Process restart'ta job Redis'te kalır — node-cron'un restart gap riski yok. ILKELER §"Kalıcılık önceliği" ile uyumlu.
+
+**İlgili:** PHASE-3 Araştırma Bulguları.
+
+---
+
+### 2026-05-31 — Faz 3 (M3): Motor Hesaplama — Hibrit StreakState
+
+**Bağlam:** Streak değerini nasıl tutacağız? Her istek anında WorkoutCompletion'dan hesapla mı, yoksa materialized state mi?
+
+**Karar:** Hibrit: WorkoutCompletion event log (değişmez kayıt defteri) + `StreakState` mutable cache tablosu (üye başına tek satır).
+
+**Gerekçe:** On-demand hesaplama T+2/T+7/T+14 sayaçları için ayrıca state gerektiriyor — bu state'in doğal evi StreakState. Re-aktivasyon temizliği (tüm comeback flag'larını sıfırla) tek satır UPDATE. Dashboard streak okuma O(1).
+
+**İlgili:** PHASE-3 Araştırma Bulguları, M3 modül dokümanı.
+
+---
+
 ### 2026-05-31 — Faz 2 (M2): patchProgram Atomic Delete+Recreate Stratejisi
 
 **Bağlam:** Program builder auto-save (PATCH /programs/:id) tüm gün/egzersiz yapısını değiştirebilir. Bireysel update/delete/insert patching yaklaşımı karmaşık diff mantığı gerektirir; atomik olmayan yaklaşım kısmi güncellemeler bırakabilir.

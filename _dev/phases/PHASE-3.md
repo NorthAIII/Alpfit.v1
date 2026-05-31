@@ -66,7 +66,89 @@
 
 ## Araştırma Bulguları
 
-> Bu bölüm `/devflow:research-phase 3` oturumunda doldurulacak.
+> Bu bölüm `/devflow:research-phase 3` oturumunda (2026-05-31) dolduruldu.
+
+### Değerlendirilen Yaklaşımlar
+
+**Push Notification Backend Katmanı**
+
+- **Expo Push API:** Backend `https://exp.host/--/api/v2/push/send` adresine HTTP POST atar. Mobile `expo-notifications` SDK token'ı (`ExponentPushToken[...]`) üretir, backend `expo-server-sdk` Node paketi sarıcıyla çağırır. FCM+APNs köprüsü Expo altyapısında; EAS sertifika yönetimi otomatik. Ops yükü minimal.
+- **Firebase Admin SDK:** `firebase-admin` paket + Firebase Console kurulumu. iOS APNs sertifikasını Firebase'e yükleme gerekir. Daha fazla vendor kontrolü ama daha ağır altyapı.
+- **Seçilen: Expo Push API** — TECH-STACK'teki `expo-notifications` seçimiyle tutarlı, solo dev için ops sıfır. Bildirim gönderim katmanı kanal-agnostik interface arkasına sarılır; v1.5 WhatsApp kanalı ikinci implementation olarak gelir.
+
+**Zamanlama / Job Scheduler**
+
+- **BullMQ + Redis:** `ioredis` zaten backend'de kurulu — altyapı ek olmadan hazır. `bullmq` paketi eklenir. Delayed job (T+2: 2 gün delay), repeatable job (sabah 09:00: cron pattern). Process restart'ta job kaybı yok (Redis'te saklanır), built-in retry + exponential backoff.
+- **node-cron:** Her dakika/saat DB polling. Yeni bağımlılık yok, basit. Eksi: process restart gap, 09:00 exact timing için ek mantık, debug zorlu.
+- **Seçilen: BullMQ + Redis** — Redis altyapısı zaten var, T+2/T+7/T+14 için "delayed job per member" modeli temiz fit. ILKELER §"Kalıcılık önceliği" ile uyumlu.
+
+**Motor Hesaplama Mimarisi**
+
+- **On-demand:** Her istek anında WorkoutCompletion tablosundan hesapla. Basit ama T-sayaçları için ayrıca state gerekir.
+- **StreakState cache (seçilen):** Üye başına mutable state tablosu. WorkoutCompletion = değişmez kayıt defteri; StreakState = okuma hızı + T-sayaç takibi. Re-aktivasyonda tek satır sıfırlama.
+
+### Yeni DB Tabloları
+
+| Tablo | Amaç |
+|-------|------|
+| `StreakState` | Üye başına streak cache + T-sayaçları |
+| `PushToken` | Cihaz token yönetimi (Expo token, platform, revoke) |
+| `NotificationPreference` | Üye bildirim ayarları (reminder saat, kategori aç/kapa) |
+| `NotificationLog` | Gönderilen/başarısız bildirim kaydı — "zaten gönderildi mi?" kontrolü |
+
+**StreakState şema (kritik alanlar):**
+```
+memberId           (unique)
+currentStreak      Int @default(0)
+maxStreak          Int @default(0)
+lastActivityDate   DateTime?        -- son tamamlanan antrenman tarihi
+streakResetAt      DateTime?        -- streak sıfırlanma zamanı (T sayaçlarının başlangıcı)
+comebackT2SentAt   DateTime?        -- T+2 push gönderildi mi?
+ptT7AlertedAt      DateTime?        -- PT T+7 in-app banner gösterildi mi?
+t14FlaggedAt       DateTime?        -- T+14 kayıp risk flag set edildi mi?
+ptT7DismissedAt    DateTime?        -- PT "Okudum" tıkladı mı?
+```
+
+### M3 ↔ M4 Entegrasyon Mimarisi
+
+BullMQ queue-based: Motor job atar → M4 bildirim worker'ı işler.
+
+Job tipleri:
+- `notification:morning-reminder` — sabah 09:00 repeatable job (per member, aktif program varsa)
+- `notification:comeback-t2` — streak sıfırından 2 gün sonra delayed job
+- `notification:comeback-t7-pt` — 7 gün aktivitesizlikten sonra PT'ye
+- `notification:t14-flag` — 14 gün aktivitesizlik flag
+
+Worker akışı: sessiz saat kontrolü (`Europe/Istanbul` 22:00–08:00) → Expo Push API → NotificationLog güncelle.
+
+### Sessiz Saat ve Timezone
+
+v1 TR-only pilot → `Europe/Istanbul` sabit. User tablosuna `timezone` alanı eklenmez (şişirme). Cihaz saat dilimi edge case v1.5'te trivial migration ile ele alınır.
+
+### Kullanılacak Araçlar / Paketler
+
+| Paket | Taraf | Versiyon | Ne için |
+|-------|-------|----------|---------|
+| `expo-notifications` | mobile | Expo SDK 56 uyumlu | Push token alma, izin yönetimi, deep link payload |
+| `expo-server-sdk` | backend | latest | Expo Push API sarıcısı |
+| `bullmq` | backend | latest | Delayed + repeatable job scheduling |
+
+### Dikkat Edilecekler
+
+- **`expo-notifications` simulator'da push çalışmaz** — test için fiziksel cihaz veya Expo Go gerekir. İzin ekranı ve token flow unit test + mock ile test edilir; gerçek push gönderimi EAS preview build üzerinden doğrulanır.
+- **BullMQ worker Fastify server process'inde başlatılır** — ayrı process değil, `onReady` hook'unda; pilot ölçeğinde (30 üye) yeterli. Worker crash Fastify restart'ında otomatik yeniden başlar.
+- **NotificationPreference varsayılan satırı** — üye ilk kayıtta otomatik oluşturulur (yoksa hata riski). Upsert pattern kullanılır.
+- **StreakState upsert garantisi** — yeni üye davet kabul ettiğinde StreakState satırı açılır (onboarding akışı tetikler); işe bu satır yoksa motor broken.
+- **T+7 banner "Okudum" düğmesi** — `ptT7DismissedAt` set edilince banner kaybolur, **tekrar belirmez** (re-aktivasyon sıfırlaması `ptT7AlertedAt` sıfırlar ama `ptT7DismissedAt` sıfırlamaz — yeni kopma = yeni `ptT7AlertedAt` set edilir).
+- **Expo Push API rate limit** — 600 mesaj/saniye per project; v1 pilot için sorun değil.
+
+### Teknik Kararlar
+
+- **Push provider: Expo Push API** — TECH-STACK expo-notifications seçimiyle tutarlı; backend `expo-server-sdk` ile çağrılır; sertifika yönetimi EAS'ta.
+- **Scheduler: BullMQ + Redis** — Redis altyapısı hazır; delayed + repeatable job modeli T sayaçları için ideal.
+- **Motor mimarisi: Hibrit StreakState** — WorkoutCompletion event log + StreakState okuma cache + T-sayaç state.
+- **Timezone: Europe/Istanbul sabit** — v1 TR pilot, User tablosu şişirilmez; v1.5'te `timezone` alanı migration.
+- **Sessiz saat kontrolü: Worker katmanında** — motor job atar, sessiz saat kararı worker verir (M3-M4 sınırına uygun).
 
 ---
 
@@ -97,4 +179,4 @@
 ---
 
 **Oluşturulma:** 2026-05-31 (discuss-phase 3)
-**Son Güncelleme:** 2026-05-31 — discuss-phase 3: kapsam tartışması tamamlandı.
+**Son Güncelleme:** 2026-05-31 — research-phase 3: araştırma bulguları tamamlandı.

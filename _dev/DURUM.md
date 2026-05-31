@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — discuss-phase 3 tamamlandı. M3+M4 birlikte, kapsam kararları alındı. Adım → research-phase 3.
+**Son Güncelleme:** 2026-05-31 — research-phase 3 tamamlandı. Push=Expo API, Scheduler=BullMQ, Motor=StreakState hibrit, 4 yeni DB tablosu. Adım → plan-phase 3.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -10,8 +10,8 @@
 
 **Faz:** 3 — Sürdürülebilirlik Motoru + Bildirim (M3 + M4)
 **Milestone:** Streak doğru hesaplanır; telafi penceresi açılır/kapanır; T+2 push gider; T+7 PT uyarısı gider; sabah reminder çalışır; bildirim izni ilk antrenman bitince istenir
-**Adım:** research
-**İlerleme:** discuss-phase tamamlandı. Önceki: Faz 2 ✅ ([PHASE-2.md](phases/PHASE-2.md))
+**Adım:** plan
+**İlerleme:** research-phase tamamlandı. Önceki: Faz 2 ✅ ([PHASE-2.md](phases/PHASE-2.md))
 **Faz Dokümanı:** [PHASE-3.md](phases/PHASE-3.md)
 
 ---
@@ -30,8 +30,8 @@
 ## Aktif Task
 
 **Task:** —
-**Durum:** Faz 3 discuss-phase tamamlandı, research-phase bekleniyor.
-**Sonraki Adım:** `/devflow:research-phase 3` — Teknik araştırma (push provider, motor zamanlama, M3↔M4 entegrasyon).
+**Durum:** Faz 3 research-phase tamamlandı, plan-phase bekleniyor.
+**Sonraki Adım:** `/devflow:plan-phase 3` — Task yazımı.
 
 ---
 
@@ -78,4 +78,4 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 **Aktif Faz:** [PHASE-3.md](phases/PHASE-3.md) — Faz 3: Sürdürülebilirlik Motoru + Bildirim (M3+M4)
 **Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:research-phase 3` — teknik araştırma
+**Sıradaki:** `/devflow:plan-phase 3` — task yazımı
