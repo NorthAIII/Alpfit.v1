@@ -1,6 +1,6 @@
 # DURUM — Proje Dashboard
 
-**Son Güncelleme:** 2026-05-31 — verify-phase 2 yeniden tamamlandı. 12/22 UAT otonom ✅; 10 simülatör senaryosu ertelendi (simülatör yok). Güvenlik: TASK-2.16 düzeltmeleri doğrulandı. Adım → review.
+**Son Güncelleme:** 2026-05-31 — review-phase 2 tamamlandı. 16 task ✅, 523 test, M2 uçtan uca çalışıyor. F2.1+F2.2 ✅. Adım → Faz 3 discuss.
 
 <!-- KURAL: Bu satır her oturum sonunda ÜZERİNE YAZILIR — tek satır, tek cümle. "Önceki:" / "Eski:" prefix ile kümülatif yığma YASAK; HTML comment'e sarma da yasak (CLAUDE.md → Doküman Disiplini). Tarih + kısa özet yeterli; detay için git log + ilgili PHASE/TASK dokümanları. -->
 
@@ -8,11 +8,11 @@
 
 ## Aktif Faz
 
-**Faz:** 2 — Program akışı uçtan uca (M2)
-**Milestone:** PT üyeye program yazar → üye görür + tamamlar → backend'e kayıt düşer → offline çalışır
-**Adım:** review
-**İlerleme:** 16/16 task tamamlandı. verify-phase 2 tamamlandı — 12/22 otonom ✅, 10 simülatör ertelendi.
-**Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
+**Faz:** 3 — Sürdürülebilirlik motoru + Bildirim (M3+M4) *(geçici ad — discuss-phase'de netleşir)*
+**Milestone:** (discuss-phase'de belirlenecek)
+**Adım:** discuss
+**İlerleme:** Henüz başlamadı. Önceki: Faz 2 ✅ Tamamlandı ([PHASE-2.md](phases/PHASE-2.md))
+**Faz Dokümanı:** (discuss-phase'de oluşturulacak)
 
 ---
 
@@ -30,31 +30,14 @@
 ## Aktif Task
 
 **Task:** —
-**Durum:** Tüm task'lar tamamlandı
-**Sonraki Adım:** `/devflow:review-phase 2` — faz review ve retrospektif.
+**Durum:** Faz 2 tamamlandı. Faz 3 henüz başlamadı.
+**Sonraki Adım:** `/devflow:discuss-phase 3` — Sürdürülebilirlik motoru + Bildirim (M3+M4) kapsam tartışması.
 
 ---
 
 ## Task Durumu (Aktif Faz)
 
-| # | Task | Durum |
-|---|------|-------|
-| 2.01 | DB Schema + Migration + Seeder + Shared Zod | ✅ Tamamlandı |
-| 2.02 | Exercises API | ✅ Tamamlandı |
-| 2.03 | Programs API | ✅ Tamamlandı |
-| 2.04 | WorkoutCompletions API | ✅ Tamamlandı |
-| 2.05 | Mobile: TanStack Query + Offline Persist | ✅ Tamamlandı |
-| 2.06 | Mobile: Exercises Hook + Bottom Sheet | ✅ Tamamlandı |
-| 2.07 | Mobile: Builder Giriş + Şablon Çatısı | ✅ Tamamlandı |
-| 2.08 | Mobile: Builder Egzersiz Listesi + ↑↓ | ✅ Tamamlandı |
-| 2.09 | Mobile: Builder Auto-save + Publish + Kopyalama | ✅ Tamamlandı |
-| 2.10 | Mobile: Üye Ana Ekranı Layout | ✅ Tamamlandı |
-| 2.11 | Mobile: Antrenman Ekranı + Video Modal | ✅ Tamamlandı |
-| 2.12 | Mobile: Tamamlama + Offline Senkron | ✅ Tamamlandı |
-| 2.13 | Mobile: Geçmiş Sekmesi | ✅ Tamamlandı |
-| 2.14 | Mobile: Program Değişikliği Banner | ✅ Tamamlandı |
-| 2.15 | CI Kalite: Lint + Format + Backend Typecheck | ✅ Tamamlandı |
-| 2.16 | Backend güvenlik düzeltmeleri (verify-phase bulgusu) | ✅ Tamamlandı |
+Faz 3 henüz başlamadı — task listesi discuss-phase → plan-phase oturumlarında oluşturulacak.
 
 **Durum Kodları:** ⬜ Bekliyor | 🔄 Devam ediyor | ⏸️ Duraklatıldı | ✅ Tamamlandı | 🔴 Bloke | ❌ İptal
 
@@ -76,13 +59,13 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 > **KURAL:** Sadece son 2 task özeti tutulur, daha eskileri **gerçekten silinir** (HTML comment'e sarma, "Önceki:" prefix, üstü çizili etiket yasak — detay için git log + arşivlenmiş task dokümanı). Her özet kısa formatlı: paragraf yasak, **bullet zorunlu**, "Özet" alanı max 3 bullet.
 
+**review-phase 2** (2026-05-31) — Faz 2 ✅ Tamamlandı
+- Retrospektif + kalite kontrol yazıldı. F2.1+F2.2 ✅, 523 test, M2 milestone karşılandı.
+- 3 bilgi düzeyi güvenlik borcu + 10 simülatör UAT sonraki fazda kapatılacak.
+
 **verify-phase 2** (2026-05-31, yeniden — TASK-2.16 sonrası) — 12/22 otonom ✅
 - 523 test ✅, lint/typecheck/format temiz. 12 senaryo otonom, 10 simülatör senaryosu ertelendi.
 - Güvenlik: TASK-2.16 düzeltmeleri doğrulandı; 3 bilgi düzey bulgu kalıyor (blokaj değil).
-
-**TASK-2.16** (2026-05-31) — Backend güvenlik düzeltmeleri ✅
-- `completeWorkout` ownership guard, `publishProgram` status guard, `patchProgram` soft-delete exercise check.
-- 4 yeni test eklendi; 231 backend test ✅, lint temiz.
 
 <!-- KURAL: Sadece son 2 task özeti tutulur, daha eskileri silinir (gerçek silme — HTML comment yasak). -->
 <!-- KURAL: Sadece aktif fazın task'leri gösterilir. Geçmiş fazların bilgileri phases/ klasöründedir. -->
@@ -91,8 +74,8 @@ Aşağıdaki ön-koşullar ilgili fazlar başlamadan önce çözülmüş olmalı
 
 ## Hızlı Erişim
 
-**Aktif Task:** (yok — tüm task'lar tamamlandı)
-**Aktif Faz:** Faz 2 — Program akışı uçtan uca (M2)
-**Faz Dokümanı:** [PHASE-2.md](phases/PHASE-2.md)
+**Aktif Task:** (yok — Faz 3 henüz başlamadı)
+**Aktif Faz:** Faz 3 — Sürdürülebilirlik motoru + Bildirim (M3+M4) *(discuss-phase'de açılacak)*
+**Önceki Faz:** [PHASE-2.md](phases/PHASE-2.md) ✅
 **Task Sistemi:** `tasks/TASKS-README.md`
-**Sıradaki:** `/devflow:review-phase 2` — faz review ve retrospektif
+**Sıradaki:** `/devflow:discuss-phase 3` — kapsam tartışması

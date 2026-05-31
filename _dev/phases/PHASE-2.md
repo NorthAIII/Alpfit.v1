@@ -1,6 +1,6 @@
 # Phase 2: Program akışı uçtan uca (M2)
 
-**Durum:** 🔄 Devam ediyor
+**Durum:** ✅ Tamamlandı
 
 ---
 
@@ -276,21 +276,75 @@ QueryClient `gcTime: 7 * 24 * 60 * 60 * 1000` (7 gün) — offline hafızada haf
 
 ## Retrospektif
 
-> Bu bölüm `/devflow:review-phase 2` oturumunda doldurulur.
+### Ne İyi Gitti?
+
+- **Result type pattern** (discriminated unions: `{ kind: 'ok' | 'forbidden' | 'not_found' | ... }`) servis katmanında tutarlı uygulandı — route handler'lar sadece map yapıyor, iş mantığı serviste kalıyor.
+- **Service / route ayrımı** temiz: `program.service.ts`, `workout-completion.service.ts`, `exercise.service.ts` bağımsız test edilebilir; route'lar ince kalıyor.
+- **patchProgram atomic delete+recreate** transaction içinde yapıldı — kısmi güncelleme bırakmayan tutarlı bir yaklaşım.
+- **Offline handling** iyi tasarlandı: TanStack Query `isPaused` + optimistic UI + offline toast; `hasNavigated` ref ile çift-navigate engellendi.
+- **Shared Zod şemaları** (`@alpfit/shared`) backend + mobile arasında tip güvencesi sağladı — type drift riski sıfırlandı.
+- **523 test** (251 mobile + 231 backend + 41 shared) temiz geçti; güvenlik testleri TASK-2.16 ile eklendi.
+- **M2↔M3 sınırı** korundu: `workout_completion` endpoint M3 için hazır ama streak hesabı yapılmadı; streak UI gizlendi.
+
+### Ne Kötü Gitti?
+
+- **Güvenlik açıkları plan aşamasında yakalanmadı:** `completeWorkout` ownership, `publishProgram` status guard, `patchProgram` soft-delete exercise kontrolü verify-phase'de ortaya çıktı → TASK-2.16 açıldı. Plan phase'de endpoint başına sahiplik+guard checklist uygulanmalıydı.
+- **10 UAT senaryosu otonom doğrulanamadı:** Simülatör/cihaz gerektiren UI akışları (PT program yazar → üye görür, video modal, offline uçak modu) ertelendi. M3 başlamadan önce bu senaryolar gerçek cihazda test edilmeli.
+- **`POST /programs/:id/copy` endpoint'inde Zod eksikliği:** `targetMemberId` Zod şeması yerine manuel string kontrolü — diğer endpoint'lerin tutarlı pattern'iyle çelişiyor (bilgi düzeyi borç).
+- **`getMemberActiveProgram` kod tekrarı:** `fetchFullProgram` helper'ı kullanılmıyor; include/select bloğu kopyalanmış.
+- **Bilgi düzeyi güvenlik borçları kaldı:** `limit=abc` → 500 (400 dönmeli), Zod şemalarında `max()` eksikliği — blokaj değil ama birikirler.
+
+### Sonraki Faz İçin Öneriler
+
+- M3 discuss-phase'den önce 10 ertelenen UAT senaryosunu gerçek cihazda (veya simülatör kurulunca) koş.
+- Kalan bilgi düzeyi güvenlik borcunu (limit validation, targetMemberId Zod, max() eksikliği) M3 plan phase'de küçük bir task olarak aç veya M3 task'larına ekle.
+- Her yeni backend route için plan phase'de sahiplik + yetki kontrolü checklist uygula (bkz. Süreç Disiplinleri → Plan Phase Güvenlik Checklist).
+- `getMemberActiveProgram`'daki kod tekrarını (fetchFullProgram kullanılmıyor) M3 scope'unda temizle.
+
+### Task-Spesifik Teknik Öğrenimler
+
+- **`patchProgram` transaction sırası:** ProgramDayExercise'ler önce silinmeli, ardından ProgramDay — FK kısıtı (programDayId) nedeniyle ters sıra `foreign key violation` verir.
+- **`WorkoutCompletion` idempotency:** `upsert` + `@@unique([memberId, programDayId, scheduledDate])` — `update: {}` boş bırakılır, böylece tekrar gelinde mevcut kayıt döner, yeni oluşmaz.
+- **TanStack Query `isPaused`:** Mutation kuyruğa alındığında (offline) `isPaused` true olur; `onSuccess` gelmez — `useEffect` ile `isPaused` watch'ı olmadan offline toast gösterilemez.
+- **YouTube embed iOS:** `allowsInlineMediaPlayback={true}` + `mediaPlaybackRequiresUserAction={false}` olmadan iOS tam ekrana geçer.
+- **`toLocalYMD` ve TR timezone:** TR sabit UTC+3 offset (DST yok), bu yüzden `new Date()` + `getFullYear/Month/Date` güvenli. DST olan ülkelerde bu yaklaşım gece yarısı sınırında kayabilir.
+
+### DevFlow'a Öneri
+
+_(Bu fazda DevFlow yönteminin geneline dair bir öneri çıkmadı.)_
 
 ---
 
 ## Kalite Kontrol Sonuçları
 
-> Bu bölüm `/devflow:review-phase 2` oturumunda doldurulur.
+| Eksen | Durum | Not |
+|-------|-------|-----|
+| Modülerlik | ✅ | Servis/route ayrımı temiz; M2↔M3 sınırı korundu; result type pattern tutarlı |
+| Güvenlik & Gizlilik | ⚠️ | TASK-2.16 orta bulgular giderildi; 3 bilgi düzeyi borç kaldı (limit val., Zod max(), copy Zod) |
+| Bakım Maliyeti | ✅ | Kod okunabilir; result types açık; minor: getMemberActiveProgram kod tekrarı + copy Zod eksikliği |
+| Performans | ✅ | Cursor pagination, safeLimit bounding; minor: patchProgram'da 7-döngü insert (v1 ölçeğinde ihmal edilebilir) |
+| Hata Yönetimi & Offline | ✅ | isPaused + onError + hasNavigated guard; tüm hata state'leri (loading/error/not-found) handle ediliyor |
+| Test Kapsamı | ✅ | 523 test geçiyor; idempotency + güvenlik testleri mevcut; 10 UAT senaryosu ertelendi (simülatör) |
+| Erişilebilirlik | ✅ | accessibilityRole/Label/State tutarlı; testID'ler mevcut; Türkçe metinler |
+| PT Sürtünme Ölçümü | ⚠️ | Builder auto-save/publish akışı iyi; 2× hız baseline ölçümü (DURUM blocker 🟡) hala yapılmadı |
+
+**Kullanıcı Yolculuğu & Boşluk Tespiti:**
+
+PT yolculuğu (Üyeler → MemberDetailScreen → Builder → publish) tutarlı ve kopuksuz. Üye yolculuğu (MemberHome → BUGÜN kartı → Workout → tamamlama) uçtan uca çalışıyor. `WorkoutHistoryScreen` geçmiş sekmesine bağlı — satır detayı okuma modunda açılıyor, sahipsiz bir nokta yok.
+
+Tek gözlem: PT "Üyeler" sekmesindeki basit liste üzerinden üyeye gidiyor (M5 yokken geçici yer tutucu). M5 fazında tam dashboard'a dönüşecek — mimari hazır, bu bilinçli kapsam sınırıdır.
 
 ---
 
 ## Sonuç
 
-> Bu bölüm `/devflow:review-phase 2` oturumunda doldurulur.
+**Faz 2 tamamlandı.** 16/16 task, 523 test temiz. Milestone kriterleri karşılandı: PT haftalık şablon yazar, üye programı görür + antrenmanını tamamlar, backend'e kayıt düşer, offline çalışır, video oynar, kopyalama çalışır.
+
+10 simülatör UAT senaryosu ertelendi (blokaj değil — sonraki faz öncesi tamamlanmalı). 3 bilgi düzeyi güvenlik borcu kayıt altında; M3 kapsamında küçük task olarak kapatılacak.
+
+**Sıradaki adım:** `/devflow:discuss-phase` (Faz 3 — Sürdürülebilirlik motoru + Bildirim, M3+M4)
 
 ---
 
 **Oluşturulma:** 2026-05-30 (discuss-phase 2)
-**Son Güncelleme:** 2026-05-31 — verify-phase 2 yeniden (TASK-2.16 sonrası): 12/22 UAT otonom ✅, 10 simülatör ertelendi; 3 TASK-2.16 güvenlik senaryosu eklendi (20-22); adım → review.
+**Son Güncelleme:** 2026-05-31 — review-phase 2: retrospektif + kalite kontrol tamamlandı; faz ✅ Tamamlandı.

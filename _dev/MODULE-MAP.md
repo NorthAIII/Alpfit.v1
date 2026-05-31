@@ -69,8 +69,8 @@ M6 ← M0, M1
 | Feature | Modül | Versiyon | Faz | Durum |
 |---------|-------|----------|-----|-------|
 | F1.1: Onboarding (Davet + Auth) | M1 | v1 | 1 | ✅ |
-| F2.1: Program Builder (PT) | M2 | v1 | 2 | 🔄 Devam ediyor |
-| F2.2: Üye Program Görüntüleme + Tamamlama | M2 | v1 | 2 | 🔄 Devam ediyor |
+| F2.1: Program Builder (PT) | M2 | v1 | 2 | ✅ |
+| F2.2: Üye Program Görüntüleme + Tamamlama | M2 | v1 | 2 | ✅ |
 | F3.1: Sürdürülebilirlik Motoru | M3 | v1 | — | ⬜ |
 | F4.1: Bildirim Sistemi (Push) | M4 | v1 | — | ⬜ |
 | F5.1: PT Dashboard — Üye Listesi | M5 | v1 | — | ⬜ |
@@ -88,4 +88,4 @@ M6 ← M0, M1
 
 ---
 
-**Son Güncelleme:** 2026-05-30 — discuss-phase 2: F2.1 + F2.2 Faz 2'ye atandı, durum 🔄 Devam ediyor.
+**Son Güncelleme:** 2026-05-31 — review-phase 2: F2.1 + F2.2 ✅ Tamamlandı.

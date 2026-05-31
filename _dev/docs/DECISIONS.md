@@ -9,6 +9,30 @@
 
 <!-- Her yeni karar aşağıdaki formatta en üste eklenir (en yeni en üstte) -->
 
+### 2026-05-31 — Faz 2 (M2): patchProgram Atomic Delete+Recreate Stratejisi
+
+**Bağlam:** Program builder auto-save (PATCH /programs/:id) tüm gün/egzersiz yapısını değiştirebilir. Bireysel update/delete/insert patching yaklaşımı karmaşık diff mantığı gerektirir; atomik olmayan yaklaşım kısmi güncellemeler bırakabilir.
+
+**Karar:** Transaction içinde: (1) mevcut ProgramDayExercise'leri sil, (2) ProgramDay'leri sil, (3) yeni günleri ve egzersizleri oluştur. Sıra FK kısıtı nedeniyle zorunlu (önce child, sonra parent sil).
+
+**Gerekçe:** Tam yapı her PATCH'te gönderildiğinden diff yerine replace daha basit ve güvenli. V1 program boyutu (7 gün × ~10 egzersiz) küçük — 7 sequential insert ihmal edilebilir. Atomik: ya tamamı güncellenir ya hiçbiri.
+
+**İlgili:** TASK-2.03, PHASE-2 retrospektifi.
+
+---
+
+### 2026-05-31 — Faz 2 (M2): hasUnreadUpdate Hesabı — lastCompletion vs publishedAt
+
+**Bağlam:** `GET /me/program` üye programı çekerken "programında güncelleme var" bilgisi döndürülmeli. Program banner'ının sadece yeni publish'te değil, üye son antrenmanından sonra yeniden publish edildiğinde gösterilmesi gerekiyor.
+
+**Karar:** `hasUnreadUpdate = publishedAt > lastCompletion.completedAt` (son tamamlamadan sonra yeni publish varsa true). Üyenin hiç tamamlaması yoksa `true` döner (yeni program her zaman "güncelleme" sayılır).
+
+**Gerekçe:** Mobil tarafta banner-store kalıcı dismiss state tutuyor (AsyncStorage). hasUnreadUpdate sunucu-tarafı sinyal; dismiss istemci-tarafı override. İkisi birlikte çalışıyor: sunucu "bu program yeni" der, istemci "ama kullanıcı kapattı" override eder.
+
+**İlgili:** TASK-2.09, TASK-2.14, PHASE-2 retrospektifi.
+
+---
+
 ### 2026-05-30 — TASK-1.32: Davet Kabul Bildirimi — In-App Polling + `TrainerMember` Event Kaynağı
 
 **Bağlam:** Üye davet kabul edince PT'ye "[İsim] davetini kabul etti" bildirimi gösterilmeli. F1.1 PRD bunu push olarak tanımlar ama push altyapısı (APNs/FCM) M4'e ertelendi (discuss-phase kararı, PHASE-1 §"Davet kabul push"). Bu fazda sadece **in-app** (uygulama açıkken) yöntem gerekir. İki soru: (1) gerçek-zaman taşıma yöntemi (polling vs SSE vs WebSocket)? (2) event'leri hangi tablodan üretelim?

@@ -7,7 +7,7 @@
 >
 > Bu yapı şişmeyi önler: index ince kalır (hep yüklü), detay yalnızca gerekince okunur.
 
-**Son Güncelleme:** 2026-05-30 — TASK-1.16 ✅: `restore-drill-disiplini.md` (YENİ) eklendi — staging Postgres yedeklerinin gerçekten restore edilebilirliği ayda 1 (her ayın 15'i) elle teyit edilir; prosedür `_dev/docs/restore-drill.md`'de, kayıt `staging-infra.md`'de; backup cron drift sinyalleri (B2 boyutu sabit, log FAIL) drill beklemeden müdahale. `staging-infra.md` "B2 Off-Site Yedek" + "Restore Drill Kayıtları" bölümleri açıldı (kullanıcı B2 kurulumunu tamamladıkça doldurur).
+**Son Güncelleme:** 2026-05-31 — review-phase 2: `plan-phase-security-checklist.md` (YENİ) eklendi — plan phase'de her yeni backend endpoint için sahiplik+guard checklist; Faz 2'de verify-phase'e kadar yakalanamamış 3 orta güvenlik bulgusundan (TASK-2.16) çıkan süreç disiplini.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
@@ -50,6 +50,7 @@
 - [Prisma + PostgreSQL partial unique index](memory/prisma-partial-unique-index.md) — Soft-delete deseninde "aynı anda tek aktif satır" invariant'ı için Prisma DSL `@@unique([..., nullableTimestamp])` YETMEZ (PostgreSQL NULL ≠ NULL); `migrate dev --create-only` + raw SQL `CREATE UNIQUE INDEX ... WHERE "endedAt" IS NULL` şart, integration test deploy garantisini yakalar.
 - [Snapshot testleri tarih-bağımsız olmalı](memory/feedback-snapshot-tarih-pin.md) — UI component `formatTrDate(new Date())` gibi non-deterministik değer üretiyorsa snapshot test'inde `jest.useFakeTimers().setSystemTime(...)` ile pin'le; aksi halde ertesi gün CI fail. Backend'de gerek yok, mobile UI smell'i.
 - [Restore drill ayda 1 yapılır](memory/restore-drill-disiplini.md) — staging Postgres B2 yedeği her ayın 15'i restore_test DB'sinde elle doğrulanır; aksilik = backup süreci kırık demek, restore gerektiğinde fark etmek geç olur; prosedür `_dev/docs/restore-drill.md`, kayıt `staging-infra.md` "Restore Drill Kayıtları".
+- [Plan phase güvenlik checklist — yeni backend route](memory/plan-phase-security-checklist.md) — plan phase'de her yeni endpoint için 5 soru: ownership, role guard, status guard, soft-delete guard, input bounding. Kanca: plan phase'de kabul kriterleri yazılırken. Faz 2 verify-phase'de 3 orta bulgu (TASK-2.16) bu kontrolün eksikliğinden çıktı.
 
 ---
 

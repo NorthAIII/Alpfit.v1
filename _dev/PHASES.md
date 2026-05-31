@@ -20,7 +20,7 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 | # | Faz | Durum | Doküman |
 |---|-----|-------|---------|
 | 1 | Çekirdek altyapı + Auth (M0 + M1) | ✅ Tamamlandı | [PHASE-1.md](phases/PHASE-1.md) |
-| 2 | Program akışı uçtan uca (M2) | 🔄 Devam ediyor | [PHASE-2.md](phases/PHASE-2.md) |
+| 2 | Program akışı uçtan uca (M2) | ✅ Tamamlandı | [PHASE-2.md](phases/PHASE-2.md) |
 
 **Durum simgeleri:**
 - 🔄 **Devam ediyor** — discuss-phase başladı (aktif faz)
@@ -62,11 +62,12 @@ Faz numaraları **global, sürekli ve append-only**'dir — versiyon değişse b
 
 | 2026-05-30 | Faz 1 → ✅ | 36 task, M0+M1 tamamlandı; 10 manuel UAT Yakın 5'e ertelendi; Faz 2 (Program domain M2) → discuss |
 | 2026-05-30 | Faz 2 → 🔄 | discuss-phase tamamlandı; kapsam kararları alındı; research-phase bekliyor |
+| 2026-05-31 | Faz 2 → ✅ | 16 task, M2 tamamlandı; 523 test ✅; 10 simülatör UAT ertelendi; Faz 3 (M3+M4) → discuss |
 
 <!-- KURAL: Her geçiş için TEK satır + kısa not. Geçiş gerekçesi/detayı PHASE-N.md retrospektifindedir, burada tekrar edilmez. "Önceki:" prefix veya HTML comment ile detay yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
 
 ---
 
-**Son Güncelleme:** 2026-05-30 — discuss-phase 2: Faz 2 tabloya eklendi, "Program akışı uçtan uca (M2)" Sıradaki Fazlar'dan çıktı.
+**Son Güncelleme:** 2026-05-31 — review-phase 2: Faz 2 ✅ Tamamlandı; Faz 3 → Sıradaki Fazlar'ın ilk maddesi.
 
 <!-- KURAL: Bu satır her güncellemede ÜZERİNE YAZILIR. "Önceki:" prefix ile kümülatif yığma YASAK (CLAUDE.md → Doküman Disiplini). -->
